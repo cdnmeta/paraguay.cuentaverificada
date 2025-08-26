@@ -1,0 +1,288 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model comercio {
+  id                         Int                        @id @default(autoincrement())
+  ruc                        String?
+  razon_social               String?
+  slug                       String?
+  telefono                   String?
+  direccion                  String?
+  urlmaps                    String?
+  url_logo_firebase          String?
+  url_comprobante_pago       String?
+  fecha_creacion             DateTime?                  @default(now()) @db.Timestamptz(6)
+  dial_code                  String?
+  codigo_pais                String?
+  fecha_eliminacion          DateTime?                  @db.Timestamptz(6)
+  fecha_actualizacion        DateTime?                  @db.Timestamptz(6)
+  id_usuario                 Int
+  id_usuario_creacion        Int?
+  id_usuario_actualizacion   Int?
+  id_usuario_eliminacion     Int?
+  estado                     Int?
+  activo                     Boolean?                   @default(true)
+  eslogan                    String?
+  observacion                String?
+  verificado                 Boolean?                   @default(false)
+  fecha_actualizacion_estado DateTime?                  @db.Timestamptz(6)
+  fecha_verificacion         DateTime?                  @db.Timestamptz(6)
+  motivo_rechazo             String?
+  foto_interior              String?
+  foto_exterior              String?
+  cedula_frontal             String?
+  cedula_reverso             String?
+  imagen_factura_servicio    String?
+  correo_empresa             String?
+  estados_comercios          estados_comercios?         @relation(fields: [estado], references: [id], onUpdate: NoAction, map: "fk_estados_comercios_id_comercios")
+  usuarios                   usuarios                   @relation(fields: [id_usuario], references: [id], onUpdate: NoAction, map: "fk_usuarios_id_comercios")
+  seguimiento_verificacion   seguimiento_verificacion[]
+  suscripciones              suscripciones[]
+}
+
+model cotizacion_empresa {
+  id                                                    Int                           @id @default(autoincrement())
+  id_moneda_origen                                      Int
+  id_moneda_destino                                     Int
+  monto                                                 Float
+  fecha_creacion                                        DateTime                      @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion                                   DateTime?                     @db.Timestamptz(6)
+  id_usuario_creacion                                   Int?
+  activo                                                Boolean                       @default(true)
+  monedas_cotizacion_empresa_id_moneda_destinoTomonedas monedas                       @relation("cotizacion_empresa_id_moneda_destinoTomonedas", fields: [id_moneda_destino], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_empresa_moneda_destino")
+  monedas_cotizacion_empresa_id_moneda_origenTomonedas  monedas                       @relation("cotizacion_empresa_id_moneda_origenTomonedas", fields: [id_moneda_origen], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_empresa_moneda_origen")
+  pagos_factura_suscripciones                           pagos_factura_suscripciones[]
+}
+
+model empresa_config {
+  id                   Int       @id @default(autoincrement())
+  razon_social         String
+  ruc                  String
+  telefono             String?
+  direccion            String?
+  email                String?
+  fecha_creacion       DateTime? @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion  DateTime? @db.Timestamptz(6)
+  activo               Boolean?  @default(true)
+  id_moneda_base       Int
+  id_plan_verificacion Int
+}
+
+model estados_comercios {
+  id          Int        @id @default(autoincrement())
+  descripcion String
+  comercio    comercio[]
+}
+
+model factura_suscripciones {
+  id                          Int                           @id @default(autoincrement())
+  id_suscripcion              Int
+  nro_factura                 String?
+  condicion                   Int?
+  fecha_emision               DateTime?                     @db.Date
+  fecha_vencimiento           DateTime?                     @db.Date
+  monto                       Float?
+  id_moneda                   Int?
+  estado                      Int?                          @default(1)
+  fecha_creacion              DateTime?                     @default(now()) @db.Timestamptz(6)
+  fecha_anulacion             DateTime?                     @db.Timestamptz(6)
+  id_usuario_anulacion        Int?
+  fecha_actualizacion         DateTime?                     @db.Timestamptz(6)
+  activo                      Boolean?                      @default(true)
+  motivo_anulacion            String?
+  total_factura               Float?
+  total_grav_10               Float?
+  total_grav_5                Float?
+  total_iva_10                Float?
+  total_iva_5                 Float?
+  monedas                     monedas?                      @relation(fields: [id_moneda], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios                    usuarios?                     @relation(fields: [id_usuario_anulacion], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  suscripciones               suscripciones                 @relation(fields: [id_suscripcion], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_suscripcion")
+  pagos_factura_suscripciones pagos_factura_suscripciones[]
+}
+
+model metodo_pagos {
+  id                  Int       @id @default(autoincrement())
+  descripcion         String
+  fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  cod_set             Int?
+  activo              Boolean   @default(true)
+}
+
+model grupos {
+  id              Int               @id @default(autoincrement())
+  descripcion     String
+  fecha_creacion  DateTime?         @default(now()) @db.Timestamptz(6)
+  usuarios_grupos usuarios_grupos[]
+}
+
+model monedas {
+  id                                                               Int                           @id @default(autoincrement())
+  nombre                                                           String
+  simbolo                                                          String?
+  sigla_iso                                                        String?
+  fecha_creacion                                                   DateTime?                     @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion                                              DateTime?                     @db.Timestamptz(6)
+  activo                                                           Boolean?                      @default(true)
+  cotizacion_empresa_cotizacion_empresa_id_moneda_destinoTomonedas cotizacion_empresa[]          @relation("cotizacion_empresa_id_moneda_destinoTomonedas")
+  cotizacion_empresa_cotizacion_empresa_id_moneda_origenTomonedas  cotizacion_empresa[]          @relation("cotizacion_empresa_id_moneda_origenTomonedas")
+  factura_suscripciones                                            factura_suscripciones[]
+  pagos_factura_suscripciones                                      pagos_factura_suscripciones[]
+}
+
+
+model usuarios_solicitudes_cuenta {
+  id             Int       @id @default(autoincrement())
+  nombre         String
+  apellido       String
+  documento      String
+  correo         String
+  telefono       String
+  codigo_pais    String?
+  dial_code      String?
+  cedula_frontal String?
+  cedula_reverso String?
+  id_estado      Int     @default(1)
+  observacion     String?
+  fecha_creacion  DateTime  @default(now()) @db.Timestamptz()
+  fecha_actualizacion DateTime? @db.Timestamptz()
+  fecha_anulacion DateTime? @db.Timestamptz()
+  activo         Boolean   @default(true)
+  id_usuario_actualizacion Int?
+  id_usuario_anulacion Int?
+}
+
+model pagos_factura_suscripciones {
+  id                    Int                   @id @default(autoincrement())
+  id_factura            Int
+  fecha_pago            DateTime              @default(now()) @db.Date
+  monto                 Float
+  monto_base            Float
+  metodo_pago           Int?
+  nro_comprobante       String?
+  estado                Int?
+  id_moneda             Int
+  id_cotizacion         Int?
+  motivo_anulacion      String?
+  fecha_creacion        DateTime?             @default(now()) @db.Timestamptz(6)
+  fecha_eliminacion     DateTime?             @db.Timestamptz(6)
+  fecha_actualizacion   DateTime?             @db.Timestamptz(6)
+  activo                Boolean?              @default(true)
+  id_usuario            Int
+  id_entidad_financiera Int?
+  factura_suscripciones factura_suscripciones @relation(fields: [id_factura], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_factura")
+  cotizacion_pago       cotizacion_empresa?   @relation(fields: [id_cotizacion], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_cotizacion_pago")
+  usuarios              usuarios              @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  monedas               monedas               @relation(fields: [id_moneda], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model planes {
+  id                  Int             @id @default(autoincrement())
+  nombre              String?
+  descripcion         String?
+  precio              Float?
+  renovacion_plan     String          @default("mes")
+  renovacion_valor    Int             @default(1)
+  fecha_creacion      DateTime?       @default(now()) @db.Timestamptz(6)
+  fecha_eliminacion   DateTime?       @db.Timestamptz(6)
+  fecha_actualizacion DateTime?       @db.Timestamptz(6)
+  activo              Boolean?        @default(true)
+  tipo_iva            Int?
+  suscripciones       suscripciones[]
+}
+
+model seguimiento_verificacion {
+  id             Int       @id @default(autoincrement())
+  id_comercio    Int
+  id_estado      Int
+  id_usuario     Int?
+  observacion    String?
+  cedula_frente  String?
+  cedula_reverso String?
+  direccion      String?
+  fecha_creacion DateTime? @default(now()) @db.Timestamptz(6)
+  comercio       comercio  @relation(fields: [id_comercio], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_comercio")
+  usuarios       usuarios? @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model suscripciones {
+  id                    Int                     @id @default(autoincrement())
+  id_comercio           Int
+  fecha_inicio          DateTime?               @db.Timestamptz(6)
+  fecha_vencimiento     DateTime?               @db.Timestamptz(6)
+  id_plan               Int
+  id_vendedor           Int?
+  estado                Int?                    @default(1)
+  activo                Boolean?                @default(true)
+  fecha_creacion        DateTime?               @default(now()) @db.Timestamptz(6)
+  fecha_eliminacion     DateTime?               @db.Timestamptz(6)
+  fecha_actualizacion   DateTime?               @db.Timestamptz(6)
+  monto                 Float?
+  factura_suscripciones factura_suscripciones[]
+  comercio              comercio                @relation(fields: [id_comercio], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_comercio")
+  planes                planes                  @relation(fields: [id_plan], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_planes")
+  usuarios              usuarios?               @relation(fields: [id_vendedor], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+
+model usuario_tokens {
+  id         Int      @id @default(autoincrement())
+  id_usuario Int
+  token_hash      String
+  fecha_creacion DateTime @default(now()) @db.Timestamptz()
+  fecha_vencimiento DateTime? @db.Timestamptz() 
+  activo Boolean? @default(true)
+}
+
+model usuarios {
+  id                          Int                           @id @default(autoincrement())
+  nombre                      String
+  uid_firebase                String?
+  apellido                    String?
+  documento                   String?
+  email                       String?
+  password                    String?
+  estado                      Int                           @default(1)
+  activo                      Boolean?                      @default(true)
+  fecha_creacion              DateTime?                     @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion         DateTime?                     @db.Timestamptz(6)
+  is_super_admin              Boolean?                      @default(false)
+  cedula_frente               String?
+  cedula_reverso              String?
+  fecha_nacimiento            DateTime?                     @db.Date
+  metodo_registro             String?
+  sexo                        Int?
+  pin                         String?
+  codigo_vendedor             String?
+  telefono                    String?
+  direccion                   String?
+  dial_code                   String?
+  comercio                    comercio[]
+  factura_suscripciones       factura_suscripciones[]
+  seguimiento_verificacion    seguimiento_verificacion[]
+  suscripciones               suscripciones[]
+  usuarios_grupos             usuarios_grupos[]
+  pagos_factura_suscripciones pagos_factura_suscripciones[]
+}
+
+model usuarios_grupos {
+  id         Int      @id @default(autoincrement())
+  id_usuario Int
+  id_grupo   Int
+  grupos     grupos   @relation(fields: [id_grupo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_grupos_id_usuarios_grupos")
+  usuarios   usuarios @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_usuarios_id_usuarios_grupos")
+}
+
+// Tabla de Entidad Bancarias Habilitadas (Paraguay)
+model entidades_bancarias {
+  id     Int     @id @default(autoincrement())
+  nombre String
+  activo Boolean @default(true)
+}
