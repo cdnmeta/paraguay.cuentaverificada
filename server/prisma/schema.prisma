@@ -315,6 +315,7 @@ model participacion_empresa {
   total_vendido          Decimal?  @db.Decimal(10, 2) // total de meta que se vendió
   saldo_participacion    Decimal?  @db.Decimal(10, 2) // saldo de meta que queda
   total_participacion_global Decimal?  @db.Decimal(10, 2) // total de meta global
+  ganancia_acumulada    Float?  // ganancia acumulada de la empresa
   precio_meta            Decimal?  @db.Decimal(10, 6) // precio de la meta
   nombre_meta            String?
   

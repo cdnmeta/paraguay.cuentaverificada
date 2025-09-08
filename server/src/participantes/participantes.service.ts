@@ -193,6 +193,7 @@ export class ParticipantesService {
           where: { id: id_factura, activo: true, estado: 2 }, // estado 2 = pagado
           include: {
             suscripciones: { select: { id: true, id_vendedor: true } },
+            usuarios: { select: { id: true, nombre: true, email: true, porcentaje_comision_primera_venta: true,porcentaje_comision_recurrente:true } }
           },
         });
 
@@ -206,6 +207,7 @@ export class ParticipantesService {
         const suscripcionFactura = factura?.suscripciones;
 
         // 3) Vendedor y Participantes (grupo 4 = participantes) con usuarios activos
+        const vendedorData = factura.usuarios;
         const vendedor = suscripcionFactura?.id_vendedor ?? null;
 
         const participantes = await prisma.usuarios_grupos.findMany({
@@ -231,14 +233,18 @@ export class ParticipantesService {
         // ------------------------------------------------------------
         // Ganancia del VENDEDOR (si existe)
         // ------------------------------------------------------------
+
+        if(!vendedorData?.porcentaje_comision_primera_venta && !vendedorData?.porcentaje_comision_recurrente) throw new BadRequestException('El usuario vendedor no tiene porcentajes de comisión configurados');
+
+
         if (vendedor) {
           let montoVendedor = 0;
 
           if (primera_venta) {
-            const pct = Number(infoMeta.porcentaje_vendedores_primera_venta);
+            const pct = Number(vendedorData.porcentaje_comision_primera_venta);
             montoVendedor = (pct / 100) * monto_factura_sin_iva;
           } else {
-            const pct = Number(infoMeta.porcentaje_vendedores_recurrente);
+            const pct = Number(vendedorData.porcentaje_comision_recurrente);
             montoVendedor = (pct / 100) * monto_factura_sin_iva;
           }
 
@@ -440,6 +446,18 @@ export class ParticipantesService {
             precio_meta: redondearDecimales(precio_meta,6),
           },
         });
+
+        // 5- Actualizar ganancia acumulada de la empresa
+        if(gananciaEmpresa > 0){
+          const acumularGananciaEmpresa = Number(infoMeta.ganancia_acumulada || 0) + gananciaEmpresa;
+          console.log("sumar a lo acumulado de la empresa:",redondearDecimales(gananciaEmpresa))
+          await prisma.participacion_empresa.update({
+            where: { id: 1 },
+            data: {
+              ganancia_acumulada: redondearDecimales(acumularGananciaEmpresa),
+            },
+          });
+        }
       });
     } catch (error) {
       throw error;
