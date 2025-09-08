@@ -1,7 +1,18 @@
 
+const PRODUCCION = true;
 
-export const URL_BASE_BACKEND = "http://localhost:3000";
-export const URL_BASE_BACKEND_API = `${URL_BASE_BACKEND}/api`;
+let url_backend = "http://localhost:3000";
+let url_backend_api = "http://localhost:3000/api";
+  
+if(PRODUCCION){
+  url_backend = "https://api.cuentaverificada.com";
+  url_backend_api = "https://api.cuentaverificada.com/api";
+}
+
+
+
+export const URL_BASE_BACKEND = url_backend;
+export const URL_BASE_BACKEND_API = url_backend_api;
 export const TOKEN_CACHE_DURATION = 55 * 60 * 1000; // 55 minutos (tokens de Firebase duran 1 hora)
 
 
