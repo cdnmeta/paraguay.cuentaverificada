@@ -5,8 +5,8 @@ let url_backend = "http://localhost:3000";
 let url_backend_api = "http://localhost:3000/api";
   
 if(PRODUCCION){
-  url_backend = "https://api.cuentaverificada.com";
-  url_backend_api = "https://api.cuentaverificada.com/api";
+  url_backend = "https://py.cuentaverificada.com";
+  url_backend_api = "https://py.cuentaverificada.com/api";
 }
 
 
