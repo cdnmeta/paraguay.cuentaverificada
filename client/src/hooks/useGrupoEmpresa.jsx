@@ -21,6 +21,8 @@ export function useGruposEmpresa(userId) {
         grupos.push({id:'admin', descripcion:"Super Admin"})
       }
 
+      grupos.push({id:'protegido', descripcion:"Usuario Protegido"})
+
       setGruposEmpresa(grupos);
     };
     

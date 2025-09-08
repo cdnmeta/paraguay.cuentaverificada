@@ -1,4 +1,5 @@
 import SuperHeroeAnimado from "@/components/SuperHeroeAnimado";
+import { PUBLIC_ROUTES } from "@/utils/routes.routes";
 import { IdCard, CarFront } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
@@ -21,11 +22,11 @@ function CrearCuenta() {
 
       <div className="flex flex-col gap-4 w-full max-w-sm z-10">
         <button
-          onClick={() => navigate("/subir-cedula")}
+          onClick={() => navigate(PUBLIC_ROUTES.solicitarCuentaVerificada)}
           className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded flex items-center justify-center gap-2"
         >
           <IdCard className="w-5 h-5" />
-          Crear cuenta con Cédula
+          Solicitar Cuenta
         </button>
       </div>
 

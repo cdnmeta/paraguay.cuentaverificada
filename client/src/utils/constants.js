@@ -4,6 +4,9 @@ export const URL_BASE_BACKEND = "http://localhost:3000";
 export const URL_BASE_BACKEND_API = `${URL_BASE_BACKEND}/api`;
 export const TOKEN_CACHE_DURATION = 55 * 60 * 1000; // 55 minutos (tokens de Firebase duran 1 hora)
 
+
+export const REGEX_CEDULA_IDENTIDAD = /^[1-9]\d{5,7}$/;
+
 export const estadosVerificacionDeComercio = [
   {
     label: "Pendiente de Verificación de Pago",

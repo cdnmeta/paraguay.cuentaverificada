@@ -21,6 +21,15 @@ import CobroSuscripcionesPage from "./pages/CobroSuscripcionesPlanes/CobroSuscri
 import { verificarSesionYgrupoAdmitido } from "./utils/auth";
 import MisDatosPage from "./pages/MisDatos/MisDatosPage";
 import LoginToken from "./pages/Login/LoginToken";
+import InicializarContrasenaPin from "./pages/recovery/InicializarContrasenaPin";
+
+import VerificadorRoutes from "./pages/Verificador/verficador.routes";
+import LayoutDepartamentoLegal from "./components/layouts/LayoutDepartamentoLegal";
+import LayoutVerificador from "./components/layouts/LayoutVerificador";
+import { routes as verificadorRoutes } from "./pages/Verificador/verficador.routes";
+import { SuperAdminRoutes } from "./pages/Dashsboards/SuperAdmin/admin.routes";
+import { ParticipantesRoutes } from "./pages/Dashsboards/Participante/participantes.routes";
+
 export default function App() {
   const { isHydrated, user } = useAuthStore();
 
@@ -39,8 +48,10 @@ export default function App() {
         <Route path="/recuperar" element={<RecuperarContrasena />} />
         <Route path="/verificado" element={<Verificado />} />
         <Route path="/solicitar-cuenta-verificada" element={<SolicitarCuentaVerificada />} />
+        <Route path="/verificacion-cuenta" element={<InicializarContrasenaPin />} />
         <Route path="/pacto" element={<Pacto />} />
         <Route path="*" element={<h1>404 Not Found</h1>} />
+        <Route path="mi-cuenta" element={<MisDatosPage />} />
       </Route>
       <Route element={<DashboardApp />}>
         <Route element={<ProtectedRoute isAuthorized={!!user} />}>
@@ -60,11 +71,21 @@ export default function App() {
           
         </Route>
       </Route>
-      <Route path={dtoLegalRoutes.index} element={<DashboardApp />}>
+      <Route path={dtoLegalRoutes.index} element={<LayoutDepartamentoLegal />}>
         <Route element={<ProtectedRoute isAuthorized={verificarSesionYgrupoAdmitido(user, [1])} redirectPath={PROTECTED_ROUTES.dashboard} />}>
           {DptoLegalRoutes()}
         </Route>
       </Route>
+      <Route path={verificadorRoutes.index} element={<LayoutVerificador />}>
+        <Route element={<ProtectedRoute isAuthorized={verificarSesionYgrupoAdmitido(user, [3])} redirectPath={PROTECTED_ROUTES.dashboard} />}>
+          {VerificadorRoutes()}
+        </Route>
+      </Route>
+      {/*Admin*/}
+
+      {SuperAdminRoutes({ user })}
+      {/*Participante*/}
+      {ParticipantesRoutes({ user })}
     </Routes>
   );
 }

@@ -14,14 +14,28 @@ export const getUserByDocumento = async (documento) => {
   return await api.get(`/doc/${documento}`);
 };
 
-export const crearSolicitudCuenta = async (data) => {
-  return await api.post(`/solicitud-cuenta`, data);
-};
 
 export const getGruposByUsuario = async () => {
   return await api.get(`/grupos`, {
     headers: {
       'Authorization': `Bearer ${await getIdToken()}`
     }
+  });
+};
+
+export const getUserByQuery = async (query) => {
+  return await api.get(`/query-one`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+    params: query
+  });
+};
+
+export const agregarUsuarioGrupo = async (data) => {
+  return await api.post(`/agregar-grupo`,data ,{
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
   });
 };

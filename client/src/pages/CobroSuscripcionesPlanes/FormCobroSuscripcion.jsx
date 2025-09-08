@@ -54,8 +54,8 @@ const detallesPagosSchema = z
         })
         .gt(0, { message: "El monto debe ser positivo" })
     ),
-    id_metodo_pago: z.string().transform((val) => Number(val)),
-    id_moneda: z.string().transform((val) => Number(val)),
+    id_metodo_pago: z.string().min(1,"Método de Pago Requerido").transform((val) => Number(val)),
+    id_moneda: z.string().min(1,"Moneda Requerida").transform((val) => Number(val)),
 
     // Preprocesamos para que "" -> undefined y no 0
     id_entidad_financiera: z
@@ -108,7 +108,7 @@ export default function FormCobroSuscripcion({ id_factura }) {
   const form = useForm({
     resolver: zodResolver(detallesPagosSchema),
     defaultValues: defaultValues,
-    reValidateMode: "onBlur",
+    reValidateMode: "onChange",
     shouldFocusError: true,
   });
 
@@ -289,6 +289,22 @@ export default function FormCobroSuscripcion({ id_factura }) {
     </TableHeader>
   );
 
+
+  const  mostrarSaldos = (saldo,moneda) => {
+    console.log("saldo mostra", saldo)
+    if(saldo === null || saldo === undefined) return "Sin definicion";
+    return new Intl.NumberFormat("es-ES", {
+      style: "currency",
+      currency: moneda,
+    }).format(saldo)
+  }
+
+  const disabledBotonAgregarDetalle = () => {
+    if(form.formState.isSubmitting || !form.formState.isValid) return true
+      if(infoFactura.estado == 2 ) return true
+      return false;
+  }
+
   const MontosySaldos = () => (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-1">
@@ -313,10 +329,7 @@ export default function FormCobroSuscripcion({ id_factura }) {
         <div className="w-full flex flex-col">
           <p className="font-bold">Pagado Gs</p>
           <p className="font-bold text-3xl">
-            {new Intl.NumberFormat("es-ES", {
-              style: "currency",
-              currency: "PYG",
-            }).format(infoFactura?.pagado_guaranies)}
+           {mostrarSaldos(infoFactura?.pagado_guaranies, "PYG")}
           </p>
         </div>
       </div>
@@ -327,19 +340,13 @@ export default function FormCobroSuscripcion({ id_factura }) {
         <div className="w-full flex flex-col">
           <p className="font-bold">Pagar USD</p>
           <p className="font-bold text-3xl">
-            {saldosFactura?.saldoUSD ? new Intl.NumberFormat("es-ES", {
-              style: "currency",
-              currency: "USD",
-            }).format(saldosFactura?.saldoUSD) : "Sin definicion"}
+            {mostrarSaldos(saldosFactura?.saldoUSD, "USD")}
           </p>
         </div>
         <div className="w-full flex flex-col">
           <p className="font-bold">Pagar PYG</p>
           <p className="font-bold text-3xl">
-            { saldosFactura?.saldoGS ?  new Intl.NumberFormat("es-ES", {
-              style: "currency",
-              currency: "USD",
-            }).format(saldosFactura?.saldoGS) : "Sin definicion"}
+           {mostrarSaldos(saldosFactura?.saldoGS, "PYG")}
           </p>
         </div>
       </div>
@@ -493,12 +500,20 @@ export default function FormCobroSuscripcion({ id_factura }) {
                     control={form.control}
                     name="id_entidad_financiera"
                     render={({ field }) => (
+                      <div className="flex-1">
                       <ComboBox
                         items={entidadesBancarias}
                         onChange={field.onChange}
                         value={field.value}
                         placeholder="Seleccione una entidad"
+                        error={!!form.formState.errors.id_entidad_financiera}
                       />
+                      {form.formState.errors.id_entidad_financiera && (
+                        <p className="text-red-500 text-sm">
+                          {form.formState.errors.id_entidad_financiera.message}
+                        </p>
+                      )}
+                      </div>
                     )}
                   />
                 </div>
@@ -507,7 +522,7 @@ export default function FormCobroSuscripcion({ id_factura }) {
           </div>
 
           <div className="w-full flex justify-end mt-2">
-            <Button type="button" onClick={handleAgregarDetalle}>
+            <Button disabled={disabledBotonAgregarDetalle()} type="button" onClick={handleAgregarDetalle}>
               Agregar Detalle
             </Button>
           </div>

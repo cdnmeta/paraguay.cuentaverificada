@@ -15,6 +15,7 @@ import {
   Put,
   UploadedFiles,
   Res,
+  Query,
 } from '@nestjs/common';
 import {
   RechazarComercioDto,
@@ -39,6 +40,7 @@ import {
   validateImageOrThrow,
 } from '@/pipes/ImageValiationPipe';
 import { Response } from 'express';
+import { QueryComercios } from './types/query-comercios';
 @Controller('verificacion-comercio')
 export class VerificacionComercioController {
   constructor(
@@ -241,10 +243,11 @@ export class VerificacionComercioController {
   }
 
   @Get('listado-comercios-aprobar')
-  async getComerciosAprobar(@Res() res: Response) {
+  async getComerciosAprobar(@Res() res: Response,@Query() query: QueryComercios) {
     try {
+
       const comercios =
-        await this.verificacionComercioService.getComerciosAprobar();
+        await this.verificacionComercioService.getComerciosAprobar(query);
       return res.status(200).json(comercios);
     } catch (error) {
       console.error('Error al obtener listado de comercios a aprobar:', error);

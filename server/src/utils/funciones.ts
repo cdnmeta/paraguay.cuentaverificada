@@ -1,15 +1,28 @@
 import { generarUUIDHASH } from "./security";
 
-export function crearSlug(texto:string, separador = "-") {
-  return texto
+interface ICrearSlugOpciones {
+  separador?: string;
+  agregarDigito?: boolean;
+}
+
+export function crearSlug(texto: string, opciones: ICrearSlugOpciones = {}) {
+  const { separador = "-", agregarDigito } = opciones;
+  let base = texto
     .toString()
     .toLowerCase()
     .normalize("NFD") // Separa letras de acentos
-    .replace(/[\u0300-\u036f]/g, "") // Elimina los acentos
+    .replace(/[\u0300-\u036f]/g, "") // Elimina acentos
     .replace(/[^a-z0-9\s-]/g, "") // Elimina caracteres especiales
-    .trim() // Elimina espacios al inicio/final
-    .replace(/\s+/g, separador) // Reemplaza espacios por guiones
-    .replace(/-+/g, separador); // Elimina guiones duplicados
+    .trim()
+    .replace(/\s+/g, separador)
+    .replace(/-+/g, separador);
+
+  if (agregarDigito) {
+    const ultimos_digitos = generarUUIDHASH().slice(-6);
+    base = `${base}${separador}${ultimos_digitos}`;
+  }
+
+  return base;
 }
 
 export function crearNombreArchivoDesdeMulterFile(file: Express.Multer.File): string {
@@ -84,3 +97,6 @@ export const calcularFechaVencimiento = (data: IFechaVencimiento): Date | null =
     return null
   }
 };
+
+
+export const redondearDecimales = (n: number,decimales:number = 2) => Number(n.toFixed(decimales));

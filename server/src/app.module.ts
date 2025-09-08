@@ -18,6 +18,9 @@ import { EntidadesBancariasModule } from './entidades-bancarias/entidades-bancar
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { VerificacionCuentaModule } from './verificacion-cuenta/verificacion-cuenta.module';
+import { GroupsGuard } from './auth/guards/groups.guard';
+import { ParticipantesModule } from './participantes/participantes.module';
+import { ParticipacionEmpresaModule } from './participacion-empresa/participacion-empresa.module';
 
 @Module({
   imports: [
@@ -37,11 +40,17 @@ import { VerificacionCuentaModule } from './verificacion-cuenta/verificacion-cue
     EntidadesBancariasModule,
     DatabaseModule,
     VerificacionCuentaModule,
+    ParticipantesModule,
+    ParticipacionEmpresaModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: FirebaseAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: GroupsGuard,
     },
     AppService,
   ]

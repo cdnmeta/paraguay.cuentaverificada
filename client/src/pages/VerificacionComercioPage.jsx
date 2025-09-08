@@ -1,58 +1,75 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { toast } from "sonner";
-
+// src/pages/VerificacionComercio/VerificacionComercioPage.jsx
 import { useState, useEffect } from "react";
-import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
-import ConfirmDialog from "@/components/ui/confirm-dialog";
-import {
-  getComerciosForUser,
-} from "@/apis/comercios.api";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuthStore } from "@/hooks/useAuthStorge";
+import { getComerciosForUser } from "@/apis/comercios.api";
 import ListSolicitudesComercios from "@/pages/VerificacionComercio/ListSolicitudesComercios";
 import FormSolicitudVerificacion from "./VerificacionComercio/FormSolicitudVerificacion";
 
+// 🟢 Event bus
+import { on, EVENTS } from "@/utils/events";
 
 export default function VerificacionComercioPage() {
+  const { user } = useAuthStore(); // ⬅️ mover arriba para usarlo en loadComercios
   const [comercios, setComercios] = useState([]);
-  useEffect(() => {
-    // Aquí puedes agregar la lógica que necesites para manejar los cambios en los comercios
-    const loadComercios = async () => {
-      try {
-        const response = await getComerciosForUser(user.id, { estado: "1,2,3,5,6" });
-        setComercios(response.data.data);
-      } catch (error) {
-        console.error("Error al obtener comercios:", error);
-        setComercios([]);
-      }
-    };
-    loadComercios();
-  }, []);
-
   const [idComercioSeleccionado, setIdComercioSeleccionado] = useState(null);
+
+  // Si tu form necesita forzar “re-mount”/reset, conservamos el counter
   const [refreshCounter, setRefreshCounter] = useState(0);
   const recargarFormulario = () => setRefreshCounter((n) => n + 1);
+
+  const loadComercios = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await getComerciosForUser(user.id, { estado: "1,2,3,5,6" });
+      setComercios(response?.data?.data ?? []);
+    } catch (error) {
+      console.error("Error al obtener comercios:", error);
+      setComercios([]);
+    }
+  };
+
+  // Carga inicial (y si cambia el usuario)
+  useEffect(() => {
+    loadComercios();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  {/*🔔 Escuchar eventos del navegador para refrescar el listado*/}
+  useEffect(() => {
+    // Cuando se actualiza/crea una solicitud desde el form
+    const offA = on(EVENTS.SOLICITUD_COMERCIO_ACTUALIZADA, ({ idComercio } = {}) => {
+      loadComercios();
+      // si vino un id desde el form, seleccionamos o forzamos refresh del form
+      if (idComercio) {
+        setIdComercioSeleccionado((prev) => (prev === idComercio ? (recargarFormulario(), prev) : idComercio));
+      }
+    });
+
+    // Cuando se actualiza/crea la verificación desde el form
+    const offB = on(EVENTS.VERIFICACION_COMERCIO_ACTUALIZADA, ({ idComercio } = {}) => {
+      loadComercios();
+      if (idComercio) {
+        setIdComercioSeleccionado((prev) => (prev === idComercio ? (recargarFormulario(), prev) : idComercio));
+      }
+    });
+
+    return () => {
+      offA();
+      offB();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // si cambia de usuario, reatach listeners (raro, pero seguro)
+
   const handleSeleccionarComercio = (id) => {
     if (id === idComercioSeleccionado) {
-      // mismo ID: forzar recarga del form
+      // mismo ID: forzar recarga del form (reset visuals/RHF if needed)
       recargarFormulario();
     } else {
       setIdComercioSeleccionado(id);
     }
   };
-  const { user } = useAuthStore();
+
   return (
     <div className="min-h-screen w-full px-4 py-8 flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
       {/* Formulario fijo */}
@@ -77,8 +94,10 @@ export default function VerificacionComercioPage() {
           <CardContent>
             <ListSolicitudesComercios
               comercios={comercios}
-              id_usuario={user.id}
+              id_usuario={user?.id}
               onSeleccionarComercio={handleSeleccionarComercio}
+              // Si tu listado hace fetch interno, también podés pasar un refreshTrigger aquí
+              // refreshTrigger={refreshCounter}
             />
           </CardContent>
         </Card>

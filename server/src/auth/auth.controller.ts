@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   FileTypeValidator,
@@ -25,6 +26,9 @@ import {
 } from 'class-transformer';
 import { UsuarioRegisterResponseDto } from './dto/usuarioResponse.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { cert } from 'firebase-admin/app';
+import { PrismaService } from '@/prisma/prisma.service';
+import { InicializarPasswordPinByToken } from './dto/password-recovery.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -32,6 +36,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
     private readonly usuariosService: UsuariosService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   @IsPublic()
@@ -123,4 +128,17 @@ export class AuthController {
     const userInfo = await this.usuariosService.getUserinfo(user.userId); 
     return res.status(200).json(userInfo);
   }
+  
+
+  @IsPublic()
+  @Post('inicializar-credenciales-token')
+  async inicializarPasswordPin(@Body() dto: InicializarPasswordPinByToken, @Res() res: Response) {
+    try {
+      await this.authService.inicializarPasswordPinByToken(dto);
+      return res.status(200).json({ message: 'PIN y contraseña inicializados correctamente' });
+    } catch (error) {
+      throw error
+    }
+  }
+
 }

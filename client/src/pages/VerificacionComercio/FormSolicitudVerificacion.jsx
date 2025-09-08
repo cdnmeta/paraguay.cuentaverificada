@@ -44,11 +44,14 @@ import {
   actualizarVerificacionComercio,
 } from "@/apis/verificacioComercios"; // <- ajusta a tu ruta real
 import { ComboBox } from "@/components/customs/comboBoxShadcn/ComboBox1";
-
+import { emit, EVENTS } from "@/utils/events";
 
 const array_estados_habilitar_edicion_info_verificacion = [2, 3, 5];
 
-export default function FormSolicitudVerificacion({ idComercio = null, refreshTrigger = 0 }) {
+export default function FormSolicitudVerificacion({
+  idComercio = null,
+  refreshTrigger = 0,
+}) {
   const [loadingComercio, startTransition] = useTransition();
   const [isEditar, setIsEditar] = useState(false);
   const [paises, setPaises] = useState([]);
@@ -71,7 +74,11 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
 
   // --- FORM B: Verificación ---
   const formB = useForm({
-    resolver: zodResolver(isEditar ? updateComercioVerificacionInformacion : comercioVerificacionInformacion),
+    resolver: zodResolver(
+      isEditar
+        ? updateComercioVerificacionInformacion
+        : comercioVerificacionInformacion
+    ),
     defaultValues: {
       correo_empresa: "",
       url_maps: "",
@@ -89,18 +96,21 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
         return {
           label: `${pais.name} +(${pais.dial_code})`,
           value: pais.code,
-        }
-      })
+        };
+      });
       setPaises(paisesMap);
-    }
+    };
 
     loadPaises();
   }, []);
 
-
   // --- Helpers ---
   const habilitarCargarDatosVerificacion = () => {
-    if (array_estados_habilitar_edicion_info_verificacion.includes(comercioData?.estado)) {
+    if (
+      array_estados_habilitar_edicion_info_verificacion.includes(
+        comercioData?.estado
+      )
+    ) {
       return true;
     }
     if (comercioData?.estado === 4) {
@@ -173,7 +183,8 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
 
       Object.entries(payload).forEach(([k, v]) => {
         if (k === "comprobantePago") {
-          if (!isEditar || (comercioData.estado === 6 && v?.[0])) fd.append(k, v[0]); // sólo crear exige archivo
+          if (!isEditar || (comercioData.estado === 6 && v?.[0]))
+            fd.append(k, v[0]); // sólo crear exige archivo
         } else if (v !== undefined && v !== null) {
           fd.append(k, v);
         }
@@ -184,12 +195,19 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
       } else {
         await solicitarVerificacionComercio(fd);
       }
-
+      // 🔔 EMIT EVENTO para que otros componentes refresquen
+      emit(EVENTS.SOLICITUD_COMERCIO_ACTUALIZADA, {
+        idComercio: isEditar ? idComercio : undefined,
+        userId: user?.id,
+        when: Date.now(),
+      });
       toast.success("Solicitud enviada correctamente");
       formA.reset();
     } catch (error) {
       console.error(error);
-      toast.error(error?.response?.data?.message || "Error al enviar solicitud");
+      toast.error(
+        error?.response?.data?.message || "Error al enviar solicitud"
+      );
     }
   };
 
@@ -204,10 +222,10 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
       fd.append("cedula_frontal", data.cedula_frontal);
       fd.append("cedula_reverso", data.cedula_reverso);
       fd.append("imagen_factura_servicio", data.factura_servicio);
-      
+
       fd.append("id_comercio", comercioData.id);
 
-      console.log(comercioData)
+      console.log(comercioData);
 
       // Si ya existe recurso de verificación en backend, usa actualizar; si no, crea
       if (comercioData?.id && comercioData?.estado === 5) {
@@ -217,6 +235,12 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
       }
 
       toast.success("Información verificada correctamente");
+      // 🔔 EMIT EVENTO
+      emit(EVENTS.VERIFICACION_COMERCIO_ACTUALIZADA, {
+        idComercio: comercioData?.id,
+        userId: user?.id,
+        when: Date.now(),
+      });
       formB.reset({
         correo_empresa: data.correo_empresa,
         url_maps: data.url_maps,
@@ -227,11 +251,12 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
       });
     } catch (error) {
       console.error(error);
-      toast.error(error?.response?.data?.message || "Error al verificar información");
+      toast.error(
+        error?.response?.data?.message || "Error al verificar información"
+      );
     }
   };
 
-  console.log(formA.formState.errors);  
 
   // --- Render bloques ---
   const BloqueRegistroEdicion = () => (
@@ -283,15 +308,20 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
               render={({ field }) => (
                 <FormItem className="w-[180px]">
                   <FormControl>
-                    <ComboBox 
-                    items={paises}
-                    placeholder="Seleccione el Pais"
-                    onChange={(value) => {
-                      const paisSeleccionado = paisesCode.find(p => p.code === value);
-                      field.onChange(value)
-                      formA.setValue("dialCode", paisSeleccionado?.dial_code || "");
-                    }}
-                    value={field.value}
+                    <ComboBox
+                      items={paises}
+                      placeholder="Seleccione el Pais"
+                      onChange={(value) => {
+                        const paisSeleccionado = paisesCode.find(
+                          (p) => p.code === value
+                        );
+                        field.onChange(value);
+                        formA.setValue(
+                          "dialCode",
+                          paisSeleccionado?.dial_code || ""
+                        );
+                      }}
+                      value={field.value}
                     />
                   </FormControl>
                   <FormMessage />
@@ -334,7 +364,9 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
                     onChange={(e) => field.onChange(e.target.files)}
                   />
                 </FormControl>
-                <p className="text-xs text-gray-500">JPG, PNG, WEBP. Máx: 5MB</p>
+                <p className="text-xs text-gray-500">
+                  JPG, PNG, WEBP. Máx: 5MB
+                </p>
                 <FormMessage />
               </FormItem>
             )}
@@ -347,7 +379,8 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Código de Vendedor <span className="text-gray-400">(opcional)</span>
+                  Código de Vendedor{" "}
+                  <span className="text-gray-400">(opcional)</span>
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="Ingrese el código" {...field} />
@@ -372,7 +405,7 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
                     onCheckedChange={field.onChange}
                   />
                   <Label htmlFor="aceptaTerminos" className="text-sm">
-                    Acepto los {" "}
+                    Acepto los{" "}
                     <a
                       href="#"
                       onClick={(e) => {
@@ -394,18 +427,38 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
 
         {/* Botón/confirmación */}
         <ConfirmDialog
-          confirmDialogTitle={isEditar ? "Confirmar actualización" : "Confirmar solicitud de Verificación"}
+          confirmDialogTitle={
+            isEditar
+              ? "Confirmar actualización"
+              : "Confirmar solicitud de Verificación"
+          }
           confirmDialogDescripcion={
             <>
-              <p>{isEditar ? "¿Guardar cambios del comercio?" : "¿Estás seguro de enviar esta solicitud?"}</p>
-              {!isEditar && <p><b>Esta acción no se puede deshacer.</b></p>}
+              <p>
+                {isEditar
+                  ? "¿Guardar cambios del comercio?"
+                  : "¿Estás seguro de enviar esta solicitud?"}
+              </p>
+              {!isEditar && (
+                <p>
+                  <b>Esta acción no se puede deshacer.</b>
+                </p>
+              )}
             </>
           }
           buttonActivate={
-            <Button type="button" className="w-full" disabled={formA.formState.isSubmitting}>
+            <Button
+              type="button"
+              className="w-full"
+              disabled={formA.formState.isSubmitting}
+            >
               {formA.formState.isSubmitting
-                ? (isEditar ? "Guardando..." : "Enviando...")
-                : (isEditar ? "Guardar cambios" : "Solicitar Verificación")}
+                ? isEditar
+                  ? "Guardando..."
+                  : "Enviando..."
+                : isEditar
+                ? "Guardar cambios"
+                : "Solicitar Verificación"}
             </Button>
           }
           onConfirm={() => formA.handleSubmit(onSubmitA)()}
@@ -416,7 +469,10 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
 
   const BloqueVerificacion = () => (
     <Form {...formB}>
-      <form onSubmit={formB.handleSubmit(onSubmitB)} className="mt-2 flex flex-col gap-4">
+      <form
+        onSubmit={formB.handleSubmit(onSubmitB)}
+        className="mt-2 flex flex-col gap-4"
+      >
         <h3 className="text-lg font-semibold text-center">
           {comercioData?.razon_social} - {comercioData?.ruc}
         </h3>
@@ -429,7 +485,11 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
             <FormItem>
               <FormLabel>Correo de la Empresa</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="correo@empresa.com" {...field} />
+                <Input
+                  type="email"
+                  placeholder="correo@empresa.com"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -444,7 +504,11 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
             <FormItem>
               <FormLabel>URL de Google Maps</FormLabel>
               <FormControl>
-                <Input type="text" placeholder="https://maps.google.com/..." {...field} />
+                <Input
+                  type="text"
+                  placeholder="https://maps.google.com/..."
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -460,7 +524,11 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
               <FormItem className="flex-1">
                 <FormLabel>Foto del interior del local</FormLabel>
                 <FormControl>
-                  <Input type="file" accept="image/*" onChange={(e) => field.onChange(e.target.files?.[0])} />
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => field.onChange(e.target.files?.[0])}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -474,7 +542,11 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
               <FormItem className="flex-1">
                 <FormLabel>Foto del exterior del local</FormLabel>
                 <FormControl>
-                  <Input type="file" accept="image/*" onChange={(e) => field.onChange(e.target.files?.[0])} />
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => field.onChange(e.target.files?.[0])}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -491,7 +563,11 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
               <FormItem className="flex-1">
                 <FormLabel>Cédula Frontal (Propietario)</FormLabel>
                 <FormControl>
-                  <Input type="file" accept="image/*" onChange={(e) => field.onChange(e.target.files?.[0])} />
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => field.onChange(e.target.files?.[0])}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -505,30 +581,41 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
               <FormItem className="flex-1">
                 <FormLabel>Cédula Reverso (Propietario)</FormLabel>
                 <FormControl>
-                  <Input type="file" accept="image/*" onChange={(e) => field.onChange(e.target.files?.[0])} />
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => field.onChange(e.target.files?.[0])}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
         </div>
 
         <FormField
-            control={formB.control}
-            name="factura_servicio"
-            render={({ field }) => (
-              <FormItem className="flex-1 w-full">
-                <FormLabel>Factura Servicio (Ande)</FormLabel>
-                <FormControl>
-                  <Input type="file" accept="image/*" onChange={(e) => field.onChange(e.target.files?.[0])} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          control={formB.control}
+          name="factura_servicio"
+          render={({ field }) => (
+            <FormItem className="flex-1 w-full">
+              <FormLabel>Factura Servicio (Ande)</FormLabel>
+              <FormControl>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => field.onChange(e.target.files?.[0])}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <Button type="submit" className="w-full" disabled={formB.formState.isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={formB.formState.isSubmitting}
+        >
           {formB.formState.isSubmitting ? "Cargando..." : "Enviar verificación"}
         </Button>
       </form>
@@ -543,12 +630,12 @@ export default function FormSolicitudVerificacion({ idComercio = null, refreshTr
           {isEditar ? "Editar Comercio" : "Registrar Comercio"}
         </CardTitle>
         <CardDescription className="text-center">
-          Complete el formulario para {isEditar ? "editar" : "registrar"} su comercio
+          Complete el formulario para {isEditar ? "editar" : "registrar"} su
+          comercio
         </CardDescription>
       </CardHeader>
       <CardContent>
         {/* Siempre muestra el Form A al cargar la página */}
-       
 
         {/* Renderiza Form B si corresponde según estado */}
         {habilitarCargarDatosVerificacion() ? (

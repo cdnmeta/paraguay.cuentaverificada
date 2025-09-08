@@ -37,4 +37,11 @@ export const registrarUsuario = async (data) => {
   return response;
 }
 
+
+
+export const inicializarCredencialesPorToken = async (data) => {
+  const response = await api.post("/inicializar-credenciales-token", data);
+  return response;
+};
+
 export default api;

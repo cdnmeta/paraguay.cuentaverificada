@@ -1,14 +1,19 @@
 import { List } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 import ListSolicitudComercios from "./AprovacionComercios/ListSolicitudComercios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { doc } from "firebase/firestore";
 
 export default function AprobarcionComerciosPage() {
+  const loadSeo = () => {
+    document.title = "Aprobación de Comercios";
+  }
+  useEffect(()=>{
+    loadSeo();
+  },[])
   return (
     <>
-      <head>
-        <title>Aprobación de Comercios</title>
-      </head>
+      
       <Card>
         <CardHeader>
           <CardTitle>Listado de comercios a verificar</CardTitle>

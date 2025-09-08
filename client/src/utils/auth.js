@@ -41,3 +41,9 @@ export function hasAccess(user, opts = {}) {
 export function verificarSesionYgrupoAdmitido(user, groupIds = [], allowSuperAdmin = true) {
   return hasAccess(user, { allowSuperAdmin, requiredGroupIds: groupIds });
 }
+
+export function generarUrlInicializacionDeCredenciales(data){
+  const {token, cedula} = data;
+  const url = window.location.origin;
+  return `${url}/verificacion-cuenta?token=${encodeURIComponent(token)}&ced=${encodeURIComponent(cedula)}`;
+}

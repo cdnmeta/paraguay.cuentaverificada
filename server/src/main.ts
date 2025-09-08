@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
-import { URL_BASE } from '@/utils/constants';
+import { URL_BASE, URL_ORIGINS } from '@/utils/constants';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
@@ -12,7 +12,7 @@ async function bootstrap() {
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
   app.enableCors({
-    origin: [URL_BASE,"http://localhost:5173"],
+    origin: URL_ORIGINS,
     credentials: true,
   });
 

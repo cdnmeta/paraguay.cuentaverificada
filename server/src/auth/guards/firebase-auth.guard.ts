@@ -21,7 +21,6 @@ export class FirebaseAuthGuard implements CanActivate {
       return true;
     }
 
-    console.log("hay auth firebase")
 
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -30,7 +29,6 @@ export class FirebaseAuthGuard implements CanActivate {
     const token = authHeader.split(' ')[1];
     try {
       const decodedToken = await this.firebaseService.verifyIdToken(token);
-      console.log(decodedToken)
       request.user = decodedToken; // Opcional, puedes inyectar info extra aquí
       return true;
     } catch (error) {

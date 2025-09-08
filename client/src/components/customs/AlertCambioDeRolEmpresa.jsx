@@ -9,10 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { db } from "@/firebaseConfig";
-import { useAuthStore } from "@/hooks/useAuthStorge";
 import { collection, doc, getDoc, query } from "firebase/firestore";
 import { use, useEffect, useRef, useState } from "react";
 import { Checkbox } from "../ui/checkbox";
@@ -33,6 +29,7 @@ const AlertCambioDeRolEmpresa = ({user}) => {
   const getGrupoSeleccionado = useGruposEmpresaStore(
     (state) => state.getGrupoSeleccionado
   );
+  console.log("gruposEmpresa", grupoSeleccionado);
   const handleCambioGrupo = async (id) => {
     setGrupoSeleccionado(id);
     closeRef.current.click(); // Cierra el diálogo
@@ -51,7 +48,7 @@ const AlertCambioDeRolEmpresa = ({user}) => {
         }`}
         onClick={() => handleCambioGrupo(grupo.id)}
       >
-        <Checkbox checked={grupoSeleccionado === grupo.id} />
+        <Checkbox checked={grupoSeleccionado == grupo.id} />
         <span>{grupo.descripcion}</span>
       </li>
     );

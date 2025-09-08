@@ -229,3 +229,4 @@
   }
 }
 
+.PhotoView-Portal { position: fixed; inset: 0; z-index: 60; }

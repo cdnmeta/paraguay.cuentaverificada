@@ -44,6 +44,7 @@ detalles AS (
 SELECT
   fac.id,
   fac.id_moneda,
+  fac.estado,
   fac.monto AS total_factura,
   mon.nombre AS moneda_factura,
 

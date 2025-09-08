@@ -20,6 +20,8 @@ export const useGruposEmpresaStore = create((set, get) => ({
     }
   },
 
+  
+
   setGrupoSeleccionado: (id) => {
     localStorage.setItem("grupoSeleccionado", id);
     set({ grupoSeleccionado: id });

@@ -1,14 +1,19 @@
 import { join } from 'path';
 
+
 export const PRODUCCION = process.env.NODE_ENV === 'production';
 export const NOMBRE_APP = 'Hola Yo Soy';
 const baseDir = PRODUCCION ? 'dist' : 'src';
+
+const url_origins_dev = ['http://localhost:5173']
+const url_origins_prod = ['https://cuenta-verificada-py.pages.dev']
+
 
 export const URL_BASE = PRODUCCION
   ? 'https://holayosoy.com'
   : 'http://localhost:3000';
 
-export const URL_FRONTEND_REACT = PRODUCCION ? 'URL_PRODUCCION' : 'http://localhost:5173';
+export const URL_ORIGINS = PRODUCCION ? url_origins_prod : url_origins_dev;
 
 export const PATH_EMAIL_TEMPLATES_EJS = join(process.cwd(), baseDir, 'templates', 'emails');
 
@@ -39,3 +44,4 @@ export const getStorageFolderPath = (folder: string, isPublic: boolean): string 
   return isPublic ? join(PUBLIC_DIR, folder) : join(UPLOADS_DIR, folder);
 }; 
 
+export const CANT_HORAS_EXP_TOKEN_SOLICITUD_CUENTA = 1;

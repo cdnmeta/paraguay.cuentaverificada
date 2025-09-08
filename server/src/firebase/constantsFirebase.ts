@@ -2,6 +2,7 @@
 export const FIREBASE_STORAGE_FOLDERS = {
     cedulasUsuarios: 'cedulas',
     comprobantes: 'comprobantes',
+    selfieUsuarios: 'selfies',
 }
 
 export const URL_BUCKET_FIREBASE_DEV = 'gs://cuenta-verificada-paraguay-dev.firebasestorage.app';

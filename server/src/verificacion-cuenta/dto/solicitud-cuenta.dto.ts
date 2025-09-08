@@ -26,3 +26,5 @@ export class SolicitudCuentaDto {
     @IsNotEmpty({ message: 'Código de marcación es requerido' })
     dial_code: string;
 }
+
+

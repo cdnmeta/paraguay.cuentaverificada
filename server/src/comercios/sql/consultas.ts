@@ -20,7 +20,8 @@ fs.total_factura,
 fs.total_grav_5,
 fs.total_grav_10,
 fs.total_iva_5,
-fs.total_iva_10
+fs.total_iva_10,
+uven.codigo_vendedor
 from suscripciones s 
 left join factura_suscripciones fs on fs.id_suscripcion = s.id and fs.estado = 1
 left join comercio com on com.id = s.id_comercio 

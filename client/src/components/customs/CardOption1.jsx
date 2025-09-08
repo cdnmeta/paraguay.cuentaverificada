@@ -4,6 +4,7 @@ const CardOption1 = (item) => {
     return (
       <div
         className="bg-black bg-opacity-50 rounded-xl p-4 shadow-lg flex flex-col items-center text-center space-y-2 border border-teal-300"
+        onClick={item.onClick}
       >
         <img
           src={item.icon}

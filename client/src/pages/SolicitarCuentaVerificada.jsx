@@ -32,8 +32,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { crearSolicitudCuenta } from "@/apis/verificacionCuenta.api";
+import { REGEX_CEDULA_IDENTIDAD } from "@/utils/constants";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@radix-ui/react-dropdown-menu";
 // import { registrarUsuario } from "@/apis/auth.api";
-import { crearSolicitudCuenta } from "@/apis/usuarios.api";
 // import { auth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 
 const MB = 1024 * 1024;
@@ -43,9 +46,18 @@ const schema = z.object({
   email: z.string().trim().email("Correo inválido"),
   nombre: z.string().trim().min(1, "Nombre es requerido"),
   apellido: z.string().trim().min(1, "Apellido es requerido"),
-  documento: z.string().trim().min(1, "Documento es requerido"),
-  codigo_pais: z.string({required_error:"Código de país es requerido",invalid_type_error:"Cogido debe ser string"}).trim().min(1, "Selecciona un código"),
-  telefono: z.string().trim().min(6, "Teléfono inválido")
+  terminos: z.string({ required_error: "Debes aceptar los términos y condiciones" }).transform((val) => Boolean(val)).refine((val) => val === true, { message: "Debes aceptar los términos y condiciones" }),
+  documento: z
+    .string()
+    .regex(REGEX_CEDULA_IDENTIDAD, "Cédula de identidad inválida"),
+  codigo_pais: z
+    .string({
+      required_error: "Código de país es requerido",
+      invalid_type_error: "Cogido debe ser string",
+    })
+    .trim()
+    .min(1, "Selecciona un código"),
+  telefono: z.string().trim().min(6, "Teléfono inválido"),
 });
 
 export default function SolicitarCuentaVerificada() {
@@ -91,11 +103,10 @@ export default function SolicitarCuentaVerificada() {
         telefono: data.telefono,
       };
 
-  
       // Llamada real (descomenta cuando tengas API)
-      await crearSolicitudCuenta(payload);
+      //await crearSolicitudCuenta(payload);
 
-      toast.success("Cuenta creada con éxito ✅");
+      toast.success("Cuenta solicitada con éxito ✅");
       setOpenConfirm(false);
       form.reset();
       // aquí puedes redirigir si quieres
@@ -135,7 +146,10 @@ export default function SolicitarCuentaVerificada() {
 
           <CardContent>
             <Form {...form}>
-              <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-3">
+              <form
+                onSubmit={(e) => e.preventDefault()}
+                className="flex flex-col gap-3"
+              >
                 {/* Datos */}
                 <FormField
                   name="nombre"
@@ -186,7 +200,11 @@ export default function SolicitarCuentaVerificada() {
                     <FormItem>
                       <FormLabel>Correo electrónico</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="email@dominio.com" {...field} />
+                        <Input
+                          type="email"
+                          placeholder="email@dominio.com"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -238,6 +256,36 @@ export default function SolicitarCuentaVerificada() {
                       />
                     </div>
                   </div>
+                  <div className="flex-1 mt-1">
+                    <FormField
+                      name="terminos"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem
+                          className={
+                            "flex items-center gap-2 space-y-0 mb-0"
+                          }
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) =>
+                                field.onChange(checked)
+                              }
+                            />
+                          </FormControl>
+                          <div className="flex flex-col">
+                            <FormLabel className="text-sm text-muted-foreground">
+                            <span>
+                              He leido y acepto los <span className="text-blue-600 hover:underline"><a href="#">Terminos y Condiciones</a></span>
+                            </span>
+                          </FormLabel>
+                          <FormMessage />
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
                 {/* Botón que abre el diálogo de confirmación */}
@@ -253,7 +301,9 @@ export default function SolicitarCuentaVerificada() {
                       });
                     }}
                   >
-                    {form.formState.isSubmitting ? "Enviando..." : "Enviar Solicitud"}
+                    {form.formState.isSubmitting
+                      ? "Enviando..."
+                      : "Enviar Solicitud"}
                   </Button>
                 </div>
               </form>
@@ -265,16 +315,22 @@ export default function SolicitarCuentaVerificada() {
       {/* Diálogo de confirmación controlado (sin Trigger para evitar doble acción) */}
       <AlertDialog open={openConfirm} onOpenChange={setOpenConfirm}>
         <AlertDialogContent
-          onInteractOutside={(e) => form.formState.isSubmitting && e.preventDefault()}
-          onEscapeKeyDown={(e) => form.formState.isSubmitting && e.preventDefault()}
+          onInteractOutside={(e) =>
+            form.formState.isSubmitting && e.preventDefault()
+          }
+          onEscapeKeyDown={(e) =>
+            form.formState.isSubmitting && e.preventDefault()
+          }
         >
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl">Solicitud de Cuenta</AlertDialogTitle>
+            <AlertDialogTitle className="text-2xl">
+              Solicitud de Cuenta
+            </AlertDialogTitle>
             <AlertDialogDescription>
               <div>
                 <p>Estás a un paso de solicitar tu cuenta verificada.</p>
                 <p>
-                  Por favor,{" "}
+                  Por favor,
                   <span className="font-bold uppercase text-destructive">
                     revisa tus datos antes de continuar.
                   </span>
@@ -284,7 +340,7 @@ export default function SolicitarCuentaVerificada() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={form.formState.isSubmitting}>
-              No, Revisar
+              Revisar
             </AlertDialogCancel>
             <Button
               className="bg-green-600"

@@ -20,7 +20,7 @@ import { QueryForUsers } from './dto/query-comercios-users.dto';
 import {
   cursorPaginatePrisma,
   getTakeCursorForPrisma,
-} from 'herper/paguinationPrisma';
+} from '@/herper/paguinationPrisma';
 import { DatabaseService } from '@/database/database.service';
 import { sqlListadoComerciosPendientes } from './sql/consultas';
 import * as path from 'path';

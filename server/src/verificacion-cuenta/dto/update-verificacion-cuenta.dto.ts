@@ -27,13 +27,6 @@ export class UpdateVerificacionCuentaDto {
     @IsString({ message: 'El documento debe ser una cadena de texto.' })
     documento?: string;
 
-    @IsOptional()
-    @IsString({ message: 'La dirección debe ser una cadena de texto.' })
-    direccion?: string;
-
-    @IsOptional()
-    @IsString({ message: 'La ciudad debe ser una cadena de texto.' })
-    ciudad?: string;
 
     @Type(() => Number)
     @IsOptional()

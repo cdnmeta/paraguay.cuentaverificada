@@ -25,6 +25,9 @@ import * as path from 'path';
 import { DatabaseService } from '@/database/database.service';
 import { FIREBASE_STORAGE_FOLDERS } from '@/firebase/constantsFirebase';
 import { sqlLisatdoComerciosAprobar } from './sql/consultas';
+import { QueryComercios } from './types/query-comercios';
+import { DatabasePromiseService } from '@/database/database-promise.service';
+import { info } from 'console';
 
 interface FileSolicitudVerificacion {
   comprobantePago: Express.Multer.File;
@@ -49,6 +52,7 @@ export class VerificacionComercioService {
     private readonly firebaseService: FirebaseService,
     private readonly prismaService: PrismaService,
     private readonly dbService: DatabaseService,
+    private readonly dbPromiseService: DatabasePromiseService,
   ) {}
   // Registro de la solicitud de la verificacion
   async solicitarVerificacion(
@@ -73,11 +77,13 @@ export class VerificacionComercioService {
         );
       }
 
-      // Verificar si el usuario ya tiene una suscripción activa
-      /* const suscripcionExistente = await this.dbService.query(
+
+
+      // Verificar si el comercio ya tiene una suscripción registrada
+      const suscripcionExistente = await this.dbService.query(
         `SELECT s.* FROM suscripciones s 
          INNER JOIN comercio c ON s.id_comercio = c.id 
-         WHERE c.id_usuario = $1 AND s.activo = true AND s.estado = 1`,
+         WHERE c.id_usuario = $1 AND s.activo = true AND s.estado in (1,2)`,
         [createComercioDto.id_usuario],
       );
 
@@ -85,7 +91,7 @@ export class VerificacionComercioService {
         throw new BadRequestException(
           'El usuario ya tiene una suscripción activa',
         );
-      } */
+      }
 
       // almacenar el comprobante de pago
       let urlPathComprobante: string | null = null;
@@ -121,6 +127,21 @@ export class VerificacionComercioService {
             id_vendedor = vendedor.id;
           }
 
+          let slugComercio = crearSlug(createComercioDto.razonSocial);
+
+          /// consultar si el slug existe
+          const slugExistente = await prisma.comercio.findFirst({
+            where: {
+              slug: slugComercio,
+            },
+          });
+
+          if (slugExistente) {
+            slugComercio = crearSlug(createComercioDto.razonSocial,{
+              agregarDigito: true,
+            });
+          }
+
           const fechaSolicitud = new Date();
           const comercioCreado = await prisma.comercio.create({
             data: {
@@ -131,7 +152,7 @@ export class VerificacionComercioService {
               dial_code: createComercioDto.prefijoTelefono,
               id_usuario: createComercioDto.id_usuario,
               id_usuario_creacion: createComercioDto.id_usuario_creacion,
-              slug: crearSlug(createComercioDto.razonSocial),
+              slug: slugComercio,
               url_comprobante_pago: urlPathComprobante,
               estado: 1,
             },
@@ -195,7 +216,7 @@ export class VerificacionComercioService {
               estado: 1, // pendiente
               id_suscripcion: suscripcionCreada.id,
               id_moneda: monedaBase?.id_moneda_base,
-              total_factura: totalesFactura.total_factura,
+              total_factura: totalesFactura.total_factura, 
               total_grav_5: totalesFactura.total_grav_5,
               total_grav_10: totalesFactura.total_grav_10,
               total_iva_5: totalesFactura.total_iva_5,
@@ -295,6 +316,7 @@ export class VerificacionComercioService {
       const comercio = await this.prismaService.comercio.findFirst({
         where: { id },
       });
+
 
       if (!comercio) throw new NotFoundException('Comercio no encontrado');
 
@@ -591,11 +613,22 @@ export class VerificacionComercioService {
     }
   }
 
-  async getComerciosAprobar() {
+  async getComerciosAprobar(query: QueryComercios) {
     try {
-      const comerciosAprobar = await this.dbService.query(
-        sqlLisatdoComerciosAprobar,
-      );
+      let sql = sqlLisatdoComerciosAprobar;
+      let parametros: any = {};
+      console.log("query es",query)
+      if (query.estado) {
+        sql += ` and com.estado = $(estado)`;
+        parametros.estado = query.estado;
+      }
+
+      if (query.ruc) {
+        sql += ` and com.ruc = $(ruc)`;
+        parametros.ruc = query.ruc;
+      }
+
+      const comerciosAprobar = await this.dbPromiseService.result(sql, parametros);
       return comerciosAprobar.rows;
     } catch (error) {
       console.error('Error al obtener comercios a aprobar:', error);
@@ -632,6 +665,7 @@ export class VerificacionComercioService {
               id_usuario_actualizacion: id_usuario_seguimiento,
               fecha_actualizacion_estado: fecha_actualizacion,
               fecha_actualizacion: fecha_actualizacion,
+              verificado:false,
             },
           });
 
@@ -709,14 +743,14 @@ export class VerificacionComercioService {
             throw new BadRequestException('Plan de verificación no configurado');
           }
 
-          
           // activar y actualizar la fecha de vecimiento
           const fechaVencimiento = calcularFechaVencimiento({
             fecha: new Date(),
             tipoRenovacion: planVerificacionConfig.renovacion_plan,
             valor: planVerificacionConfig.renovacion_valor,
           });
-          const suscripcionActualizada = await prisma.suscripciones.updateMany({
+
+          const suscripcionActualizada = await prisma.suscripciones.updateManyAndReturn({
             data: { estado: 2, fecha_vencimiento: fechaVencimiento, fecha_actualizacion: new Date() }, // activo
             where: {
               AND: [
@@ -728,9 +762,20 @@ export class VerificacionComercioService {
             },
           });
 
-          if (suscripcionActualizada.count === 0) {
+          if (suscripcionActualizada.length === 0) {
             throw new BadRequestException('No se encontró suscripción para activar');
           }
+
+          // obtener factura pagada de la suscripcion
+          const facturaPagada = await prisma.factura_suscripciones.findFirst({
+            where: { id_suscripcion: suscripcionActualizada[0].id, estado: 2 },
+          });
+
+          if (!facturaPagada) {
+            throw new BadRequestException('No se encontró factura pagada para registrar ganancias');
+          }
+
+          
 
           return comercio;
         },
@@ -742,4 +787,6 @@ export class VerificacionComercioService {
       throw error;
     }
   }
+
+  
 }

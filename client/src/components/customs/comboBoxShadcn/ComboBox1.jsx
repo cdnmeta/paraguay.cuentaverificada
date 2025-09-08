@@ -13,7 +13,11 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 /**
  * ComboBox
@@ -49,6 +53,7 @@ export function ComboBox({
   renderItem,
   side,
   align,
+  error=false,
 }) {
   const [open, setOpen] = useState(false);
 
@@ -68,12 +73,13 @@ export function ComboBox({
   }, [items, labelKey, valueKey]);
 
   const selected = useMemo(
-    () => normalized.find((i) => String(i.value) === String(value ?? "")) || null,
+    () =>
+      normalized.find((i) => String(i.value) === String(value ?? "")) || null,
     [normalized, value]
   );
 
   const handleSelect = (val) => {
-    console.log("la seleccion es ",val)
+    console.log("la seleccion es ", val);
     if (String(val) === String(value ?? "")) {
       // si selecciona el mismo, alterna a null
       onChange(null);
@@ -89,7 +95,7 @@ export function ComboBox({
   };
 
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("w-full relative ", className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild disabled={disabled}>
           <Button
@@ -100,34 +106,44 @@ export function ComboBox({
             className={cn(
               "w-full justify-between",
               !selected && "text-muted-foreground",
-              buttonClassName
+              buttonClassName,
+              error && "border-red-500 text-red-500"
+
             )}
           >
             <span className="truncate">
-              {selected ? <div className="flex items-center">
-              {selected.img && <img src={selected.img} alt="" className="mr-2 h-4 w-4" />}
-              {selected.label}
-              </div>  : placeholder}
+              {selected ? (
+                <div className="flex items-center">
+                  {selected.img && (
+                    <img src={selected.img} alt="" className="mr-2 h-4 w-4" />
+                  )}
+                  {selected.label}
+                </div>
+              ) : (
+                placeholder
+              )}
             </span>
             <div className="flex items-center gap-1">
-              {clearable && selected && !disabled && (
-                <X
-                  className="h-4 w-4 opacity-60 hover:opacity-100"
-                  onClick={handleClear}
-                />
-              )}
               <ChevronsUpDown className="h-4 w-4 opacity-50" />
             </div>
           </Button>
         </PopoverTrigger>
+        {/* Botón de limpiar, posicionado a la derecha */}
+        {clearable && selected && !disabled && (
+          <X
+            onClick={handleClear}
+            className="absolute right-8 top-[50%] -translate-y-1/2 h-4 w-4 cursor-pointer opacity-60 hover:opacity-100"
+          />
+        )}
         <PopoverContent
-          className={cn("p-0 w-[--cb-width]", contentClassName)}
+          className={cn(
+            "p-0 w-[var(--radix-popover-trigger-width)]",
+            contentClassName
+          )}
           align={align}
           side={side}
-          // Truco: hace que el popover se iguale al ancho del botón
-          style={{ ["--cb-width"]: "var(--radix-popover-trigger-width)" }}
         >
-          <Command>
+          <Command className="w-[var(--radix-popover-trigger-width)]">
             <CommandInput placeholder={searchPlaceholder} className="h-9" />
             <CommandList>
               <CommandEmpty>{emptyMessage}</CommandEmpty>
@@ -145,7 +161,13 @@ export function ComboBox({
                         renderItem(item, isSelected)
                       ) : (
                         <>
-                          {item.img && <img src={item.img} alt="" className="mr-2 h-4 w-4" />}
+                          {item.img && (
+                            <img
+                              src={item.img}
+                              alt=""
+                              className="mr-2 h-4 w-4"
+                            />
+                          )}
                           <span className="truncate">{item.label}</span>
                           <Check
                             className={cn(
@@ -166,4 +188,3 @@ export function ComboBox({
     </div>
   );
 }
-
