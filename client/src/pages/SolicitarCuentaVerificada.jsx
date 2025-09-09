@@ -106,7 +106,7 @@ export default function SolicitarCuentaVerificada() {
       };
 
       // Llamada real (descomenta cuando tengas API)
-      //await crearSolicitudCuenta(payload);
+      await crearSolicitudCuenta(payload);
 
       toast.success("Cuenta solicitada con éxito ✅");
       setOpenConfirm(false);
