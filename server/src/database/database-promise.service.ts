@@ -1,3 +1,4 @@
+import { PRODUCCION } from '@/utils/constants';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as pgPromise from 'pg-promise';
@@ -24,7 +25,7 @@ export class DatabasePromiseService implements OnModuleInit, OnModuleDestroy {
       database: this.config.get<string>('DB_NAME'),
       user: this.config.get<string>('DB_USER'),
       password: this.config.get<string>('DB_PASSWORD'),
-      ssl: this.config.get<string>('DB_SSL') === 'true' ? { rejectUnauthorized: false } : undefined,
+      ssl: PRODUCCION ? { rejectUnauthorized: false } : undefined,
     } as any);
 
     // Parsers útiles (BIGINT, NUMERIC → number)

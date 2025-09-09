@@ -27,6 +27,8 @@ export class AppService {
       return;
     }
 
+    let firebaseUserId = ""
+
     try {
       // 1) ¿Ya existe un superadmin activo?
       const existing = await this.db.query(
@@ -35,6 +37,17 @@ export class AppService {
 
       if (existing.rowCount && existing.rowCount > 0) {
         this.logger.log('Ya existe un superusuario activo. No se insertará otro.');
+        return;
+      }
+
+      // verificar si user ya existe
+      const userExists = await this.db.query(
+        `SELECT id FROM usuarios WHERE email = $1 or documento = $2 LIMIT 1`,
+        [email, documento]
+      );
+
+      if (userExists.rowCount && userExists.rowCount > 0) {
+        this.logger.error(`Ya existe un usuario con email ${email} o documento ${documento}. No se insertará otro.`);
         return;
       }
 
@@ -47,6 +60,8 @@ export class AppService {
         password: password,
         displayName: `${nombre} ${apellido}`,
       });
+
+      firebaseUserId = firebaseUser.uid;
 
       this.logger.log(`Usuario Firebase creado con UID: ${firebaseUser.uid}`);
 
@@ -61,6 +76,7 @@ export class AppService {
 
       this.logger.log(`Superusuario creado con email: ${email}`);
     } catch (err) {
+      await this.firebaseService.auth.deleteUser(firebaseUserId)
       this.logger.error('Error creando superusuario:', err as any);
     }
   }

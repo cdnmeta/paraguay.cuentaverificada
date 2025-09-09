@@ -28,6 +28,8 @@ import { sqlLisatdoComerciosAprobar } from './sql/consultas';
 import { QueryComercios } from './types/query-comercios';
 import { DatabasePromiseService } from '@/database/database-promise.service';
 import { info } from 'console';
+import { ParticipantesService } from '@/participantes/participantes.service';
+import { OpcionesRepartirParticipantesDto } from '@/participantes/dto/repartir-participantes';
 
 interface FileSolicitudVerificacion {
   comprobantePago: Express.Multer.File;
@@ -53,6 +55,7 @@ export class VerificacionComercioService {
     private readonly prismaService: PrismaService,
     private readonly dbService: DatabaseService,
     private readonly dbPromiseService: DatabasePromiseService,
+    private readonly participantesService: ParticipantesService,
   ) {}
   // Registro de la solicitud de la verificacion
   async solicitarVerificacion(
@@ -771,11 +774,20 @@ export class VerificacionComercioService {
             where: { id_suscripcion: suscripcionActualizada[0].id, estado: 2 },
           });
 
+          
+          
+          
           if (!facturaPagada) {
             throw new BadRequestException('No se encontró factura pagada para registrar ganancias');
           }
-
           
+
+          await this.participantesService.repartirGananciasDeVentaPlan(
+            facturaPagada.id,
+            {primera_venta:true} as OpcionesRepartirParticipantesDto
+          );
+          
+
 
           return comercio;
         },

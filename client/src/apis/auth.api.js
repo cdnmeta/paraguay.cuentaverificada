@@ -14,7 +14,6 @@ export const login = async (credentials) => {
     headers: {
       "Content-Type": "application/json", // explícito
     },
-    withCredentials: true, // para enviar cookies
   });
   return response;
 };

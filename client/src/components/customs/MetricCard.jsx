@@ -55,6 +55,7 @@ export default function MetricCardTW({
   icon,
   href,
   onClick,
+  digitosNum = 2,
   accent = "emerald",
   className,
   locale = "es-PY",
@@ -65,7 +66,7 @@ export default function MetricCardTW({
 
   const isNumber = typeof value === "number" && Number.isFinite(value);
   const formatted = isNumber
-    ? new Intl.NumberFormat(locale, { maximumFractionDigits: 2, ...formatOptions }).format(value)
+    ? new Intl.NumberFormat(locale, { maximumFractionDigits: digitosNum, ...formatOptions }).format(value)
     : String(value ?? "—");
 
   // wrapper semántico según props

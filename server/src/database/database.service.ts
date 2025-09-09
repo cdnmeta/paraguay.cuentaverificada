@@ -1,4 +1,5 @@
 // src/database/database.service.ts
+import { PRODUCCION } from '@/utils/constants';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool, QueryResult,QueryResultRow } from 'pg';
@@ -13,6 +14,7 @@ export class DatabaseService implements OnModuleInit {
 
     this.pool = new Pool({
       connectionString: connectionString,
+      ssl: PRODUCCION ? { rejectUnauthorized: false } : undefined,
     });
 
     const { types } = require('pg');

@@ -1,5 +1,5 @@
 
-const PRODUCCION = true;
+const PRODUCCION = false;
 
 let url_backend = "http://localhost:3000";
 let url_backend_api = "http://localhost:3000/api";

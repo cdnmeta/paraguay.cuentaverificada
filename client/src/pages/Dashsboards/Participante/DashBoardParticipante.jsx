@@ -28,6 +28,7 @@ const getIconoByKey = (key) => {
 };
 export default function DashBoardParticipante() {
   const [dataParticipaciones, setDataParticipaciones] = useState([]);
+  const [dataInfoNegocio, setDataInfoNegocio] = useState(null);
   const user = useAuthStore((state) => state.user);
   const fetchData = async () => {
     try {
@@ -35,13 +36,25 @@ export default function DashBoardParticipante() {
       const {
         porcentaje_participacion,
         precio_actual,
-        total_invertido,
         total_meta,
+        cantidad_suscripciones_pendientes,
+        cantidad_suscripciones_activas,
+        cantidad_suscripciones_suspendidas,
+        ganancias_totales,
+        ganancias_por_cobrar,
+        ganancias_cobradas,
+
       } = response.data;
+      setDataInfoNegocio({
+        cantidad_suscripciones_activas,
+        cantidad_suscripciones_pendientes,
+        cantidad_suscripciones_suspendidas,
+      })
       setDataParticipaciones([
         {
           key: "precioActual",
           value: precio_actual,
+          digitosNum: 6,
           titulo: "Precio META",
           unit: "USD",
         },
@@ -51,8 +64,8 @@ export default function DashBoardParticipante() {
           titulo: "Participación",
           unit: `Valor: ${porcentaje_participacion}%`,
         },
-        { key: "ganancias", value: 0, titulo: "Ganancias", unit: "USD" },
-        { key: "cobrar", value: 0, titulo: "Por Cobrar", unit: "USD" },
+        { key: "ganancias", value: ganancias_totales, titulo: "Ganancias", unit: "USD" },
+        { key: "cobrar", value: ganancias_por_cobrar, titulo: "Por Cobrar", unit: "USD" },
       ]);
     } catch (error) {
       toast.error("Error al cargar las participaciones: " + error.message);
@@ -78,6 +91,7 @@ export default function DashBoardParticipante() {
               unit={data.unit}
               iconSrc={getIconoByKey(data.key)}
               accent="emerald"
+              digitosNum={data.digitosNum}
               className="!max-w-full !min-h-[200px]" // llena la celda y fija altura mínima
             />
           ))}
@@ -92,7 +106,7 @@ export default function DashBoardParticipante() {
           />
           <MetricCardTW
             title="Auditoría"
-            value={0}
+            value={(dataInfoNegocio?.cantidad_suscripciones_activas ?? 0) + (dataInfoNegocio?.cantidad_suscripciones_pendientes ?? 0) + (dataInfoNegocio?.cantidad_suscripciones_suspendidas ?? 0)}
             unit="Suscriptores"
             iconSrc={getIconoByKey("auditoria")}
             accent="emerald"

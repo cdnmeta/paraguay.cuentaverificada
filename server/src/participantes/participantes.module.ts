@@ -7,6 +7,7 @@ import { DatabaseModule } from '@/database/database.module';
 @Module({
   controllers: [ParticipantesController],
   providers: [ParticipantesService],
+  exports: [ParticipantesService],
   imports: [PrismaModule,DatabaseModule]
 })
 export class ParticipantesModule {}

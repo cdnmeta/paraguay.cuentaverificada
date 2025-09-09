@@ -4,7 +4,7 @@ import { UpdateParticipanteDto } from './dto/update-participante.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { compras_participantes } from '@prisma/client';
 import { DatabaseService } from '@/database/database.service';
-import { RepartirParticipantesDto } from './dto/repartir-participantes';
+import { OpcionesRepartirParticipantesDto } from './dto/repartir-participantes';
 import { redondearDecimales } from '@/utils/funciones';
 interface Ganancia {
   observacion?: string;
@@ -176,7 +176,7 @@ export class ParticipantesService {
    */
   async repartirGananciasDeVentaPlan(
     id_factura: number,
-    options: RepartirParticipantesDto,
+    options: OpcionesRepartirParticipantesDto,
   ) {
     // Helper local para redondeo consistente a 2 decimales
     const toTwo = (n: number) => Number(n.toFixed(2));

@@ -1,12 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { BadRequestException, ValidationPipe } from '@nestjs/common';
-import { URL_BASE, URL_ORIGINS } from '@/utils/constants';
+import { BadRequestException, ConsoleLogger, ValidationPipe } from '@nestjs/common';
+import { PRODUCCION, URL_BASE, URL_ORIGINS } from '@/utils/constants';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  // Usa winston como logger de Nest
+  const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
+  app.useLogger(logger);
+
+  
+
   app.use(cookieParser());
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
@@ -33,7 +43,12 @@ async function bootstrap() {
       },
     }),
   );
+  
+
+  // Filtro global de excepciones
+  app.useGlobalFilters(new AllExceptionsFilter(logger));
 
   await app.listen(process.env.PORT ?? 3000);
+  logger.log(`Iniciando servidor en modo ${PRODUCCION ? 'producción' : 'desarrollo'}`);
 }
 bootstrap();

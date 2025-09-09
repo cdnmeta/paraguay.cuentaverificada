@@ -21,10 +21,13 @@ import { VerificacionCuentaModule } from './verificacion-cuenta/verificacion-cue
 import { GroupsGuard } from './auth/guards/groups.guard';
 import { ParticipantesModule } from './participantes/participantes.module';
 import { ParticipacionEmpresaModule } from './participacion-empresa/participacion-empresa.module';
+import { WinstonModule } from 'nest-winston';
+import { winstonOptions } from './logger/logger.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+     WinstonModule.forRoot(winstonOptions),
     UsuariosModule,
     AuthModule,
     PrismaModule,

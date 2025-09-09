@@ -1,4 +1,3 @@
-export class RepartirParticipantesDto {
-    id_factura: number;
+export class OpcionesRepartirParticipantesDto {
     primera_venta: boolean;
 }

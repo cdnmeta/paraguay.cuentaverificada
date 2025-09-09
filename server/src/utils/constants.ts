@@ -1,7 +1,7 @@
 import { join } from 'path';
 
 
-export const PRODUCCION = true;
+export const PRODUCCION = process.env.NODE_ENV === 'production';
 export const NOMBRE_APP = 'Hola Yo Soy';
 const baseDir = PRODUCCION ? 'dist' : 'src';
 
