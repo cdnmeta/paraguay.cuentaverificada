@@ -46,7 +46,9 @@ const schema = z.object({
   email: z.string().trim().email("Correo inválido"),
   nombre: z.string().trim().min(1, "Nombre es requerido"),
   apellido: z.string().trim().min(1, "Apellido es requerido"),
-  terminos: z.string({ required_error: "Debes aceptar los términos y condiciones" }).transform((val) => Boolean(val)).refine((val) => val === true, { message: "Debes aceptar los términos y condiciones" }),
+  terminos: z.boolean().refine((val) => val === true, {
+    message: "Debes aceptar los términos y condiciones",
+  }),
   documento: z
     .string()
     .regex(REGEX_CEDULA_IDENTIDAD, "Cédula de identidad inválida"),
