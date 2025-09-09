@@ -107,7 +107,12 @@ export default function ParticipantesForm() {
       setUsuarioEncontrado(resultado.data);
       toast.success("Usuario encontrado");
     } catch (error) {
-      toast.error("Error de conexión");
+      if([400,404].includes(error.response?.status)){
+        toast.error(error.response?.data?.message || "Error al buscar usuario");
+      }
+      else{
+        toast.error("Error al solicitar búsqueda");
+      }
     } finally {
       setCargandoBusqueda(false);
     }

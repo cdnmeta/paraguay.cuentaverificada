@@ -7,7 +7,6 @@ import { TOKEN_CACHE_DURATION } from "./constants";
 export const getIdToken = async (forzarRefresh = false) => {
   const user = auth.currentUser;
   // Si no hay usuario autenticado, lanzamos un error
-  console.log(user);
   if (!user) {
     throw new Error("Usuario no autenticado");
   }
