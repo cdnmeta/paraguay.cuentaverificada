@@ -14,6 +14,7 @@ export const login = async (credentials) => {
     headers: {
       "Content-Type": "application/json", // explícito
     },
+    withCredentials: true, // para enviar cookies
   });
   return response;
 };
@@ -24,6 +25,7 @@ export const getUserInfo = async () => {
       "Content-Type": "application/json", // explícito
       "Authorization": `Bearer ${await getIdToken()}`,
     },
+    withCredentials: true, // para enviar cookies
   });
   return response;
 };
@@ -33,6 +35,7 @@ export const registrarUsuario = async (data) => {
     headers: {
       "Content-Type": "multipart/form-data", // explícito
     },
+    withCredentials: true, // para enviar cookies
   });
   return response;
 }
@@ -40,7 +43,9 @@ export const registrarUsuario = async (data) => {
 
 
 export const inicializarCredencialesPorToken = async (data) => {
-  const response = await api.post("/inicializar-credenciales-token", data);
+  const response = await api.post("/inicializar-credenciales-token", data, {
+    withCredentials: true, // para enviar cookies
+  });
   return response;
 };
 
