@@ -8,6 +8,6 @@ export const seccionesFeatures = [
     desc: "Registrar Nuevos Inversionistas",
     icon: "/icons/2179332.png",
     path: `${ROUTE_BASE}/inversionistas`,
-    allowedGroups: [3],
+    allowedGroups: [], // todos los grupos
   },
 ];
