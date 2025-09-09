@@ -22,9 +22,7 @@ function matchByFeatureKey(key) {
 }
 
 export function SuperAdminRoutes({ user }) {
-  const allowedGroupIds = [4]; // o calcula desde user
-  const isAuthorized = (u) =>
-    u && u.grupos?.some((g) => allowedGroupIds.includes(g.id));
+  const isAuthorized = (u) => u.is_super_admin === true;
 
   return (
     <Route
