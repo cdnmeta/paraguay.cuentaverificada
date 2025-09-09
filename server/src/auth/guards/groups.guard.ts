@@ -85,10 +85,13 @@ export class GroupsGuard implements CanActivate {
 
     const userInfo = userInfoDta.rows[0];
 
+    if (userInfo.is_super_admin) return true;
+
+
     // 🔎 Consulta grupos del usuario
     // Ideal: que el service ya devuelva number[], pero normalizamos por si retorna objetos.
     const gruposDelUsuario = userInfo?.grupos || [];
-    //if (userInfo.is_super_admin) return true;
+
     
     const userGroupIds = new Set<number>(
       Array.isArray(gruposDelUsuario)
