@@ -77,7 +77,7 @@ export default function App() {
         </Route>
       </Route>
       <Route path={verificadorRoutes.index} element={<LayoutVerificador />}>
-        <Route element={<ProtectedRoute isAuthorized={verificarSesionYgrupoAdmitido(user, [3])} redirectPath={PROTECTED_ROUTES.dashboard} />}>
+        <Route element={<ProtectedRoute isAuthorized={verificarSesionYgrupoAdmitido(user, [2])} redirectPath={PROTECTED_ROUTES.dashboard} />}>
           {VerificadorRoutes()}
         </Route>
       </Route>

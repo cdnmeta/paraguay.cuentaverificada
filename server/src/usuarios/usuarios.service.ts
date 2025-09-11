@@ -79,36 +79,28 @@ export class UsuariosService {
   }
 
   async crearUsuario(dto: CrearUsuarioDTO, files?: UsuariosArchivos | any) {
+    
     let uidUserFirebase = '';
     try {
-      // verificar que el usuario no exista
-      return await this.prismaService.$transaction(async (tx) => {
-        const userExists = await tx.usuarios.findFirst({
-          where: {
-            OR: [{ email: dto.correo }, { documento: dto.documento }],
-          },
-        });
-        if (userExists) {
-          throw new BadRequestException('El usuario ya existe');
-        }
+      // guardar ususario en firebase para autenticación
+      const { cedulaFrente, cedulaReverso, selfie } = files || {};
+      const firebaseUser = await this.firebaseService.createUser({
+        email: dto.correo,
+        password: dto.contrasena,
+        displayName: `${dto.nombre} ${dto.apellido}`,
+        emailVerified: true,
+      });
+  
+      uidUserFirebase = firebaseUser.uid;
 
-        // guardar ususario en firebase para autenticación
-        const { cedulaFrente, cedulaReverso, selfie } = files || {};
-        const firebaseUser = await this.firebaseService.createUser({
-          email: dto.correo,
-          password: dto.contrasena,
-          displayName: `${dto.nombre} ${dto.apellido}`,
-          emailVerified: true,
-        });
 
-        uidUserFirebase = firebaseUser.uid;
-
-        // guardar la cedula del ususarios
+      // guardar la cedula del ususarios
         const nombre_cedula_frontal =
           cedulaFrente && crearNombreArchivoDesdeMulterFile(cedulaFrente);
         const nombre_cedula_reverso =
           cedulaReverso && crearNombreArchivoDesdeMulterFile(cedulaReverso);
         const nombre_selfie = selfie && crearNombreArchivoDesdeMulterFile(selfie);
+
         let rutaArchivoFrontal: string | null = null;
         let rutaArchivoReverso: string | null = null;
         let rutaArchivoSelfie: string | null = null;
@@ -138,6 +130,18 @@ export class UsuariosService {
             filePath,
             selfie.mimetype,
           );
+        }
+
+      // verificar que el usuario no exista
+       await this.prismaService.$transaction(async (tx) => {
+        const userExists = await tx.usuarios.findFirst({
+          where: {
+            OR: [{ email: dto.correo }, { documento: dto.documento }],
+          },
+        });
+
+        if (userExists) {
+          throw new BadRequestException('El usuario ya existe');
         }
 
         // encriptar contraseña
@@ -170,6 +174,7 @@ export class UsuariosService {
 
         return newUser;
       });
+      return { message: 'Usuario creado exitosamente' };
     } catch (error) {
       if (uidUserFirebase) {
         // eliminar usuario en firebase
