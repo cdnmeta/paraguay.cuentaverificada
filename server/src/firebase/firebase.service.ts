@@ -27,12 +27,13 @@ export class FirebaseService {
   return ruta; // solo retornás el path
 };
 
-  async createUser(userData: { email: string; password: string; displayName?: string }) {
+  async createUser(userData: { email: string; password: string; displayName?: string,emailVerified?:boolean }) {
     try {
       const userRecord = await this.auth.createUser({
         email: userData.email,
         password: userData.password,
         displayName: userData.displayName,
+        emailVerified: userData.emailVerified ?? false,
       });
       return userRecord;
     } catch (error) {

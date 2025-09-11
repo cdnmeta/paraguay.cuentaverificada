@@ -93,11 +93,12 @@ export class UsuariosService {
         }
 
         // guardar ususario en firebase para autenticación
-        const { cedulaFrente, cedulaReverso } = files || {};
+        const { cedulaFrente, cedulaReverso, selfie } = files || {};
         const firebaseUser = await this.firebaseService.createUser({
           email: dto.correo,
           password: dto.contrasena,
           displayName: `${dto.nombre} ${dto.apellido}`,
+          emailVerified: true,
         });
 
         uidUserFirebase = firebaseUser.uid;
@@ -107,8 +108,10 @@ export class UsuariosService {
           cedulaFrente && crearNombreArchivoDesdeMulterFile(cedulaFrente);
         const nombre_cedula_reverso =
           cedulaReverso && crearNombreArchivoDesdeMulterFile(cedulaReverso);
+        const nombre_selfie = selfie && crearNombreArchivoDesdeMulterFile(selfie);
         let rutaArchivoFrontal: string | null = null;
         let rutaArchivoReverso: string | null = null;
+        let rutaArchivoSelfie: string | null = null;
 
         if (cedulaFrente) {
           const filePath = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_frontal}`;
@@ -128,6 +131,15 @@ export class UsuariosService {
           );
         }
 
+        if(selfie){
+          const filePath = `${FIREBASE_STORAGE_FOLDERS.selfieUsuarios}/${nombre_selfie}`;
+          rutaArchivoSelfie = await this.firebaseService.subirArchivoPrivado(
+            selfie.buffer,
+            filePath,
+            selfie.mimetype,
+          );
+        }
+
         // encriptar contraseña
         const contrasenaEncryptada = await encrypt(dto.contrasena);
         const pinHash = dto.pin ? await encrypt(dto.pin) : null;
@@ -143,6 +155,9 @@ export class UsuariosService {
             cedula_frente: rutaArchivoFrontal,
             cedula_reverso: rutaArchivoReverso,
             pin: pinHash,
+            dial_code: dto.dial_code,
+            telefono: dto.telefono,
+            selfie: rutaArchivoSelfie,
           },
         });
         // si viene el id del usuario que registra, actualizar el campo
