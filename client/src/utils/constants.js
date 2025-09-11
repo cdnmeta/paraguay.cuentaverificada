@@ -1,5 +1,5 @@
 
-const PRODUCCION = true;
+const PRODUCCION = false;
 
 let url_backend = "http://localhost:3000";
 let url_backend_api = "http://localhost:3000/api";
@@ -17,6 +17,7 @@ export const TOKEN_CACHE_DURATION = 55 * 60 * 1000; // 55 minutos (tokens de Fir
 
 
 export const REGEX_CEDULA_IDENTIDAD = /^[1-9]\d{5,7}$/;
+export const CANT_MIN_CARACTERES_CONTRASENA = 6;
 
 export const estadosVerificacionDeComercio = [
   {

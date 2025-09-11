@@ -784,7 +784,8 @@ export class VerificacionComercioService {
 
           await this.participantesService.repartirGananciasDeVentaPlan(
             facturaPagada.id,
-            {primera_venta:true} as OpcionesRepartirParticipantesDto
+            {primera_venta:true} as OpcionesRepartirParticipantesDto,
+            prisma
           );
           
 

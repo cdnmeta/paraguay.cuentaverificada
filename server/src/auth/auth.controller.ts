@@ -29,6 +29,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { cert } from 'firebase-admin/app';
 import { PrismaService } from '@/prisma/prisma.service';
 import { InicializarPasswordPinByToken } from './dto/password-recovery.dto';
+import { OnlyAdminGuard } from './guards/onlyAdmin.guard';
+import { IsOnlyAdmin } from './decorators/onlyAdmin.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -138,6 +140,17 @@ export class AuthController {
       return res.status(200).json({ message: 'PIN y contraseña inicializados correctamente' });
     } catch (error) {
       throw error
+    }
+  }
+
+  @Get("grupos")
+  @IsOnlyAdmin()
+  async getGruposHabilitados(@Res() res: Response) {
+    try {
+      const grupos = await this.authService.getGruposHabilitados();
+      return res.status(200).json(grupos);
+    } catch (error) {
+      throw error;
     }
   }
 

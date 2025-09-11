@@ -1,11 +1,12 @@
 // src/pages/SuperAdmin/DashBoardSuperAdmin.jsx
 import useSecciones from "./hooks/secciones";
 import CardOption1 from "@/components/customs/CardOption1";
-import { useAuthStore } from "@/hooks/useAuthStorge";
+import { useAuthStore } from "@/hooks/useAuthStorge"
 
 export default function DashBoardSuperAdmin() {
   const { user } = useAuthStore();
   const secciones = useSecciones({ user });
+
 
   return (
     <div className="min-h-screen text-white">

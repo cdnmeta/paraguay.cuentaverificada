@@ -29,7 +29,6 @@ const AlertCambioDeRolEmpresa = ({user}) => {
   const getGrupoSeleccionado = useGruposEmpresaStore(
     (state) => state.getGrupoSeleccionado
   );
-  console.log("gruposEmpresa", grupoSeleccionado);
   const handleCambioGrupo = async (id) => {
     setGrupoSeleccionado(id);
     closeRef.current.click(); // Cierra el diálogo

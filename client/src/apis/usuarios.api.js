@@ -39,3 +39,36 @@ export const agregarUsuarioGrupo = async (data) => {
     },
   });
 };
+
+export const getUsersByQuery = async (query) => {
+  return await api.get(`/query-many`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+    params: query,
+  });
+}
+
+export const asignarGrupos = async (data) => {
+  return await api.post(`/asignar-grupos`, data, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}
+
+export const getGruposByUsuarioId = async (id_usuario) => {
+  return await api.get(`/grupos/${id_usuario}`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}
+
+export const crearUsuario = async (data) => {
+  return await api.post(`/crear-usuario`, data, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}

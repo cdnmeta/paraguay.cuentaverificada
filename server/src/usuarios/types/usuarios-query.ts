@@ -3,3 +3,9 @@ export interface UserByQuery {
   documento: string;
   email: string;
 }
+
+export interface UsersForQueryMany {
+  nombre?: string;
+  documento?: string;
+  email?: string;
+}

@@ -39,15 +39,11 @@ const cedulaSchema = z.object({
 
 const participacionSchema = z
   .object({
-    monto_meta: z.preprocess(
-      (v) => (v === "" ? undefined : v),
-      z
-        .number({
-          required_error: "El monto es requerido",
-          invalid_type_error: "El monto debe ser numérico",
-        })
-        .gt(0, { message: "El monto debe ser positivo" })
-    ),
+    monto_meta: z.coerce.number({
+      invalid_type_error: "El monto meta es requerido",
+      required_error: "El monto meta es requerido",
+    })
+    .min(1, "El monto meta debe ser mayor a 0"),
   });
 
 
@@ -156,6 +152,8 @@ export default function ParticipantesForm() {
     setCargandoParticipacion(true);
 
     try {
+
+      console.log(data)
       const payload = {
         id_usuario: usuarioEncontrado.id,
         monto_meta: data.monto_meta,

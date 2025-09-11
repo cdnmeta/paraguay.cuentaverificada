@@ -123,16 +123,13 @@ export function ComboBox({
                 placeholder
               )}
             </span>
-            <div className="flex items-center gap-1">
-              <ChevronsUpDown className="h-4 w-4 opacity-50" />
-            </div>
           </Button>
         </PopoverTrigger>
         {/* Botón de limpiar, posicionado a la derecha */}
         {clearable && selected && !disabled && (
           <X
             onClick={handleClear}
-            className="absolute right-8 top-[50%] -translate-y-1/2 h-4 w-4 cursor-pointer opacity-60 hover:opacity-100"
+            className="absolute right-5 top-[50%] -translate-y-1/2 h-4 w-4 cursor-pointer opacity-60 hover:opacity-100"
           />
         )}
         <PopoverContent

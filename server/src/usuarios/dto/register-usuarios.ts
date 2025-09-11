@@ -1,3 +1,4 @@
+import { Transform, Type } from 'class-transformer';
 import {
   IsString,
   IsNotEmpty,
@@ -6,6 +7,7 @@ import {
   IsDateString,
   IsEnum,
   IsNumber,
+  IsArray,
 } from 'class-validator';
 
 export class RegisterUsuariosDto {
@@ -79,15 +81,24 @@ export class CrearUsuarioDTO {
   @IsOptional()
   pin?: string | null;
 
-  @IsString({ message: 'Path cedula frontal debe ser una cadena' })
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value.map(Number);
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.map(Number) : [];
+    } catch {
+      return [];
+    }
+  })
+  @IsArray({ message: 'Grupos debe ser un arreglo de números' })
+  @IsNumber({}, { each: true, message: 'Cada grupo debe ser un número' })
   @IsOptional()
-  path_cedula_frontal?: string | null;
+  grupos?: number[] | null;
 
-  @IsString({ message: 'Path cedula reverso debe ser una cadena' })
+  @IsNumber({}, { message: 'El ID del usuario de registro debe ser un número' })
   @IsOptional()
-  path_cedula_reverso?: string | null;
+  id_usuario_registro?: number | null;
 }
-
 
 export class AgregarGrupoUsuario {
   @IsNotEmpty({ message: 'El ID de usuario es obligatorio' })

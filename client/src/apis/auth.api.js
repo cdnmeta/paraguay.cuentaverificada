@@ -48,4 +48,14 @@ export const inicializarCredencialesPorToken = async (data) => {
   return response;
 };
 
+export const getGruposHabilitados = async () => {
+  const response = await api.get("/grupos", {
+    headers: {
+      "Authorization": `Bearer ${await getIdToken()}`,
+    },
+    withCredentials: true, // para enviar cookies
+  });
+  return response;
+};
+
 export default api;

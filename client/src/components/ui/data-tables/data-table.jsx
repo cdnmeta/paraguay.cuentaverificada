@@ -28,11 +28,13 @@ function fuzzyFilter(row, columnId, value, addMeta) {
   return itemRank.passed
 }
 
-export function DataTable({ data, columns, placeholder = "Buscar en todos los campos...", pageSize = 10 }) {
+export function DataTable({ data, columns, placeholder = "Buscar en todos los campos...", pageSize = 10  , options = {}}) {
   const [sorting, setSorting] = React.useState([])
   const [columnVisibility, setColumnVisibility] = React.useState({})
   const [rowSelection, setRowSelection] = React.useState({})
   const [globalFilter, setGlobalFilter] = React.useState("")
+
+  const {ocultar_boton_ver_columnas = false} = options;
 
   const table = useReactTable({
     data,
@@ -76,7 +78,7 @@ export function DataTable({ data, columns, placeholder = "Buscar en todos los ca
           </div>
         </div>
 
-        <DropdownMenu>
+        {!ocultar_boton_ver_columnas && ( <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="w-full sm:w-auto">
               Columnas <ChevronDown className="ml-2 h-4 w-4" />
@@ -97,7 +99,7 @@ export function DataTable({ data, columns, placeholder = "Buscar en todos los ca
                 </DropdownMenuCheckboxItem>
               ))}
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>)}
       </div>
 
       {/* Table Section */}

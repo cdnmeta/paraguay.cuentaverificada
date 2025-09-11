@@ -1,12 +1,13 @@
 import CardOption1 from "@/components/customs/CardOption1";
 import React from "react";
-import useSecciones from "./hooks/seciones";
+import useSecciones from "@/hooks/secciones";
 import { useAuthStore } from "@/hooks/useAuthStorge";
+import {seccionesFeatures} from './config/features'
 
 
 const DashboardDptoLegal = () => {
     const user = useAuthStore(state => state.user);
-    const secciones = useSecciones({user});
+    const secciones = useSecciones({ user, seccionesFeatures });
   return (
     <div className="min-h-screen text-white">
       <h1>Departamento Legal Dashboard</h1>

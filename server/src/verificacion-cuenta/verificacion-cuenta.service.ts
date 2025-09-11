@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
   Inject,
-  forwardRef
+  forwardRef,
 } from '@nestjs/common';
 import { CreateVerificacionCuentaDto } from './dto/create-verificacion-cuenta.dto';
 import {
@@ -23,7 +23,10 @@ import { generateToken } from '@/utils/security';
 import { createHash } from 'crypto';
 import { TokenSolicitud } from './types/token-solicitudes';
 import { DatabaseService } from '@/database/database.service';
-import { consulta_verificador_asignar, listadoSolicitudes } from './sql/consultas';
+import {
+  consulta_verificador_asignar,
+  listadoSolicitudes,
+} from './sql/consultas';
 import { AprobarCuentaOpciones } from './types/services';
 @Injectable()
 export class VerificacionCuentaService {
@@ -35,11 +38,12 @@ export class VerificacionCuentaService {
     private authService: AuthService,
   ) {}
 
-
   async listadoUsuariosSolicitudes() {
     try {
-      const estado = [1,2,3,4]
-      const resultado = await this.dbservice.query(listadoSolicitudes,[estado]);
+      const estado = [1, 2, 3, 4];
+      const resultado = await this.dbservice.query(listadoSolicitudes, [
+        estado,
+      ]);
       return resultado.rows;
     } catch (error) {
       throw error;
@@ -48,14 +52,13 @@ export class VerificacionCuentaService {
 
   async listadoUsuariosSolicitudesByVerificador(id_verificador: number) {
     try {
-
       const clasulaWhere = {
         id_estado: {
           in: [1, 2, 3, 4],
         },
         id_verificador: id_verificador,
       };
-     
+
       const usuarios =
         await this.prismaService.usuarios_solicitudes_cuenta.findMany({
           select: {
@@ -98,21 +101,30 @@ export class VerificacionCuentaService {
       if (user.id_estado === 3)
         throw new BadRequestException('La solicitud ya ha sido aprobada');
 
-      const nombre_cedula_frontal = user?.cedula_frontal
-        ? path.basename(user?.cedula_frontal)
-        : crearNombreArchivoDesdeMulterFile(files?.cedula_frontal[0]);
-      const nombre_cedula_reverso = user?.cedula_reverso
-        ? path.basename(user?.cedula_reverso)
-        : crearNombreArchivoDesdeMulterFile(files?.cedula_reverso[0]);
-      const nombre_selfie_user = user?.selfie
-        ? path.basename(user?.selfie)
-        : crearNombreArchivoDesdeMulterFile(files?.selfie_user[0]);
+      //if(!user?.cedula_frontal  || !user?.cedula_reverso || !user?.selfie  ) throw new BadRequestException('La cedula o selfie es obligatoria, no se ha registrado, son necesarias para actualizar la solicitud');
 
-      let url_cedula_frontal = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_frontal}`;
-      let url_cedula_reverso = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_reverso}`;
-      let url_selfie_user = `${FIREBASE_STORAGE_FOLDERS.selfieUsuarios}/${nombre_selfie_user}`;
+      if (!user?.cedula_frontal && !cedula_frontal)
+        throw new BadRequestException(
+          'La cedula frontal es obligatoria, no se ha registrado, es necesaria para actualizar la solicitud',
+        );
+      if (!user?.cedula_reverso && !cedula_reverso)
+        throw new BadRequestException(
+          'La cedula reverso es obligatoria, no se ha registrado, es necesaria para actualizar la solicitud',
+        );
+      if (!user?.selfie && !selfie_user)
+        throw new BadRequestException(
+          'La selfie es obligatoria, no se ha registrado, es necesaria para actualizar la solicitud',
+        );
+
+      let url_cedula_frontal = '';
+      let url_cedula_reverso = '';
+      let url_selfie_user = '';
 
       if (cedula_frontal) {
+        const nombre_cedula_frontal = user?.cedula_frontal
+          ? path.basename(user?.cedula_frontal)
+          : crearNombreArchivoDesdeMulterFile(files?.cedula_frontal[0]);
+        url_cedula_frontal = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_frontal}`;
         await this.firebaseService.subirArchivoPrivado(
           cedula_frontal.buffer,
           url_cedula_frontal,
@@ -121,6 +133,10 @@ export class VerificacionCuentaService {
       }
 
       if (cedula_reverso) {
+        const nombre_cedula_reverso = user?.cedula_reverso
+          ? path.basename(user?.cedula_reverso)
+          : crearNombreArchivoDesdeMulterFile(files?.cedula_reverso[0]);
+        url_cedula_reverso = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_reverso}`;
         await this.firebaseService.subirArchivoPrivado(
           cedula_reverso.buffer,
           url_cedula_reverso,
@@ -129,6 +145,10 @@ export class VerificacionCuentaService {
       }
 
       if (selfie_user) {
+        const nombre_selfie_user = user?.selfie
+          ? path.basename(user?.selfie)
+          : crearNombreArchivoDesdeMulterFile(files?.selfie_user[0]);
+        url_selfie_user = `${FIREBASE_STORAGE_FOLDERS.selfieUsuarios}/${nombre_selfie_user}`;
         await this.firebaseService.subirArchivoPrivado(
           selfie_user.buffer,
           url_selfie_user,
@@ -197,14 +217,18 @@ export class VerificacionCuentaService {
         await this.prismaService.usuarios_solicitudes_cuenta.findFirst({
           where: {
             id: dto.id_usuario_aprobacion,
-            id_estado: 2, // estado 2 es "pendiente"
           },
         });
 
       if (!cuenta_aprobar_solicitud)
         throw new NotFoundException('Solicitud no encontrada');
 
-      if (cuenta_aprobar_solicitud.id_estado === id_estado_asignar)
+      if(cuenta_aprobar_solicitud.id_estado !== 2)
+        throw new BadRequestException(
+          'La cuenta no se encuentra en estado pendiente',
+        );
+
+      if (Number(cuenta_aprobar_solicitud.id_estado) === Number(id_estado_asignar))
         throw new BadRequestException(
           'La cuenta ya se encuentra en estado aprobado',
         );
@@ -223,16 +247,17 @@ export class VerificacionCuentaService {
 
       // Envolver en una transacción de Prisma
 
-     const usuarioSolicitud = await this.prismaService.usuarios_solicitudes_cuenta.update({
-        where: {
-          id: dto.id_usuario_aprobacion,
-        },
-        data: {
-          id_estado: id_estado_asignar, // estado 3 es "aprobado"
-          id_usuario_actualizacion: dto.id_usuario_actualizacion,
-          fecha_actualizacion: new Date(),
-        },
-      });
+      const usuarioSolicitud =
+        await this.prismaService.usuarios_solicitudes_cuenta.update({
+          where: {
+            id: dto.id_usuario_aprobacion,
+          },
+          data: {
+            id_estado: id_estado_asignar, // estado 3 es "aprobado"
+            id_usuario_actualizacion: dto.id_usuario_actualizacion,
+            fecha_actualizacion: new Date(),
+          },
+        });
 
       if (crear_token) {
         const { token } = await this.generarTokenSolicitud(usuarioSolicitud.id);
@@ -278,7 +303,9 @@ export class VerificacionCuentaService {
       });
 
       if (usuarioAsignar.rowCount == 0) {
-        throw new BadRequestException('No se encontró un verificador disponible');
+        throw new BadRequestException(
+          'No se encontró un verificador disponible',
+        );
       }
       // guardar cedula en firebase
       const userSolicitud =
@@ -333,7 +360,6 @@ export class VerificacionCuentaService {
 
   async regenerarTokenVerificacion(data: { token: string; cedula: string }) {
     try {
-
       const usuarioSolicitud =
         await this.prismaService.usuarios_solicitudes_cuenta.findFirst({
           where: { documento: data.cedula, id_estado: 3, activo: true },
@@ -343,11 +369,12 @@ export class VerificacionCuentaService {
         throw new NotFoundException('Solicitud verificacion no encontrada');
       }
 
-      const { token_id } = await this.verificarTokenSolicitud({ token: data.token, id_usuario_solicitud: usuarioSolicitud.id }, false);
+      const { token_id } = await this.verificarTokenSolicitud(
+        { token: data.token, id_usuario_solicitud: usuarioSolicitud.id },
+        false,
+      );
 
       // regenerar token a solicitudes aprobadas
-      
-      
 
       // deactivar otros tokens generados
       await this.prismaService.tokens_usuarios_solicitudes.update({
@@ -356,7 +383,7 @@ export class VerificacionCuentaService {
           activo: false,
         },
       });
-      const {token} = await this.generarTokenSolicitud(usuarioSolicitud.id);
+      const { token } = await this.generarTokenSolicitud(usuarioSolicitud.id);
       return { token, documento: usuarioSolicitud.documento };
     } catch (error) {
       throw error;
@@ -366,28 +393,34 @@ export class VerificacionCuentaService {
   async generarTokenSolicitudById(id_usuario_solicitud: number) {
     try {
       // BUSCAR TOKENS ANTERIORES E INVALIDARLOS
-      const tokenAnteriores = await this.prismaService.tokens_usuarios_solicitudes.findMany({
-        where: { id_usuario_solicitud, activo: true },
-      });
+      const tokenAnteriores =
+        await this.prismaService.tokens_usuarios_solicitudes.findMany({
+          where: { id_usuario_solicitud, activo: true },
+        });
 
       if (tokenAnteriores.length > 0) {
-        const ids = tokenAnteriores.map(token => token.id);
+        const ids = tokenAnteriores.map((token) => token.id);
         await this.prismaService.tokens_usuarios_solicitudes.updateMany({
           where: { id: { in: ids } },
           data: { activo: false },
         });
       }
 
-      const user = await this.prismaService.usuarios_solicitudes_cuenta.findUnique({
-        where: { id: id_usuario_solicitud },
-      });
+      const user =
+        await this.prismaService.usuarios_solicitudes_cuenta.findUnique({
+          where: { id: id_usuario_solicitud },
+        });
 
       if (!user) {
         throw new NotFoundException('Solicitud no encontrada');
       }
-      const {token} = await this.generarTokenSolicitud(id_usuario_solicitud);
+      const { token } = await this.generarTokenSolicitud(id_usuario_solicitud);
 
-      return { token: token, documento: user.documento, id_usuario_solicitud: user.id };
+      return {
+        token: token,
+        documento: user.documento,
+        id_usuario_solicitud: user.id,
+      };
     } catch (error) {
       throw error;
     }
@@ -417,24 +450,25 @@ export class VerificacionCuentaService {
 
   async getSolicitudById(id: number) {
     try {
-      const solicitud =  await this.prismaService.usuarios_solicitudes_cuenta.findUnique({
-        select:{
-          apellido: true,
-          nombre: true,
-          documento: true,
-          dial_code: true,
-          telefono: true,
-          id_estado: true,
-          cedula_frontal: true,
-          cedula_reverso: true,
-          selfie: true,
-          correo: true,
-          id: true,
-          observacion: true
-        },
+      const solicitud =
+        await this.prismaService.usuarios_solicitudes_cuenta.findUnique({
+          select: {
+            apellido: true,
+            nombre: true,
+            documento: true,
+            dial_code: true,
+            telefono: true,
+            id_estado: true,
+            cedula_frontal: true,
+            cedula_reverso: true,
+            selfie: true,
+            correo: true,
+            id: true,
+            observacion: true,
+          },
 
-        where: { id, activo: true },
-      });
+          where: { id, activo: true },
+        });
       if (!solicitud) throw new NotFoundException('Solicitud no encontrada');
       return solicitud;
     } catch (error) {

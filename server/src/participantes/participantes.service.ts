@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateParticipanteDto } from './dto/create-participante.dto';
 import { UpdateParticipanteDto } from './dto/update-participante.dto';
 import { PrismaService } from '@/prisma/prisma.service';
-import { compras_participantes } from '@prisma/client';
+import { compras_participantes, Prisma } from '@prisma/client';
 import { DatabaseService } from '@/database/database.service';
 import { OpcionesRepartirParticipantesDto } from './dto/repartir-participantes';
 import { redondearDecimales } from '@/utils/funciones';
@@ -177,6 +177,7 @@ export class ParticipantesService {
   async repartirGananciasDeVentaPlan(
     id_factura: number,
     options: OpcionesRepartirParticipantesDto,
+    tx?: Prisma.TransactionClient
   ) {
     // Helper local para redondeo consistente a 2 decimales
     const toTwo = (n: number) => Number(n.toFixed(2));
@@ -187,7 +188,8 @@ export class ParticipantesService {
       const ganancias: Ganancia[] = [];
       const gananciasForUsuario: any = {};
 
-      await this.prisma.$transaction(async (prisma) => {
+      await this.prisma.runInTransaction(tx, async (client) => {
+        const prisma = client;
         // 1) Buscar la factura pagada + su suscripción (incluye vendedor)
         const factura = await prisma.factura_suscripciones.findFirst({
           where: { id: id_factura, activo: true, estado: 2 }, // estado 2 = pagado

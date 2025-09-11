@@ -23,6 +23,7 @@ import { ParticipantesModule } from './participantes/participantes.module';
 import { ParticipacionEmpresaModule } from './participacion-empresa/participacion-empresa.module';
 import { WinstonModule } from 'nest-winston';
 import { winstonOptions } from './logger/logger.config';
+import { OnlyAdminGuard } from './auth/guards/onlyAdmin.guard';
 
 @Module({
   imports: [

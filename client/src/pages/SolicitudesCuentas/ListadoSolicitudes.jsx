@@ -299,7 +299,7 @@ function TokenDialog({ solicitudId }) {
               });
       } catch (error) {
         if ([400, 404].includes(error?.status)) {
-          toast.error("Solicitud no encontrada");
+          toast.error(error?.response?.data?.message || "Solicitud no encontrada", { richColors: true });
           return;
         }
         toast.error("Error al aprobar la solicitud", { richColors: true });

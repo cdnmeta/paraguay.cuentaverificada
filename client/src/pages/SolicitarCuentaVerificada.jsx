@@ -36,8 +36,7 @@ import { crearSolicitudCuenta } from "@/apis/verificacionCuenta.api";
 import { REGEX_CEDULA_IDENTIDAD } from "@/utils/constants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@radix-ui/react-dropdown-menu";
-// import { registrarUsuario } from "@/apis/auth.api";
-// import { auth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+
 
 const MB = 1024 * 1024;
 const CANTIDAD_DIGITOS_OTP = 6;
@@ -75,6 +74,7 @@ export default function SolicitarCuentaVerificada() {
       email: "",
       codigo_pais: "",
       telefono: "",
+      terminos: false,
     },
     mode: "onChange",
   });
@@ -215,7 +215,7 @@ export default function SolicitarCuentaVerificada() {
 
                 {/* País + teléfono */}
                 <div className="flex flex-col w-full gap-1">
-                  <FormLabel>Teléfono</FormLabel>
+                  <FormLabel className={form.formState.errors.telefono ? 'text-red-500' : ''}>Teléfono</FormLabel>
                   <div className="flex w-full">
                     <div className="flex-shrink-0">
                       <FormField
@@ -231,6 +231,7 @@ export default function SolicitarCuentaVerificada() {
                                 onChange={field.onChange}
                                 placeholder="Código"
                                 buttonClassName="rounded-r-none border-r-0"
+                                error={!!form.formState.errors.codigo_pais}
                               />
                             </FormControl>
                             <FormMessage />

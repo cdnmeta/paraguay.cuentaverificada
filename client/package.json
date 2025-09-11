@@ -41,6 +41,7 @@
     "react": "^19.1.0",
     "react-day-picker": "^9.8.1",
     "react-dom": "^19.1.0",
+    "react-dual-listbox": "^6.0.3",
     "react-hook-form": "^7.62.0",
     "react-number-format": "^5.4.4",
     "react-photo-view": "^1.2.7",

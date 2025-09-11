@@ -306,9 +306,7 @@ export class AuthService {
         documento: user.documento,
         correo: user.correo,
         telefono: user.telefono,
-        dial_code: user.dial_code,
-        path_cedula_frontal: user.cedula_frontal || undefined,
-        path_cedula_reverso: user.cedula_reverso || undefined,
+        dial_code: user.dial_code
       };
 
       await this.prismaService.$transaction(async (prisma) => {
@@ -331,8 +329,8 @@ export class AuthService {
             dial_code: dataUsuarioNuevo.dial_code,
             password: dataUsuarioNuevo.contrasena,
             pin: dataUsuarioNuevo.pin,
-            cedula_frente: dataUsuarioNuevo.path_cedula_frontal,
-            cedula_reverso: dataUsuarioNuevo.path_cedula_reverso,
+            cedula_frente: user.cedula_frontal,
+            cedula_reverso: user.cedula_reverso,
             uid_firebase: firebaseUser.uid,
           },
         });
@@ -360,4 +358,19 @@ export class AuthService {
       //empresa : usuario.empresa
     };
   }
+
+
+   async getGruposHabilitados(){
+    try {
+      const grupos = await this.prismaService.grupos.findMany({
+        select: {id:true,descripcion:true},
+        where: {id: {
+          notIn: [4]  // excluir inversionista
+        }} ,
+      });
+      return grupos;
+    } catch (error) {
+      throw error
+    }
+   }
 }
