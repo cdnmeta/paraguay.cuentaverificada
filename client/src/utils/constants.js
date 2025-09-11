@@ -1,6 +1,5 @@
 
-const PRODUCCION = false;
-
+const PRODUCCION = import.meta.env.MODE === 'production';
 let url_backend = "http://localhost:3000";
 let url_backend_api = "http://localhost:3000/api";
   
