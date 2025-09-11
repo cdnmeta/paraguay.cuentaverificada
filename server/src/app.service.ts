@@ -76,7 +76,12 @@ export class AppService {
 
       this.logger.log(`Superusuario creado con email: ${email}`);
     } catch (err) {
-      await this.firebaseService.auth.deleteUser(firebaseUserId)
+      console.log("uid firebase catch,",firebaseUserId)
+      if(firebaseUserId){
+        // si hubo error y se creó el usuario en firebase, eliminarlo para no dejar basura
+        await this.firebaseService.auth.deleteUser(firebaseUserId);
+        this.logger.log(`Usuario Firebase con UID ${firebaseUserId} eliminado por error en creación de superusuario.`);
+      }
       this.logger.error('Error creando superusuario:', err as any);
     }
   }
