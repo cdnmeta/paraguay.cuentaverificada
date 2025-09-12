@@ -37,8 +37,7 @@ export class FirebaseService {
       });
       return userRecord;
     } catch (error) {
-      console.log(error)
-      throw new HttpException('Error creando usuario en Firebase', 500);
+      throw error;
     }
   }
 
