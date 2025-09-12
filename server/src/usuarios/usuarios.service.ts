@@ -127,7 +127,7 @@ export class UsuariosService {
         });
 
         if (userExists) {
-          throw new BadRequestException('El usuario ya existe');
+          throw new BadRequestException('La cédula o correo ya están registrados');
         }
 
       // guardar ususario en firebase para autenticación
@@ -206,8 +206,8 @@ export class UsuariosService {
             throw new BadRequestException('No se han configurado los porcentajes de comisiones en la empresa. Contacte con el administrador.');
           }
 
-          const suma_info_primera_venta = Number(infoPorcentajes.porcentaje_empresa_primera_venta) + Number(infoPorcentajes.porcentaje_participantes_primera_venta);
-          const suma_info_venta_recurrente = Number(infoPorcentajes.porcentaje_empresa_recurrente) + Number(infoPorcentajes.porcentaje_participantes_recurrente);
+          const suma_info_primera_venta = Number(infoPorcentajes.porcentaje_participantes_primera_venta) + Number(infoPorcentajes.porcentaje_empresa_primera_venta);
+          const suma_info_venta_recurrente = Number(infoPorcentajes.porcentaje_participantes_recurrente) + Number(infoPorcentajes.porcentaje_empresa_recurrente);
 
          
 
@@ -217,11 +217,11 @@ export class UsuariosService {
            console.log(`Suma info primera venta: ${suma_info_primera_venta}, Suma info venta recurrente: ${suma_info_venta_recurrente}`);
           console.log(`Suma primera venta: ${suma_primer_vendedor}, Suma venta recurrente: ${suma_recurrente_vendedor}`);
 
-          if( suma_primer_vendedor != 100){
-            throw new BadRequestException(`El porcentaje de comisión por primera venta es inválido. La suma de los porcentajes sdeben ser  100%. Por favor, ajuste el porcentaje máximo a ${100 - suma_info_primera_venta}%.`);
+          if( suma_primer_vendedor > 100){
+            throw new BadRequestException(`El porcentaje de comisión por primera venta es inválido. La suma de los porcentajes deben ser  100%. Por favor, ajuste el porcentaje máximo a ${100 - suma_info_primera_venta}%.`);
           }
 
-          if(suma_recurrente_vendedor != 100){
+          if(suma_recurrente_vendedor > 100){
             throw new BadRequestException(`El porcentaje de comisión por venta recurrente es inválido. La suma de los porcentajes deben dar 100%. Por favor, ajuste el porcentaje máximo a ${100 - suma_info_venta_recurrente}%.`);
           }
 
@@ -273,7 +273,6 @@ export class UsuariosService {
       });
       return { message: 'Usuario creado exitosamente' };
     } catch (error) {
-      console.log('Error creando usuario, eliminando en Firebase si aplica con uid', uidUserFirebase);
       if (uidUserFirebase) {
         // eliminar usuario en firebase
         await this.firebaseService.auth.deleteUser(uidUserFirebase);
