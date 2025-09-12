@@ -44,7 +44,6 @@ export function AlertDialogGlobal() {
 
   // Esta función se llama cuando cambia el estado del dialog (click afuera o escape)
   const handleOpenChange = (nextOpen) => {
-    console.log("cabiuo en handleOpenChange", nextOpen);
     if (nextOpen === false && closeOnOutsideClick) {
       closeAlert();
     }

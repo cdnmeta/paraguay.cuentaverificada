@@ -27,7 +27,7 @@ import { AuthenticatedRequest } from '@/auth/types/AuthenticatedRequest';
 import { SolicitudCuentaDto } from './dto/solicitud-cuenta.dto';
 import { IsPublic } from '@/auth/decorators/public.decorator';
 import { PrismaService } from '@/prisma/prisma.service';
-import { RequireGroupIdsAll } from '@/auth/decorators/groups.decorator';
+import { RequireGroupIdsAll, RequireGroupIdsAny } from '@/auth/decorators/groups.decorator';
 
 @Controller('verificacion-cuenta')
 export class VerificacionCuentaController {
@@ -180,7 +180,7 @@ export class VerificacionCuentaController {
   }
 
   @Get(':id')
-  @RequireGroupIdsAll(2)
+  @RequireGroupIdsAny(1,2)
   async getSolicitudById(@Param('id', ParseIntPipe) id: number) {
     return this.verificacionCuentaService.getSolicitudById(id);
   }

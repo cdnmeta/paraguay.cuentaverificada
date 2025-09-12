@@ -1,4 +1,4 @@
-import { obtenerParticipaciones } from "@/apis/participacion-empresa.api";
+import { obtenerParticipaciones } from "@/apis/participantes.api";
 import MetricCardTW from "@/components/customs/MetricCard";
 import MetricCard from "@/components/customs/MetricCard";
 import { useAuthStore } from "@/hooks/useAuthStorge";

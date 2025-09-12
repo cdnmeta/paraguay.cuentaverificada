@@ -20,17 +20,4 @@ export class ParticipacionEmpresaController {
       throw error;
     }
   }
-
-  @Get('mis-participaciones')
-  async getParticipaciones(
-    @Req() req: AuthenticatedRequest,
-  ) {
-    try {
-      const userId = req.user.userId;
-
-      return await this.participacionEmpresaService.getParticipacionByUsuario(userId);
-    } catch (error) {
-      throw error;
-    }
-  }
 }

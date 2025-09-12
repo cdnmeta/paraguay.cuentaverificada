@@ -46,9 +46,16 @@ import "react-dual-listbox/lib/react-dual-listbox.css";
 import { ComboBox } from "@/components/customs/comboBoxShadcn/ComboBox1";
 import { getGruposHabilitados } from "@/apis/auth.api";
 import langListDualbox from "@/assets/lang/lang-list-dualbox";
-import { CANT_MIN_CARACTERES_CONTRASENA, REGEX_CEDULA_IDENTIDAD } from "@/utils/constants";
+import {
+  CANT_MIN_CARACTERES_CONTRASENA,
+  IMAGE_SCHEMA,
+  MAXIMO_PESO_IMAGENES_BYTES,
+  REGEX_CEDULA_IDENTIDAD,
+} from "@/utils/constants";
 import { crearUsuario } from "@/apis/usuarios.api";
 import { toast } from "sonner";
+import { useAlertDialogStore } from "@/store/useAlertDialogStore";
+import { de } from "zod/v4/locales";
 
 /**
  * Props:
@@ -77,19 +84,25 @@ export default function FormUsuario({
   const schema = z
     .object({
       nombre: z
-        .string({ required_error: "El nombre es obligatorio" }).trim()
+        .string({ required_error: "El nombre es obligatorio" })
+        .trim()
         .min(1, "El nombre es obligatorio"),
       contrasena: z
-        .string({ required_error: "La contraseña es obligatoria" }).trim()
+        .string({ required_error: "La contraseña es obligatoria" })
+        .trim()
         .min(CANT_MIN_CARACTERES_CONTRASENA, "La contraseña es obligatoria"),
       repetir_contrasena: z
-        .string({ required_error: "La contraseña es obligatoria" }).trim()
+        .string({ required_error: "La contraseña es obligatoria" })
+        .trim()
         .min(CANT_MIN_CARACTERES_CONTRASENA, "La contraseña es obligatoria"),
       apellido: z.string().trim().optional().nullable(),
       documento: z
-        .string({ required_error: "El documento es obligatorio" }).trim().regex(REGEX_CEDULA_IDENTIDAD, "Formato cedula inválido"),
+        .string({ required_error: "El documento es obligatorio" })
+        .trim()
+        .regex(REGEX_CEDULA_IDENTIDAD, "Formato cedula inválido"),
       correo: z
-        .string({ required_error: "El correo es obligatorio" }).trim()
+        .string({ required_error: "El correo es obligatorio" })
+        .trim()
         .email("El correo debe ser un correo válido"),
       dial_code: z.string().optional().nullable(),
       telefono: z.string().optional().nullable(),
@@ -100,6 +113,14 @@ export default function FormUsuario({
       cedula_frontal: z.any().optional().nullable(),
       cedula_reverso: z.any().optional().nullable(),
       selfie: z.any().optional().nullable(),
+      porcentaje_vendedor_primera_venta: z
+        .string()
+        .transform((v) => (v ? Number(v) : null))
+        .optional(),
+      porcentaje_vendedor_venta_recurrente: z
+        .string()
+        .transform((v) => (v ? Number(v) : null))
+        .optional(),
     })
     .superRefine((val, ctx) => {
       // Si es creación (no hay idUsuario), pedimos contraseña obligatoria
@@ -120,6 +141,73 @@ export default function FormUsuario({
           path: ["repetir_contrasena"],
         });
       }
+
+      if (val.grupos && val.grupos.includes(3)) {
+        // 3 = vendedor
+        if (!val.porcentaje_vendedor_primera_venta) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "El porcentaje del vendedor en la primera venta es obligatorio",
+            path: ["porcentaje_vendedor_primera_venta"],
+          });
+        }
+        if (!val.porcentaje_vendedor_venta_recurrente) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "El porcentaje del vendedor en ventas recurrentes es obligatorio",
+            path: ["porcentaje_vendedor_venta_recurrente"],
+          });
+        }
+
+        if (
+          val.porcentaje_vendedor_primera_venta < 0 ||
+          val.porcentaje_vendedor_primera_venta > 100
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "El porcentaje de venta debe estar entre 0 y 100",
+            path: ["porcentaje_vendedor_primera_venta"],
+          });
+        }
+
+        if (
+          val.porcentaje_vendedor_venta_recurrente < 0 ||
+          val.porcentaje_vendedor_venta_recurrente > 100
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "El porcentaje de venta debe estar entre 0 y 100",
+            path: ["porcentaje_vendedor_venta_recurrente"],
+          });
+        }
+      }
+      if (!isEdit) {
+        // En creación, pedimos las 3 imágenes obligatorias si es vendedor
+        if (!val.selfie) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "La selfie es obligatoria",
+            path: ["selfie"],
+          });
+        }
+
+        if (!val.cedula_frontal) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "La cédula frontal es obligatoria",
+            path: ["cedula_frontal"],
+          });
+        }
+        if (!val.cedula_reverso) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "La cédula reverso es obligatoria",
+            path: ["cedula_reverso"],
+          });
+        }
+      }
     });
 
   const {
@@ -139,8 +227,10 @@ export default function FormUsuario({
       apellido: "",
       documento: "",
       correo: "",
-      dial_code: "+595",
+      dial_code: "",
       telefono: "",
+     porcentaje_vendedor_primera_venta: "",
+     porcentaje_vendedor_venta_recurrente: "",
       grupos: [],
     },
   });
@@ -156,6 +246,8 @@ export default function FormUsuario({
 
   // Grupos
   const [optionsGrupos, setOptionsGrupos] = useState([]);
+
+  const showAlert = useAlertDialogStore((state) => state.showAlert);
 
   // Carga de grupos
   useEffect(() => {
@@ -260,13 +352,25 @@ export default function FormUsuario({
     if (values.apellido) formData.append("apellido", values.apellido);
     if (values.dial_code) formData.append("dial_code", values.dial_code);
     if (values.telefono) formData.append("telefono", values.telefono);
-    if (values.observaciones)
-      formData.append("observaciones", values.observaciones);
 
     // grupos como números
     const grupos = (values.grupos ?? []).filter(Boolean).map(Number);
-    if (grupos.length)
-      formData.append("grupos", JSON.stringify(grupos));
+    if (grupos.length) formData.append("grupos", JSON.stringify(grupos));
+
+    // porcentaje vendedores
+
+    if (values?.grupos.includes(3)) {
+      if (values.porcentaje_vendedor_primera_venta)
+        formData.append(
+          "porcentaje_vendedor_primera_venta",
+          values.porcentaje_vendedor_primera_venta
+        );
+      if (values.porcentaje_vendedor_venta_recurrente)
+        formData.append(
+          "porcentaje_vendedor_venta_recurrente",
+          values.porcentaje_vendedor_venta_recurrente
+        );
+    }
 
     // archivos
     if (values.cedula_frontal instanceof File)
@@ -275,36 +379,41 @@ export default function FormUsuario({
       formData.append("cedula_reverso", values.cedula_reverso);
     if (values.selfie instanceof File) formData.append("selfie", values.selfie);
 
-    // mostrar los datos en consola (debug)
-
-    console.log("Datos a enviar:", Object.fromEntries(formData));
-
+    console.log(Object.fromEntries(formData.entries()));
     try {
-        let response = null
-        if(isEdit) {
-            //response = await editarUsuario(idUsuario, formData);
-        } else {
-            response = await crearUsuario(formData);
-        }
+      let response = null;
+      if (isEdit) {
+        //response = await editarUsuario(idUsuario, formData);
+      } else {
+        response = await crearUsuario(formData);
+      }
 
-      
-      
       if (typeof afterSubmit === "function") afterSubmit?.();
-      toast.success(response?.data?.message || "Guardado correctamente");
+        toast.success(response?.data?.message || "Usuario guardado correctamente");
       handleLimpiar();
     } catch (e) {
       console.error("Error guardando usuario", e);
-      if([400, 422].includes(e?.response?.status)) {
+      if ([400, 422].includes(e?.response?.status)) {
         const msg = e?.response?.data?.message || "Error de validación";
-        toast.error(msg);
+        showAlert({
+            title: "Error",
+            description: msg,
+            type: "error",
+        })
         return;
       }
-        toast.error("Error guardando usuario: " + (e?.message || "Desconocido"));
+       showAlert({
+            title: "Error",
+            description: e?.message || "Error al guardar el usuario",
+            type: "error",
+        })
     }
   };
 
   // ---- UI auxiliares ----
   const selectedGrupos = watch("grupos") || [];
+
+  const includeGrupo = (id) => selectedGrupos.includes(id);
 
   const handleLimpiar = () => {
     reset();
@@ -493,6 +602,40 @@ export default function FormUsuario({
                 />
               </div>
 
+              {includeGrupo(3) && (
+                <div className="flex flex-col gap-2">
+                  <Label>Imágenes (Porcentajes vendedores)</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                      <Label>Primera Venta</Label>
+                      <Input
+                        type="number"
+                        placeholder="Porcentaje"
+                        {...register("porcentaje_vendedor_primera_venta")}
+                      />
+                      {errors.porcentaje_vendedor_primera_venta && (
+                        <p className="text-sm text-red-500">
+                          {errors.porcentaje_vendedor_primera_venta.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Venta Recurrente</Label>
+                      <Input
+                        type="number"
+                        placeholder="Porcentaje"
+                        {...register("porcentaje_vendedor_venta_recurrente")}
+                      />
+                      {errors.porcentaje_vendedor_venta_recurrente && (
+                        <p className="text-sm text-red-500">
+                          {errors.porcentaje_vendedor_venta_recurrente.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <Separator />
 
               {/* Imágenes */}
@@ -508,7 +651,11 @@ export default function FormUsuario({
                       accept="image/*"
                       onChange={(e) => handleFileChange(e, "cedula_frontal")}
                     />
-                    
+                    {errors.cedula_frontal && (
+                      <p className="text-sm text-red-500">
+                        {errors.cedula_frontal.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Cédula reverso */}
@@ -519,7 +666,11 @@ export default function FormUsuario({
                       accept="image/*"
                       onChange={(e) => handleFileChange(e, "cedula_reverso")}
                     />
-                   
+                    {errors.cedula_reverso && (
+                      <p className="text-sm text-red-500">
+                        {errors.cedula_reverso.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Selfie */}
@@ -530,30 +681,32 @@ export default function FormUsuario({
                       accept="image/*"
                       onChange={(e) => handleFileChange(e, "selfie")}
                     />
-                    
+                    {errors.selfie && (
+                      <p className="text-sm text-red-500">
+                        {errors.selfie.message}
+                      </p>
+                    )}
                   </div>
                 </div>
-                  {/*Preview imagenes*/}
-                   <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-2">
-
-                    {
-                    <PhotoProvider
-                    >
-                        {[previewFront, previewBack, previewSelfie].map(
+                {/*Preview imagenes*/}
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-2">
+                  {
+                    <PhotoProvider>
+                      {[previewFront, previewBack, previewSelfie].map(
                         (url, index) =>
-                            url ? (
+                          url ? (
                             <PhotoView key={index} src={url}>
-                                <img
+                              <img
                                 src={url}
                                 alt={`Previsualización ${index}`}
                                 className="w-full h-48 object-cover rounded-xl border"
-                                />
+                              />
                             </PhotoView>
-                            ) : null
-                        )}
+                          ) : null
+                      )}
                     </PhotoProvider>
-                              }
-                   </div>
+                  }
+                </div>
               </div>
 
               {/* Acciones */}

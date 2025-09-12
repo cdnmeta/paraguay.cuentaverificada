@@ -1,7 +1,6 @@
 import { DatabasePromiseService } from '@/database/database-promise.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { consultaParticipacionByUsuario } from './sql/consultas';
 
 @Injectable()
 export class ParticipacionEmpresaService {
@@ -41,18 +40,6 @@ export class ParticipacionEmpresaService {
             };
         } catch (error) {
             throw error
-        }
-    }
-
-    async getParticipacionByUsuario(id_usuario: number) {
-        try {
-            const result = await this.dbPromiseService.result(consultaParticipacionByUsuario, [id_usuario]);
-            if(result.rowCount === 0){
-                throw new NotFoundException('No se encontraron participaciones para el usuario');
-            }
-            return result.rows[0];
-        } catch (error) {
-            throw error;
         }
     }
 }

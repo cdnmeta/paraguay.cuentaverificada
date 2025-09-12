@@ -5,6 +5,7 @@ import { Toaster } from '@components/ui/sonner';
 import AlertCambioDeRolEmpresa from '@components/customs/AlertCambioDeRolEmpresa';
 import { ROUTE_BASE } from './config/features';
 import NavBarCustom1 from '@/components/navbars/NavBarCustom1';
+import { AlertDialogGlobal } from '@/components/customs/AlertDialogGlobal';
 export default function LayoutSuperAdmin({children}) {
   const user = useAuthStore((state) => state.user);
   return (
@@ -29,6 +30,7 @@ export default function LayoutSuperAdmin({children}) {
 
       <Toaster position="top-right" />
       <AlertCambioDeRolEmpresa user={user} />
+      <AlertDialogGlobal />
     </div>
   )
 }

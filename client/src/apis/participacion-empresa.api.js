@@ -18,11 +18,3 @@ export const getPrecioMeta = async () => {
   });
   return response.data;
 };
-
-export const obtenerParticipaciones = async () => {
-  return await api.get(`/mis-participaciones`, {
-    headers: {
-      'Authorization': `Bearer ${await getIdToken()}`
-    }
-  });
-}

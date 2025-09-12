@@ -39,11 +39,9 @@ const cedulaSchema = z.object({
 
 const participacionSchema = z
   .object({
-    monto_meta: z.coerce.number({
-      invalid_type_error: "El monto meta es requerido",
-      required_error: "El monto meta es requerido",
-    })
-    .min(1, "El monto meta debe ser mayor a 0"),
+    monto_meta: z.string().transform((val) => val == "" ? undefined : Number(val)).refine((val) => !isNaN(val) && val > 0, {
+      message: "El monto meta debe ser un número mayor a 0",
+    }),
   });
 
 
@@ -74,6 +72,7 @@ export default function ParticipantesForm() {
     defaultValues: {
       cedula: "",
     },
+    
   });
 
   // Form para registro de participación
@@ -82,6 +81,7 @@ export default function ParticipantesForm() {
     defaultValues: {
       monto_meta: "",
     },
+    reValidateMode: "onSubmit",
   });
 
   // Calcular si puede registrar participación
@@ -152,13 +152,13 @@ export default function ParticipantesForm() {
     setCargandoParticipacion(true);
 
     try {
-
-      console.log(data)
       const payload = {
         id_usuario: usuarioEncontrado.id,
         monto_meta: data.monto_meta,
         precio_meta: metaInfo?.precio_meta,
       };
+
+      console.log(payload);
 
       await agregarParticipacion(payload);
 
@@ -352,12 +352,12 @@ export default function ParticipantesForm() {
                         <NumericFormat
                           value={field.value}
                           onValueChange={(values) => {
-                            field.onChange(values.floatValue);
+                            field.onChange(values.value);
                           }}
                           thousandSeparator="."
                           decimalSeparator=","
                           customInput={Input}
-                          decimalScale={2}
+                          decimalScale={0}
                           fixedDecimalScale
                           allowNegative={false}
                           placeholder="Ingrese el monto meta"

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateParticipanteDto } from './dto/create-participante.dto';
 import { UpdateParticipanteDto } from './dto/update-participante.dto';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -6,6 +6,8 @@ import { compras_participantes, Prisma } from '@prisma/client';
 import { DatabaseService } from '@/database/database.service';
 import { OpcionesRepartirParticipantesDto } from './dto/repartir-participantes';
 import { redondearDecimales } from '@/utils/funciones';
+import { DatabasePromiseService } from '@/database/database-promise.service';
+import { consultaParticipacionByUsuario } from './sql/consultas';
 interface Ganancia {
   observacion?: string;
   id_moneda: number;
@@ -21,6 +23,7 @@ export class ParticipantesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly dbService: DatabaseService,
+    private readonly dbPromiseService: DatabasePromiseService,
   ) {}
   async create(createParticipanteDto: CreateParticipanteDto) {
     try {
@@ -465,4 +468,16 @@ export class ParticipantesService {
       throw error;
     }
   }
+
+  async getParticipacionByUsuario(id_usuario: number) {
+        try {
+            const result = await this.dbPromiseService.result(consultaParticipacionByUsuario, [id_usuario]);
+            if(result.rowCount === 0){
+                throw new NotFoundException('No se encontraron participaciones para el usuario');
+            }
+            return result.rows[0];
+        } catch (error) {
+            throw error;
+        }
+    }
 }

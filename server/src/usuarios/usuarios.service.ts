@@ -32,6 +32,41 @@ export class UsuariosService {
     private readonly dbservice: DatabaseService,
     private readonly dbPromise: DatabasePromiseService,
   ) {}
+
+  /**
+   * Genera un código numérico único para vendedor (1-999)
+   * Verifica que no exista en la base de datos
+   */
+  private async generarCodigoVendedorUnico(limite: number = 999): Promise<number> {
+    const maxIntentos = 10; // Máximo 10 intentos para evitar loops infinitos
+    for (let intento = 0; intento < maxIntentos; intento++) {
+      // Generar número aleatorio entre 1 y limite
+      const codigo = Math.floor(Math.random() * limite) + 1;
+
+      // Verificar si el código ya existe
+      const existeCodigo = await this.prismaService.usuarios.findFirst({
+        where: { codigo_vendedor: codigo.toString() },
+        select: { id: true }
+      });
+      
+      if (!existeCodigo) {
+        return codigo;
+      }
+    }
+    
+    // Si no se pudo generar un código único después de varios intentos
+    throw new BadRequestException('No se pudo generar un código de vendedor único. Intente nuevamente.');
+  }
+
+  /**
+   * Función pública para generar código de vendedor
+   * Útil para otros servicios o casos especiales
+   */
+  async generarCodigoVendedor(): Promise<string> {
+    const codigo = await this.generarCodigoVendedorUnico();
+    return codigo.toString();
+  }
+
   async getUserInfoJwt(id: number) {
     try {
       const user = await this.prismaService.usuarios.findFirst({
@@ -81,7 +116,20 @@ export class UsuariosService {
   async crearUsuario(dto: CrearUsuarioDTO, files?: UsuariosArchivos | any) {
     
     let uidUserFirebase = '';
+    let codVendedor:string | null = null;
     try {
+      // buscar usuarios
+
+      const userExists = await this.prismaService.usuarios.findFirst({
+          where: {
+            OR: [{ email: dto.correo }, { documento: dto.documento }],
+          },
+        });
+
+        if (userExists) {
+          throw new BadRequestException('El usuario ya existe');
+        }
+
       // guardar ususario en firebase para autenticación
       const { cedulaFrente, cedulaReverso, selfie } = files || {};
       const firebaseUser = await this.firebaseService.createUser({
@@ -92,6 +140,8 @@ export class UsuariosService {
       });
   
       uidUserFirebase = firebaseUser.uid;
+
+      console.log('Usuario creado en Firebase con UID:', firebaseUser.uid);
 
 
       // guardar la cedula del ususarios
@@ -134,19 +184,63 @@ export class UsuariosService {
 
       // verificar que el usuario no exista
        await this.prismaService.$transaction(async (tx) => {
-        const userExists = await tx.usuarios.findFirst({
-          where: {
-            OR: [{ email: dto.correo }, { documento: dto.documento }],
-          },
-        });
-
-        if (userExists) {
-          throw new BadRequestException('El usuario ya existe');
-        }
+        
 
         // encriptar contraseña
         const contrasenaEncryptada = await encrypt(dto.contrasena);
         const pinHash = dto.pin ? await encrypt(dto.pin) : null;
+
+        
+        
+        if(dto.porcentaje_vendedor_primera_venta && dto.porcentaje_vendedor_venta_recurrente){
+          // validar porcentajes de comisiones 
+  
+          const infoPorcentajes = await tx.participacion_empresa.findFirst({
+            orderBy: { id: 'desc' },
+          });
+
+          if(!infoPorcentajes?.porcentaje_empresa_primera_venta || 
+            !infoPorcentajes?.porcentaje_empresa_recurrente ||
+            !infoPorcentajes?.porcentaje_participantes_primera_venta ||
+            !infoPorcentajes?.porcentaje_participantes_recurrente ){
+            throw new BadRequestException('No se han configurado los porcentajes de comisiones en la empresa. Contacte con el administrador.');
+          }
+
+          const suma_info_primera_venta = Number(infoPorcentajes.porcentaje_empresa_primera_venta) + Number(infoPorcentajes.porcentaje_participantes_primera_venta);
+          const suma_info_venta_recurrente = Number(infoPorcentajes.porcentaje_empresa_recurrente) + Number(infoPorcentajes.porcentaje_participantes_recurrente);
+
+         
+
+          const suma_primer_vendedor = dto.porcentaje_vendedor_primera_venta + suma_info_primera_venta;
+          const suma_recurrente_vendedor = suma_info_venta_recurrente + dto.porcentaje_vendedor_venta_recurrente;
+
+           console.log(`Suma info primera venta: ${suma_info_primera_venta}, Suma info venta recurrente: ${suma_info_venta_recurrente}`);
+          console.log(`Suma primera venta: ${suma_primer_vendedor}, Suma venta recurrente: ${suma_recurrente_vendedor}`);
+
+          if( suma_primer_vendedor != 100){
+            throw new BadRequestException(`El porcentaje de comisión por primera venta es inválido. La suma de los porcentajes sdeben ser  100%. Por favor, ajuste el porcentaje máximo a ${100 - suma_info_primera_venta}%.`);
+          }
+
+          if(suma_recurrente_vendedor != 100){
+            throw new BadRequestException(`El porcentaje de comisión por venta recurrente es inválido. La suma de los porcentajes deben dar 100%. Por favor, ajuste el porcentaje máximo a ${100 - suma_info_venta_recurrente}%.`);
+          }
+
+         
+          
+        }
+
+
+        if(dto?.grupos && dto.grupos.length > 0){
+          // si vendedor (grupo 3)
+          if(dto.grupos.includes(3)){
+            // generar codigo de vendedor de 3 digitos numericos (1-999)
+            const codigoNumerico = await this.generarCodigoVendedorUnico();
+            codVendedor = codigoNumerico.toString();
+          }
+        }
+
+
+
 
         const newUser = await tx.usuarios.create({
           data: {
@@ -162,6 +256,9 @@ export class UsuariosService {
             dial_code: dto.dial_code,
             telefono: dto.telefono,
             selfie: rutaArchivoSelfie,
+            codigo_vendedor: codVendedor,
+            porcentaje_comision_primera_venta: dto.porcentaje_vendedor_primera_venta || null,
+            porcentaje_comision_recurrente: dto.porcentaje_vendedor_venta_recurrente || null,
           },
         });
         // si viene el id del usuario que registra, actualizar el campo
@@ -176,6 +273,7 @@ export class UsuariosService {
       });
       return { message: 'Usuario creado exitosamente' };
     } catch (error) {
+      console.log('Error creando usuario, eliminando en Firebase si aplica con uid', uidUserFirebase);
       if (uidUserFirebase) {
         // eliminar usuario en firebase
         await this.firebaseService.auth.deleteUser(uidUserFirebase);

@@ -8,6 +8,9 @@ import {
   IsEnum,
   IsNumber,
   IsArray,
+  ValidateIf,
+  Min,
+  Max,
 } from 'class-validator';
 
 export class RegisterUsuariosDto {
@@ -94,6 +97,20 @@ export class CrearUsuarioDTO {
   @IsNumber({}, { each: true, message: 'Cada grupo debe ser un número' })
   @IsOptional()
   grupos?: number[] | null;
+
+  @Type(() => Number)
+  @IsNumber({}, { message: 'El porcentaje de primera venta debe ser un número' })
+  @Min(0, { message: 'El porcentaje de primera venta debe ser mayor o igual a 0' })
+  @Max(100, { message: 'El porcentaje de primera venta debe ser menor o igual a 100' })
+  @IsOptional()
+  porcentaje_vendedor_primera_venta?: number | null;
+  
+  @Type(() => Number)
+  @IsNumber({}, { message: 'El porcentaje de venta recurrente debe ser un número' })
+  @Min(0, { message: 'El porcentaje de venta recurrente debe ser mayor o igual a 0' })
+  @Max(100, { message: 'El porcentaje de venta recurrente debe ser menor o igual a 100' })
+  @IsOptional()
+  porcentaje_vendedor_venta_recurrente?: number | null;
 
   @IsNumber({}, { message: 'El ID del usuario de registro debe ser un número' })
   @IsOptional()
