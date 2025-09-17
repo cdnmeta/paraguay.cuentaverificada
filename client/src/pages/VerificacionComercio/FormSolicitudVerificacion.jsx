@@ -222,6 +222,7 @@ export default function FormSolicitudVerificacion({
       fd.append("cedula_frontal", data.cedula_frontal);
       fd.append("cedula_reverso", data.cedula_reverso);
       fd.append("imagen_factura_servicio", data.factura_servicio);
+      fd.append("direccion", data.direccion);
 
       fd.append("id_comercio", comercioData.id);
 
@@ -234,7 +235,7 @@ export default function FormSolicitudVerificacion({
         await verificarInformacionComercio(fd);
       }
 
-      toast.success("Información verificada correctamente");
+      toast.success("Información enviada correctamente");
       // 🔔 EMIT EVENTO
       emit(EVENTS.VERIFICACION_COMERCIO_ACTUALIZADA, {
         idComercio: comercioData?.id,
@@ -246,8 +247,6 @@ export default function FormSolicitudVerificacion({
         url_maps: data.url_maps,
         foto_interior: undefined,
         foto_exterior: undefined,
-        cedula_frontal: undefined,
-        cedula_reverso: undefined,
       });
     } catch (error) {
       console.error(error);
@@ -515,6 +514,25 @@ export default function FormSolicitudVerificacion({
           )}
         />
 
+        {/* Dirección Comercial */}
+        <FormField
+          control={formB.control}
+          name="direccion"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Direccion de Comercio </FormLabel>
+              <FormControl>
+                <Input
+                  type="text"
+                  placeholder="Ingrese la dirección comercial"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         {/* Fotos interior / exterior */}
         <div className="flex flex-col md:flex-row gap-2">
           <FormField
@@ -554,44 +572,6 @@ export default function FormSolicitudVerificacion({
           />
         </div>
 
-        {/* Cédulas */}
-        <div className="flex flex-col md:flex-row gap-2">
-          <FormField
-            control={formB.control}
-            name="cedula_frontal"
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>Cédula Frontal (Propietario)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => field.onChange(e.target.files?.[0])}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={formB.control}
-            name="cedula_reverso"
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>Cédula Reverso (Propietario)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => field.onChange(e.target.files?.[0])}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
 
         <FormField
           control={formB.control}

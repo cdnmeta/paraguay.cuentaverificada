@@ -20,9 +20,11 @@ import {
   RegisterUsuariosDto,
 } from './dto/register-usuarios';
 import { encrypt, generarUUIDHASH } from '@/utils/security';
-import { UserByQuery, UsersForQueryMany } from './types/usuarios-query';
+import { UserByQueryDto, UsersForQueryManyDto } from './dto/usuarios-query.dto';
 import { DatabasePromiseService } from '@/database/database-promise.service';
 import { Prisma } from '@prisma/client';
+import { AsignarGruposDto, VendedorDataDto } from './dto/grupos.dto';
+import { ActualizarUsuarioDTO } from './dto/actualizar-usuario.dto';
 
 @Injectable()
 export class UsuariosService {
@@ -37,7 +39,9 @@ export class UsuariosService {
    * Genera un código numérico único para vendedor (1-999)
    * Verifica que no exista en la base de datos
    */
-  private async generarCodigoVendedorUnico(limite: number = 999): Promise<number> {
+  private async generarCodigoVendedorUnico(
+    limite: number = 999,
+  ): Promise<number> {
     const maxIntentos = 10; // Máximo 10 intentos para evitar loops infinitos
     for (let intento = 0; intento < maxIntentos; intento++) {
       // Generar número aleatorio entre 1 y limite
@@ -46,16 +50,18 @@ export class UsuariosService {
       // Verificar si el código ya existe
       const existeCodigo = await this.prismaService.usuarios.findFirst({
         where: { codigo_vendedor: codigo.toString() },
-        select: { id: true }
+        select: { id: true },
       });
-      
+
       if (!existeCodigo) {
         return codigo;
       }
     }
-    
+
     // Si no se pudo generar un código único después de varios intentos
-    throw new BadRequestException('No se pudo generar un código de vendedor único. Intente nuevamente.');
+    throw new BadRequestException(
+      'No se pudo generar un código de vendedor único. Intente nuevamente.',
+    );
   }
 
   /**
@@ -114,21 +120,22 @@ export class UsuariosService {
   }
 
   async crearUsuario(dto: CrearUsuarioDTO, files?: UsuariosArchivos | any) {
-    
     let uidUserFirebase = '';
-    let codVendedor:string | null = null;
+    let codVendedor: string | null = null;
     try {
       // buscar usuarios
 
       const userExists = await this.prismaService.usuarios.findFirst({
-          where: {
-            OR: [{ email: dto.correo }, { documento: dto.documento }],
-          },
-        });
+        where: {
+          OR: [{ email: dto.correo }, { documento: dto.documento }],
+        },
+      });
 
-        if (userExists) {
-          throw new BadRequestException('La cédula o correo ya están registrados');
-        }
+      if (userExists) {
+        throw new BadRequestException(
+          'La cédula o correo ya están registrados',
+        );
+      }
 
       // guardar ususario en firebase para autenticación
       const { cedulaFrente, cedulaReverso, selfie } = files || {};
@@ -138,109 +145,54 @@ export class UsuariosService {
         displayName: `${dto.nombre} ${dto.apellido}`,
         emailVerified: true,
       });
-  
+
       uidUserFirebase = firebaseUser.uid;
 
       console.log('Usuario creado en Firebase con UID:', firebaseUser.uid);
 
-
       // guardar la cedula del ususarios
-        const nombre_cedula_frontal =
-          cedulaFrente && crearNombreArchivoDesdeMulterFile(cedulaFrente);
-        const nombre_cedula_reverso =
-          cedulaReverso && crearNombreArchivoDesdeMulterFile(cedulaReverso);
-        const nombre_selfie = selfie && crearNombreArchivoDesdeMulterFile(selfie);
+      const nombre_cedula_frontal =
+        cedulaFrente && crearNombreArchivoDesdeMulterFile(cedulaFrente);
+      const nombre_cedula_reverso =
+        cedulaReverso && crearNombreArchivoDesdeMulterFile(cedulaReverso);
+      const nombre_selfie = selfie && crearNombreArchivoDesdeMulterFile(selfie);
 
-        let rutaArchivoFrontal: string | null = null;
-        let rutaArchivoReverso: string | null = null;
-        let rutaArchivoSelfie: string | null = null;
+      let rutaArchivoFrontal: string | null = null;
+      let rutaArchivoReverso: string | null = null;
+      let rutaArchivoSelfie: string | null = null;
 
-        if (cedulaFrente) {
-          const filePath = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_frontal}`;
-          rutaArchivoFrontal = await this.firebaseService.subirArchivoPrivado(
-            cedulaFrente.buffer,
-            filePath,
-            cedulaFrente.mimetype,
-          );
-        }
+      if (cedulaFrente) {
+        const filePath = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_frontal}`;
+        rutaArchivoFrontal = await this.firebaseService.subirArchivoPrivado(
+          cedulaFrente.buffer,
+          filePath,
+          cedulaFrente.mimetype,
+        );
+      }
 
-        if (cedulaReverso) {
-          const filePath = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_reverso}`;
-          rutaArchivoReverso = await this.firebaseService.subirArchivoPrivado(
-            cedulaReverso.buffer,
-            filePath,
-            cedulaReverso.mimetype,
-          );
-        }
+      if (cedulaReverso) {
+        const filePath = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_reverso}`;
+        rutaArchivoReverso = await this.firebaseService.subirArchivoPrivado(
+          cedulaReverso.buffer,
+          filePath,
+          cedulaReverso.mimetype,
+        );
+      }
 
-        if(selfie){
-          const filePath = `${FIREBASE_STORAGE_FOLDERS.selfieUsuarios}/${nombre_selfie}`;
-          rutaArchivoSelfie = await this.firebaseService.subirArchivoPrivado(
-            selfie.buffer,
-            filePath,
-            selfie.mimetype,
-          );
-        }
+      if (selfie) {
+        const filePath = `${FIREBASE_STORAGE_FOLDERS.selfieUsuarios}/${nombre_selfie}`;
+        rutaArchivoSelfie = await this.firebaseService.subirArchivoPrivado(
+          selfie.buffer,
+          filePath,
+          selfie.mimetype,
+        );
+      }
 
       // verificar que el usuario no exista
-       await this.prismaService.$transaction(async (tx) => {
-        
-
+      await this.prismaService.$transaction(async (tx) => {
         // encriptar contraseña
         const contrasenaEncryptada = await encrypt(dto.contrasena);
         const pinHash = dto.pin ? await encrypt(dto.pin) : null;
-
-        
-        
-        if(dto.porcentaje_vendedor_primera_venta && dto.porcentaje_vendedor_venta_recurrente){
-          // validar porcentajes de comisiones 
-  
-          const infoPorcentajes = await tx.participacion_empresa.findFirst({
-            orderBy: { id: 'desc' },
-          });
-
-          if(!infoPorcentajes?.porcentaje_empresa_primera_venta || 
-            !infoPorcentajes?.porcentaje_empresa_recurrente ||
-            !infoPorcentajes?.porcentaje_participantes_primera_venta ||
-            !infoPorcentajes?.porcentaje_participantes_recurrente ){
-            throw new BadRequestException('No se han configurado los porcentajes de comisiones en la empresa. Contacte con el administrador.');
-          }
-
-          const suma_info_primera_venta = Number(infoPorcentajes.porcentaje_participantes_primera_venta) + Number(infoPorcentajes.porcentaje_empresa_primera_venta);
-          const suma_info_venta_recurrente = Number(infoPorcentajes.porcentaje_participantes_recurrente) + Number(infoPorcentajes.porcentaje_empresa_recurrente);
-
-         
-
-          const suma_primer_vendedor = dto.porcentaje_vendedor_primera_venta + suma_info_primera_venta;
-          const suma_recurrente_vendedor = suma_info_venta_recurrente + dto.porcentaje_vendedor_venta_recurrente;
-
-           console.log(`Suma info primera venta: ${suma_info_primera_venta}, Suma info venta recurrente: ${suma_info_venta_recurrente}`);
-          console.log(`Suma primera venta: ${suma_primer_vendedor}, Suma venta recurrente: ${suma_recurrente_vendedor}`);
-
-          if( suma_primer_vendedor > 100){
-            throw new BadRequestException(`El porcentaje de comisión por primera venta es inválido. La suma de los porcentajes deben ser  100%. Por favor, ajuste el porcentaje máximo a ${100 - suma_info_primera_venta}%.`);
-          }
-
-          if(suma_recurrente_vendedor > 100){
-            throw new BadRequestException(`El porcentaje de comisión por venta recurrente es inválido. La suma de los porcentajes deben dar 100%. Por favor, ajuste el porcentaje máximo a ${100 - suma_info_venta_recurrente}%.`);
-          }
-
-         
-          
-        }
-
-
-        if(dto?.grupos && dto.grupos.length > 0){
-          // si vendedor (grupo 3)
-          if(dto.grupos.includes(3)){
-            // generar codigo de vendedor de 3 digitos numericos (1-999)
-            const codigoNumerico = await this.generarCodigoVendedorUnico();
-            codVendedor = codigoNumerico.toString();
-          }
-        }
-
-
-
 
         const newUser = await tx.usuarios.create({
           data: {
@@ -256,17 +208,24 @@ export class UsuariosService {
             dial_code: dto.dial_code,
             telefono: dto.telefono,
             selfie: rutaArchivoSelfie,
-            codigo_vendedor: codVendedor,
-            porcentaje_comision_primera_venta: dto.porcentaje_vendedor_primera_venta || null,
-            porcentaje_comision_recurrente: dto.porcentaje_vendedor_venta_recurrente || null,
           },
         });
         // si viene el id del usuario que registra, actualizar el campo
         if (dto.grupos && dto.grupos.length > 0) {
-          await this.asignarGrupos({
-            id_usuario: newUser.id,
-            grupos: dto.grupos,
-          }, tx);
+          const dataVendedor: VendedorDataDto = {
+            porcentaje_vendedor_primera_venta:
+              dto.porcentaje_vendedor_primera_venta || 0,
+            porcentaje_vendedor_venta_recurrente:
+              dto.porcentaje_vendedor_venta_recurrente || 0,
+          };
+          await this.asignarGrupos(
+            {
+              id_usuario: newUser.id,
+              grupos: dto.grupos,
+              vendedorData: dataVendedor,
+            },
+            tx,
+          );
         }
 
         return newUser;
@@ -281,7 +240,7 @@ export class UsuariosService {
     }
   }
 
-  async getUserByQuery(query: UserByQuery) {
+  async getUserByQuery(query: UserByQueryDto) {
     const whereClause: any = { activo: true, is_super_admin: false };
 
     if (query.id) {
@@ -314,21 +273,53 @@ export class UsuariosService {
     return user;
   }
 
-  async getUsersByQuery(query: UsersForQueryMany): Promise<any[]> {
-    const { documento, email, nombre } = query;
+  async getUsersByQuery(query: UsersForQueryManyDto): Promise<any[]> {
+    const { documento, email, nombre, is_super_admin, estado, activo } = query;
+
+    console.log(query)
     const whereClause: any = {};
+    
+    // Convertir strings a booleans cuando sea necesario
+    const isActivoBoolean = activo === 'true' ? true : activo === 'false' ? false : undefined;
+    const isSuperAdminBoolean = is_super_admin === 'true' ? true : is_super_admin === 'false' ? false : undefined;
+    
     try {
       let sql = `select 
-        u.id,
-        u.nombre, 
-        u.apellido,
-        u.documento,
-        u.email,
-        u.dial_code,
-        u.telefono,
-        u.direccion
-        from usuarios u
-        where u.activo = true  and u.is_super_admin <> true`;
+       U.ID,
+        U.NOMBRE,
+        U.APELLIDO,
+        U.DOCUMENTO,
+        U.EMAIL,
+        U.DIAL_CODE,
+        U.TELEFONO,
+        U.DIRECCION,
+        u.fecha_creacion,
+        u.estado,
+        u.is_super_admin,
+        u.activo,
+        u.roles_asignados,
+        u.codigo_vendedor,
+        u.porcentaje_comision_primera_venta,
+        u.porcentaje_comision_recurrente
+        from v_usuarios u`;
+
+      // Lógica mejorada para el campo activo
+      if (isActivoBoolean !== undefined) {
+        sql += ` where u.activo = $(activo) `;
+        whereClause.activo = isActivoBoolean;
+      } else {
+        sql += ` where u.activo = true `; // Por defecto solo usuarios activos
+      }
+
+      if (estado) {
+        sql += ` and u.estado = $(estado) `;
+        whereClause.estado = estado;
+      }
+
+      if (isSuperAdminBoolean !== undefined) {
+        sql += ` and u.is_super_admin = $(is_super_admin)`;
+        whereClause.is_super_admin = isSuperAdminBoolean;
+      }
 
       if (nombre) {
         sql += ' and u.nombre ILIKE ${nombre}';
@@ -348,6 +339,7 @@ export class UsuariosService {
       const resultUser = await this.dbPromise.result(sql, whereClause);
       return resultUser.rows;
     } catch (error) {
+      console.log(error)
       throw error;
     }
   }
@@ -382,10 +374,7 @@ export class UsuariosService {
     }
   }
 
-  async asignarGrupos(
-    data: { id_usuario: number; grupos: number[] },
-    tx?: Prisma.TransactionClient
-  ) {
+  async asignarGrupos(data: AsignarGruposDto, tx?: Prisma.TransactionClient) {
     return this.prismaService.runInTransaction(tx, async (client) => {
       const gruposActuales = await client.usuarios_grupos.findMany({
         where: { id_usuario: data.id_usuario },
@@ -415,8 +404,250 @@ export class UsuariosService {
           },
         });
       }
+      // si es vendedor (grupo 3) validar porcentaje de comisiones
+      // --- Reglas por rol ---
+      // Vendedor = 3 → requiere dataExtra de tipo VendedorDataDto
+      if (data.grupos?.includes(3)) {
+        const vendedorData = data?.vendedorData;
+        if (Object.keys(vendedorData || {}).length === 0) {
+          throw new BadRequestException(
+            'Se requiere la información de porcentajes para el grupo Vendedor',
+          );
+        }
+
+        const infoPorcentajes = await client.participacion_empresa.findFirst({
+          orderBy: { id: 'desc' },
+        });
+
+        if (
+          !infoPorcentajes?.porcentaje_empresa_primera_venta ||
+          !infoPorcentajes?.porcentaje_empresa_recurrente ||
+          !infoPorcentajes?.porcentaje_participantes_primera_venta ||
+          !infoPorcentajes?.porcentaje_participantes_recurrente
+        ) {
+          throw new BadRequestException(
+            'No se han configurado los porcentajes de comisiones en la empresa. Contacte con el administrador.',
+          );
+        }
+
+        const suma_info_primera_venta =
+          Number(infoPorcentajes.porcentaje_participantes_primera_venta) +
+          Number(infoPorcentajes.porcentaje_empresa_primera_venta);
+
+        const suma_info_venta_recurrente =
+          Number(infoPorcentajes.porcentaje_participantes_recurrente) +
+          Number(infoPorcentajes.porcentaje_empresa_recurrente);
+
+        const suma_primer_vendedor =
+          Number(vendedorData?.porcentaje_vendedor_primera_venta ?? 0) +
+          suma_info_primera_venta;
+
+        const suma_recurrente_vendedor =
+          Number(vendedorData?.porcentaje_vendedor_venta_recurrente ?? 0) +
+          suma_info_venta_recurrente;
+
+        if (suma_primer_vendedor > 100) {
+          throw new BadRequestException(
+            `El porcentaje de comisión por primera venta es inválido. Ajuste el máximo a ${100 - suma_info_primera_venta}%.`,
+          );
+        }
+
+        if (suma_recurrente_vendedor > 100) {
+          throw new BadRequestException(
+            `El porcentaje de comisión por venta recurrente es inválido. Ajuste el máximo a ${100 - suma_info_venta_recurrente}%.`,
+          );
+        }
+
+        // Si además quieres **persistir** algo del vendedor (p. ej. código), hazlo aquí:
+        // generar codigo de vendedor de 3 digitos numericos (1-999)
+        const codigoNumerico = await this.generarCodigoVendedorUnico();
+        let codVendedor = codigoNumerico.toString();
+        await client.usuarios.update({
+          where: { id: data.id_usuario },
+          data: {
+            porcentaje_comision_primera_venta:
+              vendedorData!.porcentaje_vendedor_primera_venta ?? null,
+            porcentaje_comision_recurrente:
+              vendedorData!.porcentaje_vendedor_venta_recurrente ?? null,
+            codigo_vendedor: codVendedor,
+          },
+        });
+      }
 
       return { message: 'Grupos actualizados correctamente' };
     });
+  }
+
+  async getUsuarioById(id: number) {
+    try {
+      const usuario = await this.prismaService.usuarios.findFirst({
+        include:{
+          usuarios_grupos:{
+            select:{id_grupo:true}
+          }
+        },
+        where: { id },
+      });
+      if (!usuario) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+      return usuario;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async actualizarUsuario(
+    id: number,
+    dto: ActualizarUsuarioDTO,
+    files?: UsuariosArchivos | any
+  ) {
+    try {
+      // Verificar que el usuario existe
+      const usuarioExistente = await this.prismaService.usuarios.findFirst({
+        where: { id, activo: true },
+        include: {
+          usuarios_grupos: {
+            select: { id_grupo: true }
+          }
+        }
+      });
+
+      if (!usuarioExistente) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+
+      // Verificar que el email y documento no estén siendo usados por otro usuario
+      const conflictoUsuario = await this.prismaService.usuarios.findFirst({
+        where: {
+          AND: [
+            { id: { not: id } }, // Excluir el usuario actual
+            {
+              OR: [
+                { email: dto.correo },
+                { documento: dto.documento }
+              ]
+            }
+          ]
+        }
+      });
+
+      if (conflictoUsuario) {
+        throw new BadRequestException('El correo o documento ya están siendo usados por otro usuario');
+      }
+
+      let uidUserFirebase = usuarioExistente.uid_firebase;
+
+      await this.prismaService.$transaction(async (tx) => {
+        // Datos base para actualizar
+        const datosActualizacion: any = {
+          nombre: dto.nombre,
+          apellido: dto.apellido,
+          documento: dto.documento,
+          email: dto.correo,
+          dial_code: dto.dial_code,
+          telefono: dto.telefono,
+          direccion: dto.direccion,
+        };
+
+        // Actualizar contraseña si se proporciona
+        if (dto.contrasena) {
+          // Aquí podrías agregar verificación de la contraseña actual
+
+          datosActualizacion.password = await encrypt(dto.contrasena);
+
+          // Actualizar también en Firebase
+          if (uidUserFirebase) {
+            await this.firebaseService.auth.updateUser(uidUserFirebase, {
+              password: dto.contrasena
+            });
+          }
+        }
+
+        // Actualizar PIN si se proporciona
+        if (dto.pin) {
+          
+          datosActualizacion.pin = await encrypt(dto.pin);
+        }
+
+        // Manejar archivos si se proporcionan
+        const { cedulaFrente, cedulaReverso, selfie } = files || {};
+        
+        if (cedulaFrente) {
+          const { crearNombreArchivoDesdeMulterFile } = await import('@/utils/funciones');
+          const { FIREBASE_STORAGE_FOLDERS } = await import('@/firebase/constantsFirebase');
+
+          const nombreArchivo =  usuarioExistente.cedula_frente ? usuarioExistente.cedula_frente : crearNombreArchivoDesdeMulterFile(cedulaFrente);
+          const filePath = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombreArchivo}`;
+          const rutaArchivo = await this.firebaseService.subirArchivoPrivado(
+            cedulaFrente.buffer,
+            filePath,
+            cedulaFrente.mimetype
+          );
+          datosActualizacion.cedula_frente = rutaArchivo;
+        }
+
+        if (cedulaReverso) {
+          const { crearNombreArchivoDesdeMulterFile } = await import('@/utils/funciones');
+          const { FIREBASE_STORAGE_FOLDERS } = await import('@/firebase/constantsFirebase');
+
+          const nombreArchivo =  usuarioExistente.cedula_reverso ? usuarioExistente.cedula_reverso : crearNombreArchivoDesdeMulterFile(cedulaReverso);
+          const filePath = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombreArchivo}`;
+          const rutaArchivo = await this.firebaseService.subirArchivoPrivado(
+            cedulaReverso.buffer,
+            filePath,
+            cedulaReverso.mimetype
+          );
+          datosActualizacion.cedula_reverso = rutaArchivo;
+        }
+
+        if (selfie) {
+          const { crearNombreArchivoDesdeMulterFile } = await import('@/utils/funciones');
+          const { FIREBASE_STORAGE_FOLDERS } = await import('@/firebase/constantsFirebase');
+
+          const nombreArchivo =  usuarioExistente.selfie ? usuarioExistente.selfie : crearNombreArchivoDesdeMulterFile(selfie);
+          const filePath = `${FIREBASE_STORAGE_FOLDERS.selfieUsuarios}/${nombreArchivo}`;
+          const rutaArchivo = await this.firebaseService.subirArchivoPrivado(
+            selfie.buffer,
+            filePath,
+            selfie.mimetype
+          );
+          datosActualizacion.selfie = rutaArchivo;
+        }
+
+        // Actualizar datos básicos del usuario
+        const usuarioActualizado = await tx.usuarios.update({
+          where: { id },
+          data: datosActualizacion
+        });
+
+        // Actualizar grupos si se proporcionan
+        if (dto.grupos && Array.isArray(dto.grupos)) {
+          await this.asignarGrupos({
+            id_usuario: id,
+            grupos: dto.grupos,
+            vendedorData:{
+              porcentaje_vendedor_primera_venta: dto.porcentaje_vendedor_primera_venta ?? undefined,
+              porcentaje_vendedor_venta_recurrente: dto.porcentaje_vendedor_venta_recurrente ?? undefined,
+            }
+          }, tx);
+        }
+
+        // Actualizar información en Firebase si es necesario
+        if (uidUserFirebase) {
+          await this.firebaseService.auth.updateUser(uidUserFirebase, {
+            email: dto.correo,
+            password: dto.contrasena ? dto.contrasena : undefined,
+            displayName: `${dto.nombre} ${dto.apellido || ''}`.trim()
+          });
+        }
+
+        return usuarioActualizado;
+      });
+
+      return { message: 'Usuario actualizado exitosamente' };
+    } catch (error) {
+      throw error;
+    }
   }
 }

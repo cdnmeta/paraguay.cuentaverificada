@@ -51,6 +51,7 @@ model cotizacion_empresa {
   id_moneda_origen                                      Int
   id_moneda_destino                                     Int
   monto                                                 Float
+  monto_pagos                                           Float?
   fecha_creacion                                        DateTime                      @default(now()) @db.Timestamptz(6)
   fecha_actualizacion                                   DateTime?                     @db.Timestamptz(6)
   id_usuario_creacion                                   Int?

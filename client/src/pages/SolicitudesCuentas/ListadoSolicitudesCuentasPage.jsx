@@ -13,7 +13,6 @@ export default function ListadoSolicitudesCuentasPage({
     document.title = "Solicitudes de Cuentas";
   };
   const { opcionesHabilitar, columnasHabilitar,tipoLista } = opcionesPage;
-
   // Mover loadSolicitudes fuera del useEffect para usar useCallback
   const loadSolicitudes = React.useCallback(async () => {
     try {

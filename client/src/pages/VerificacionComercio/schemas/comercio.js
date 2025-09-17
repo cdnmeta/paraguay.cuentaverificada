@@ -4,7 +4,7 @@ export const comercioSchema = z.object({
   razonSocial: z.string().min(3, "Debe tener al menos 3 caracteres").trim(),
   ruc: z
     .string()
-    .regex(/^[0-9]+-[1-9]$/, "Formato inválido. Ejemplo: 978783-8")
+    .regex(/^[0-9]+-[0-9]$/, "Formato inválido. Ejemplo: 978783-8")
     .nonempty("El R.U.C. es obligatorio")
     .trim(),
   telefono: z
@@ -59,9 +59,8 @@ export const comercioVerificacionInformacion = z.object({
     ),
   foto_interior: ImageSchema,
   foto_exterior: ImageSchema,
-  cedula_frontal: ImageSchema,
-  cedula_reverso: ImageSchema,
   factura_servicio: ImageSchema,
+  direccion: z.string({ required_error: "Dirección requerida" }).trim().min(5, "Debe tener al menos 5 caracteres"),
 });
 
 export const updateComercioVerificacionInformacion = comercioVerificacionInformacion.partial();

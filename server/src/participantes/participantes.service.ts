@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateParticipanteDto } from './dto/create-participante.dto';
 import { UpdateParticipanteDto } from './dto/update-participante.dto';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -7,7 +11,7 @@ import { DatabaseService } from '@/database/database.service';
 import { OpcionesRepartirParticipantesDto } from './dto/repartir-participantes';
 import { redondearDecimales } from '@/utils/funciones';
 import { DatabasePromiseService } from '@/database/database-promise.service';
-import { consultaParticipacionByUsuario } from './sql/consultas';
+import { consultaParticipacionByUsuario, consultaparticipantes } from './sql/consultas';
 interface Ganancia {
   observacion?: string;
   id_moneda: number;
@@ -180,7 +184,7 @@ export class ParticipantesService {
   async repartirGananciasDeVentaPlan(
     id_factura: number,
     options: OpcionesRepartirParticipantesDto,
-    tx?: Prisma.TransactionClient
+    tx?: Prisma.TransactionClient,
   ) {
     // Helper local para redondeo consistente a 2 decimales
     const toTwo = (n: number) => Number(n.toFixed(2));
@@ -198,7 +202,15 @@ export class ParticipantesService {
           where: { id: id_factura, activo: true, estado: 2 }, // estado 2 = pagado
           include: {
             suscripciones: { select: { id: true, id_vendedor: true } },
-            usuarios: { select: { id: true, nombre: true, email: true, porcentaje_comision_primera_venta: true,porcentaje_comision_recurrente:true } }
+            usuarios: {
+              select: {
+                id: true,
+                nombre: true,
+                email: true,
+                porcentaje_comision_primera_venta: true,
+                porcentaje_comision_recurrente: true,
+              },
+            },
           },
         });
 
@@ -212,7 +224,6 @@ export class ParticipantesService {
         const suscripcionFactura = factura?.suscripciones;
 
         // 3) Vendedor y Participantes (grupo 4 = participantes) con usuarios activos
-        const vendedorData = factura.usuarios;
         const vendedor = suscripcionFactura?.id_vendedor ?? null;
 
         const participantes = await prisma.usuarios_grupos.findMany({
@@ -235,15 +246,26 @@ export class ParticipantesService {
         let monto_factura_sin_iva = Number(factura.total_grav_10) || 0;
         monto_factura_sin_iva = toTwo(monto_factura_sin_iva);
 
+        let montoVendedor = 0;
+
         // ------------------------------------------------------------
         // Ganancia del VENDEDOR (si existe)
         // ------------------------------------------------------------
 
-        if(!vendedorData?.porcentaje_comision_primera_venta && !vendedorData?.porcentaje_comision_recurrente) throw new BadRequestException('El usuario vendedor no tiene porcentajes de comisión configurados');
-
-
         if (vendedor) {
-          let montoVendedor = 0;
+          console.log("Vendedor ", vendedor)
+          const vendedorData = await client.usuarios.findFirst({
+            where: { id: vendedor, activo: true },
+          });
+          console.log("data", vendedorData)
+          if (
+            !vendedorData?.porcentaje_comision_primera_venta &&
+            !vendedorData?.porcentaje_comision_recurrente
+          )
+            throw new BadRequestException(
+              'El usuario vendedor no tiene porcentajes de comisión configurados',
+            );
+
 
           if (primera_venta) {
             const pct = Number(vendedorData.porcentaje_comision_primera_venta);
@@ -279,7 +301,6 @@ export class ParticipantesService {
         let montoDistribuidoParticipantes = 0;
         let gananciaEmpresa = 0;
         if (participantes.length > 0) {
-
           // Determinar el monto total a repartirse entre todos los participantes
           if (primera_venta) {
             const pct = Number(infoMeta.porcentaje_participantes_primera_venta);
@@ -317,7 +338,6 @@ export class ParticipantesService {
 
               gananciaParticipante = toTwo(gananciaParticipante);
 
-
               // Agregar a la lista de ganancias a registrar
               ganancias.push({
                 id_moneda: idMonedaAsignarComisiones,
@@ -345,7 +365,9 @@ export class ParticipantesService {
           );
 
           // Ajuste por redondeo: si hay diferencia, se asigna a la ganancia de la empresa
-          const diferencia = toTwo(montoRepartirse - montoDistribuidoParticipantes);
+          const diferencia = toTwo(
+            montoRepartirse - montoDistribuidoParticipantes,
+          );
           if (diferencia > 0) {
             gananciaEmpresa += diferencia;
             ganancias.push({
@@ -360,33 +382,16 @@ export class ParticipantesService {
         }
 
         // ------------------------------------------------------------
-        // Ganancia de la EMPRESA
+        // Ganancia de la EMPRESA (administrativo)
         // ------------------------------------------------------------
+        
+        // asignar la ganancia a la empresa de lo que sobro al no se repartir entre participantes y vendedor
+
         let montoEmpresa = 0;
-        if (primera_venta) {
-          const pct = Number(infoMeta.porcentaje_empresa_primera_venta);
-          montoEmpresa = (pct / 100) * monto_factura_sin_iva;
-        } else {
-          const pct = Number(infoMeta.porcentaje_empresa_recurrente);
-          montoEmpresa = (pct / 100) * monto_factura_sin_iva;
-        }
+        const montoSobranteReparticion = monto_factura_sin_iva - montoParticipantes - montoVendedor;
 
-        if (!vendedor) {
-          if (primera_venta) {
-            montoEmpresa += toTwo(
-              (Number(infoMeta.porcentaje_vendedores_primera_venta || 0) /
-                100) *
-                monto_factura_sin_iva,
-            );
-          } else {
-            montoEmpresa += toTwo(
-              (Number(infoMeta.porcentaje_vendedores_recurrente || 0) / 100) *
-                monto_factura_sin_iva,
-            );
-          }
-        }
+        montoEmpresa += toTwo(montoSobranteReparticion);
 
-        montoEmpresa = toTwo(montoEmpresa);
         // Agregar a la lista de ganancias a registrar
         ganancias.push({
           id_moneda: idMonedaAsignarComisiones,
@@ -396,18 +401,44 @@ export class ParticipantesService {
           monto: montoEmpresa,
           tipo_participante: 3, // 3 = empresa
         });
-        
+
         //1 - TODO: Persistir el registro de ganancia de los participantes si corresponde.
-        let participaciones_actual = Number(infoMeta.total_participacion_global) + Number(montoParticipantes);
-        let precio_meta = Number(participaciones_actual) / Number(infoMeta.total_participacion);
+        let participaciones_actual =
+          Number(infoMeta.total_participacion_global) +
+          Number(montoParticipantes);
+        let precio_meta =
+          Number(participaciones_actual) / Number(infoMeta.total_participacion);
 
         console.log('gananciasRepartir', ganancias);
+        
         console.log('ganancias por cada usuario', gananciasForUsuario);
-        console.log("Total wallet master",redondearDecimales(participaciones_actual))
-        console.log("Precio Meta:",redondearDecimales(precio_meta,6))
-        console.log("Cantidad repartir entre participantes:",redondearDecimales(montoParticipantes))
-        console.log("Total a repartido entre participantes:",redondearDecimales(montoDistribuidoParticipantes))
-        console.log("Total Ganancia empresa:",redondearDecimales(gananciaEmpresa))
+
+        console.log(
+          'Total wallet master',
+          redondearDecimales(participaciones_actual),
+        );
+
+        console.log('Precio Meta:', redondearDecimales(precio_meta, 6));
+
+        console.log(
+          'Total a repartido entre participantes:',
+          redondearDecimales(montoDistribuidoParticipantes),
+        );
+        
+        console.log(
+          'Cantidad repartir entre participantes:',
+          redondearDecimales(montoParticipantes),
+        );
+
+        console.log(
+          'Total Ganancia empresa (Bolsa):',
+          redondearDecimales(gananciaEmpresa),
+        );
+
+
+        console.log("Total asignado a Vendedor",redondearDecimales(montoVendedor))
+
+        console.log("Total Sobrante empresa (administrativo) :", redondearDecimales(montoEmpresa));
 
 
         // 1- registrar las ganacias por la venta de un plan
@@ -421,9 +452,6 @@ export class ParticipantesService {
             tipo_participante: g.tipo_participante,
           })),
         });
-        
-
-
 
         // 2- registrar ganancias entre usuarios cada usuario (vendedor, participante)
         for (const [idStr, monto] of Object.entries(gananciasForUsuario)) {
@@ -434,7 +462,6 @@ export class ParticipantesService {
             data: { saldo: { increment: montoAsignar } },
           });
         }
-
 
         // 3- registrar ganancias globales (Wallet Mater)
         await prisma.participacion_empresa.update({
@@ -448,14 +475,18 @@ export class ParticipantesService {
         await prisma.participacion_empresa.update({
           where: { id: 1 },
           data: {
-            precio_meta: redondearDecimales(precio_meta,6),
+            precio_meta: redondearDecimales(precio_meta, 6),
           },
         });
 
         // 5- Actualizar ganancia acumulada de la empresa
-        if(gananciaEmpresa > 0){
-          const acumularGananciaEmpresa = Number(infoMeta.ganancia_acumulada || 0) + gananciaEmpresa;
-          console.log("sumar a lo acumulado de la empresa:",redondearDecimales(gananciaEmpresa))
+        if (gananciaEmpresa > 0) {
+          const acumularGananciaEmpresa =
+            Number(infoMeta.ganancia_acumulada || 0) + gananciaEmpresa;
+          console.log(
+            'sumar a lo acumulado de la empresa:',
+            redondearDecimales(gananciaEmpresa),
+          );
           await prisma.participacion_empresa.update({
             where: { id: 1 },
             data: {
@@ -470,14 +501,29 @@ export class ParticipantesService {
   }
 
   async getParticipacionByUsuario(id_usuario: number) {
-        try {
-            const result = await this.dbPromiseService.result(consultaParticipacionByUsuario, [id_usuario]);
-            if(result.rowCount === 0){
-                throw new NotFoundException('No se encontraron participaciones para el usuario');
-            }
-            return result.rows[0];
-        } catch (error) {
-            throw error;
-        }
+    try {
+      const result = await this.dbPromiseService.result(
+        consultaParticipacionByUsuario,
+        [id_usuario],
+      );
+      if (result.rowCount === 0) {
+        throw new NotFoundException(
+          'No se encontraron participaciones para el usuario',
+        );
+      }
+      return result.rows[0];
+    } catch (error) {
+      throw error;
     }
+  }
+
+  async getParticipantesQueryMany(query:any){
+   try {
+    
+    const inversionistas = await this.dbPromiseService.result(consultaparticipantes)
+    return inversionistas.rows;
+   } catch (error) {
+    throw error;
+   }
+  }
 }

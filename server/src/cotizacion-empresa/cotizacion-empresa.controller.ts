@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Req, Res } from '@nestjs/common';
 import { CotizacionEmpresaService } from './cotizacion-empresa.service';
 import { IsPublic } from '@/auth/decorators/public.decorator';
 import { CotizacionDto } from './dto/regitrar-cotizacion.dto';
 import { Response } from 'express';
+import { AuthenticatedRequest } from '@/auth/types/AuthenticatedRequest';
 
 @Controller('cotizacion-empresa')
 export class CotizacionEmpresaController {
@@ -19,7 +20,7 @@ export class CotizacionEmpresaController {
   }
 
   @Post('registrar-cotizacion')
-  async registrarCotizacionByMoneda(@Req() req:any,@Body() data: CotizacionDto, @Res() res: Response) {
+  async registrarCotizacionByMoneda(@Req() req: AuthenticatedRequest, @Body() data: CotizacionDto, @Res() res: Response) {
     data.id_usuario_registro = req.user.userId;
     await this.cotizacionEmpresaService.registrarCotizacionByMoneda(data);
     return res.status(200).json({ message: 'Cotización registrada exitosamente' });

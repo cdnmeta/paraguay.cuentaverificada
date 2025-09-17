@@ -40,9 +40,17 @@ export const useAuthStore = create((set, get) => ({
   setHydrated: () => set({ isHydrated: true }),
 
   loadUserFromStorage: async () => {
-    const user = await getEncrypted("user");
-    if (user) await get().setUser(user);
-    set({ isHydrated: true }); // 👈 marcamos como hidratado
+    try {
+      console.log("Cargando usuario desde el almacenamiento...");
+      const user = await getEncrypted("user");
+      if (user) await get().setUser(user);
+    } catch (err) {
+      console.error("Error al cargar usuario desde el almacenamiento:", err);
+      get().logout();
+    } finally {
+      console.log("esta hidratado");
+      set({ isHydrated: true }); // Aseguramos que siempre se marque como hidratado
+    }
   },
 
   isLoggedIn: () => !!get().user,

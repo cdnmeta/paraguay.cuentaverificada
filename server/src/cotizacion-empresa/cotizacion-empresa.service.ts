@@ -13,7 +13,7 @@ export class CotizacionEmpresaService {
     try {
       const monedaBase = `select m.id,m.nombre, m.simbolo,m.sigla_iso from monedas m where  m.id = (select id_moneda_base from empresa_config)`;
       const { rows: monedaBaseRows } = await this.dbService.query(monedaBase);
-      const monedasSQL = `select m.id,m.nombre, m.simbolo,m.sigla_iso from monedas m where m.activo = true and m.id <> (select id_moneda_base from empresa_config)`;
+      const monedasSQL = `select m.id,m.nombre, m.simbolo,m.sigla_iso from monedas m where m.activo = true`;
       const monedas = await this.dbService.query(monedasSQL);
       return { monedaBase: monedaBaseRows[0], monedas: monedas.rows };
     } catch (error) {
@@ -24,26 +24,19 @@ export class CotizacionEmpresaService {
 
   async registrarCotizacionByMoneda(data: CotizacionDto) {
     try {
-      const monedaHabilitadaSQL = `select exists (select 1  from monedas m where m.activo = true and m.id = $1 and $1 <> (select id_moneda_base from empresa_config ) ) as moneda_habilitada`;
-
-      const { rows } = await this.dbService.query(monedaHabilitadaSQL, [
-        data.id_moneda_destino,
-      ]);
-      if (!rows[0].moneda_habilitada) {
-        throw new BadRequestException('La moneda no está habilitada');
+      
+      if (data.id_moneda_origen === data.id_moneda_destino) {
+        throw new BadRequestException('La moneda de origen y destino no pueden ser la misma.');
       }
-
-      const monedaBaseSQL = `select id_moneda_base from empresa_config limit 1`;
-
-      const { rows: monedaBaseRows } =
-        await this.dbService.query(monedaBaseSQL);
-      const idMonedaBase = monedaBaseRows[0].id_moneda_base;
 
       const result = await this.prisma.cotizacion_empresa.create({
         data: {
-          id_moneda_origen: idMonedaBase, // regitrar en moneda origen la moneda base de la empresa
+          id_moneda_origen: data.id_moneda_origen, // regitrar en moneda origen la moneda base de la empresa
           id_moneda_destino: data.id_moneda_destino,
-          monto: data.monto,
+          monto: data.monto_venta, // monto de venta
+          monto_pagos: data.monto_pagos,
+          id_usuario_creacion: data.id_usuario_registro,
+          activo: true,
           fecha_creacion: new Date(),
         },
       });
@@ -60,6 +53,8 @@ export class CotizacionEmpresaService {
         ce.id_moneda_origen,
         ce.id_moneda_destino,
         ce.monto,
+		ce.monto_pagos,
+		(us.nombre || ' ' || us.apellido ) as nombre_usuario_registro,
         COALESCE(ce.fecha_actualizacion, ce.fecha_creacion) AS fecha,
         mo.nombre  AS moneda_origen_nombre,
         mo.sigla_iso AS moneda_origen_iso,
@@ -68,6 +63,7 @@ export class CotizacionEmpresaService {
         FROM cotizacion_empresa ce
         JOIN monedas mo ON mo.id = ce.id_moneda_origen AND mo.activo = TRUE
         JOIN monedas md ON md.id = ce.id_moneda_destino AND md.activo = TRUE
+		join usuarios us on us.id = ce.id_usuario_creacion
         WHERE ce.activo = TRUE
         ORDER BY
         ce.id_moneda_origen,

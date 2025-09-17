@@ -25,4 +25,13 @@ export const obtenerParticipaciones = async () => {
   });
 }
 
+export const getParticipantesMany = async (query) => {
+  return await api.get(`/query-many`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+    params: query
+  });
+}
+
 

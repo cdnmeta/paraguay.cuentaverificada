@@ -1,72 +1,217 @@
 export const consultaParticipacionByUsuario:string = `
-WITH info_meta AS (
-  SELECT  
-    pem.precio_meta,
-    pem.nombre_meta
-  FROM participacion_empresa pem
-  LIMIT 1
-),
-info_usuario_ganancias AS (
-  SELECT 
-    u.id AS id_usuario,
-    SUM(CASE WHEN gf.activo = TRUE THEN gf.monto END)                          AS ganancias_totales,
-    SUM(CASE WHEN gf.activo = TRUE AND gf.id_estado = 1 THEN gf.monto END)     AS ganancias_por_cobrar,
-    SUM(CASE WHEN gf.activo = TRUE AND gf.id_estado = 2 THEN gf.monto END)     AS ganancias_cobradas
-  FROM usuarios u
-  LEFT JOIN ganancias_futuras gf 
-    ON gf.id_usuario = u.id
-  GROUP BY u.id
-),
-suscripciones_plataforma_conteo as (
-select  
-sum(case when su.estado = 1 and activo = true then 1 end) as cantidad_suscripciones_pendientes,
-sum(case when su.estado = 2 and activo = true then 1 end) as cantidad_suscripciones_activas,
-sum(case when su.estado = 3 and activo = true then 1 end) as cantidad_suscripciones_suspendidas
-
-from suscripciones su 
-group by su.id
-)
-SELECT 
-  com.id,
-  com.id_usuario,
-  com.total_meta,
-  com.porcentaje_participacion,
-  coalesce((select sc.cantidad_suscripciones_pendientes from suscripciones_plataforma_conteo sc ),0) as cantidad_suscripciones_pendientes,
-  coalesce((select sc.cantidad_suscripciones_activas from suscripciones_plataforma_conteo sc ),0) as cantidad_suscripciones_activas,
-  coalesce((select sc.cantidad_suscripciones_suspendidas from suscripciones_plataforma_conteo sc ),0) as cantidad_suscripciones_suspendidas,
-  
-  (SELECT precio_meta FROM info_meta) AS precio_actual,
-  SUM(
-    CASE 
-      WHEN det.activo = TRUE AND det.estado = 1 
-      THEN det.total_venta 
-      ELSE 0 
-    END
-  ) AS total_invertido,
-  COALESCE(guf.ganancias_totales, 0)     AS ganancias_totales,
-  COALESCE(guf.ganancias_por_cobrar, 0)  AS ganancias_por_cobrar,
-  COALESCE(guf.ganancias_cobradas, 0)    AS ganancias_cobradas,
-  COALESCE(
-    JSON_AGG(
-      JSON_BUILD_OBJECT(
-        'id', det.id,
-        'monto_meta', det.monto_meta,
-        'id_moneda', det.id_moneda,
-        'total_venta', det.total_venta
-      )
-    ) FILTER (WHERE det.activo = TRUE AND det.estado = 1),
-    '[]'::json
-  ) AS detalles_compras
-FROM compras_participantes com
-LEFT JOIN compras_detalles_participantes det 
-  ON det.id_compras_participantes = com.id 
-LEFT JOIN info_usuario_ganancias guf 
-  ON guf.id_usuario = com.id_usuario
-WHERE com.id_usuario = $1
-GROUP BY 
-  com.id, 
-  guf.ganancias_totales, 
-  guf.ganancias_por_cobrar, 
-  guf.ganancias_cobradas;
-
+WITH
+	INFO_META AS (
+		SELECT
+			PEM.PRECIO_META,
+			PEM.NOMBRE_META
+		FROM
+			PARTICIPACION_EMPRESA PEM
+		LIMIT
+			1
+	),
+	INFO_USUARIO_GANANCIAS AS (
+		SELECT
+			U.ID AS ID_USUARIO,
+			SUM(
+				CASE
+					WHEN GF.ACTIVO = TRUE THEN GF.MONTO
+				END
+			) AS GANANCIAS_TOTALES,
+			SUM(
+				CASE
+					WHEN GF.ACTIVO = TRUE
+					AND GF.ID_ESTADO = 1 THEN GF.MONTO
+				END
+			) AS GANANCIAS_POR_COBRAR,
+			SUM(
+				CASE
+					WHEN GF.ACTIVO = TRUE
+					AND GF.ID_ESTADO = 2 THEN GF.MONTO
+				END
+			) AS GANANCIAS_COBRADAS
+		FROM
+			USUARIOS U
+			JOIN GANANCIAS_FUTURAS GF ON GF.ID_USUARIO = U.ID
+		GROUP BY
+			U.ID
+	),
+	SUSCRIPCIONES_PLATAFORMA_CONTEO AS (
+		SELECT
+			SUM(
+				CASE
+					WHEN SU.ESTADO = 1
+					AND ACTIVO = TRUE THEN 1
+				END
+			) AS CANTIDAD_SUSCRIPCIONES_PENDIENTES,
+			SUM(
+				CASE
+					WHEN SU.ESTADO = 2
+					AND ACTIVO = TRUE THEN 1
+				END
+			) AS CANTIDAD_SUSCRIPCIONES_ACTIVAS,
+			SUM(
+				CASE
+					WHEN SU.ESTADO = 3
+					AND ACTIVO = TRUE THEN 1
+				END
+			) AS CANTIDAD_SUSCRIPCIONES_SUSPENDIDAS
+		FROM
+			SUSCRIPCIONES SU
+	)
+SELECT
+	COM.ID,
+	COM.ID_USUARIO,
+	COM.TOTAL_META,
+	COM.PORCENTAJE_PARTICIPACION,
+	COALESCE(
+		(
+			SELECT
+				SC.CANTIDAD_SUSCRIPCIONES_PENDIENTES
+			FROM
+				SUSCRIPCIONES_PLATAFORMA_CONTEO SC
+		),
+		0
+	) AS CANTIDAD_SUSCRIPCIONES_PENDIENTES,
+	COALESCE(
+		(
+			SELECT
+				SC.CANTIDAD_SUSCRIPCIONES_ACTIVAS
+			FROM
+				SUSCRIPCIONES_PLATAFORMA_CONTEO SC
+		),
+		0
+	) AS CANTIDAD_SUSCRIPCIONES_ACTIVAS,
+	COALESCE(
+		(
+			SELECT
+				SC.CANTIDAD_SUSCRIPCIONES_SUSPENDIDAS
+			FROM
+				SUSCRIPCIONES_PLATAFORMA_CONTEO SC
+		),
+		0
+	) AS CANTIDAD_SUSCRIPCIONES_SUSPENDIDAS,
+	(
+		SELECT
+			PRECIO_META
+		FROM
+			INFO_META
+	) AS PRECIO_ACTUAL,
+	SUM(
+		CASE
+			WHEN DET.ACTIVO = TRUE
+			AND DET.ESTADO = 1 THEN DET.TOTAL_VENTA
+			ELSE 0
+		END
+	) AS TOTAL_INVERTIDO,
+	COALESCE(GUF.GANANCIAS_TOTALES, 0) AS GANANCIAS_TOTALES,
+	COALESCE(GUF.GANANCIAS_POR_COBRAR, 0) AS GANANCIAS_POR_COBRAR,
+	COALESCE(GUF.GANANCIAS_COBRADAS, 0) AS GANANCIAS_COBRADAS,
+	COALESCE(
+		JSON_AGG(
+			JSON_BUILD_OBJECT(
+				'id',
+				DET.ID,
+				'monto_meta',
+				DET.MONTO_META,
+				'id_moneda',
+				DET.ID_MONEDA,
+				'total_venta',
+				DET.TOTAL_VENTA
+			)
+		) FILTER (
+			WHERE
+				DET.ACTIVO = TRUE
+				AND DET.ESTADO = 1
+		),
+		'[]'::JSON
+	) AS DETALLES_COMPRAS
+FROM
+	COMPRAS_PARTICIPANTES COM
+	LEFT JOIN COMPRAS_DETALLES_PARTICIPANTES DET ON DET.ID_COMPRAS_PARTICIPANTES = COM.ID
+	LEFT JOIN INFO_USUARIO_GANANCIAS GUF ON GUF.ID_USUARIO = COM.ID_USUARIO
+WHERE
+	COM.ID_USUARIO = $1
+GROUP BY
+	COM.ID,
+	GUF.GANANCIAS_TOTALES,
+	GUF.GANANCIAS_POR_COBRAR,
+	GUF.GANANCIAS_COBRADAS;
 `
+
+
+export const consultaparticipantes = `with INFO_USUARIO_GANANCIAS AS (
+		SELECT
+			U.ID AS ID_USUARIO,
+			SUM(
+				CASE
+					WHEN GF.ACTIVO = TRUE THEN GF.MONTO
+				END
+			) AS GANANCIAS_TOTALES,
+			SUM(
+				CASE
+					WHEN GF.ACTIVO = TRUE
+					AND GF.ID_ESTADO = 1 THEN GF.MONTO
+				END
+			) AS GANANCIAS_POR_COBRAR,
+			SUM(
+				CASE
+					WHEN GF.ACTIVO = TRUE
+					AND GF.ID_ESTADO = 2 THEN GF.MONTO
+				END
+			) AS GANANCIAS_COBRADAS
+		FROM
+			USUARIOS U
+			JOIN GANANCIAS_FUTURAS GF ON GF.ID_USUARIO = U.ID
+		GROUP BY
+			U.ID
+	)
+
+SELECT
+	u.id,
+	(U.NOMBRE || U.APELLIDO) AS NOMBRE,
+	u.telefono,
+	u.documento,
+	u.email,
+	CPAR.TOTAL_META AS TOTAL_META_COMPRADA,
+	CPAR.PORCENTAJE_PARTICIPACION,
+	COALESCE(GUF.GANANCIAS_TOTALES, 0) AS GANANCIAS_TOTALES,
+	COALESCE(GUF.GANANCIAS_POR_COBRAR, 0) AS GANANCIAS_POR_COBRAR,
+	COALESCE(GUF.GANANCIAS_COBRADAS, 0) AS GANANCIAS_COBRADAS,
+	COALESCE(
+		JSON_AGG(
+			JSON_BUILD_OBJECT(
+				'id',
+				DETCOM.ID,
+				'monto_meta',
+				DETCOM.MONTO_META,
+				'id_moneda',
+				DETCOM.ID_MONEDA,
+				'total_venta',
+				DETCOM.TOTAL_VENTA,
+				'fecha_compra',
+				detcom.fecha_creacion
+				
+			)
+		) FILTER (
+			WHERE
+				DETCOM.ACTIVO = TRUE
+				AND DETCOM.ESTADO = 1
+		),
+		'[]'::JSON
+	) AS DETALLES_COMPRAS
+FROM
+	USUARIOS U
+	JOIN USUARIOS_GRUPOS USG ON USG.ID_USUARIO = U.ID
+	AND USG.ID_GRUPO = 4
+	JOIN COMPRAS_PARTICIPANTES CPAR ON CPAR.ID_USUARIO = USG.ID_USUARIO
+	JOIN COMPRAS_DETALLES_PARTICIPANTES DETCOM ON DETCOM.ID_COMPRAS_PARTICIPANTES = CPAR.ID
+	join INFO_USUARIO_GANANCIAS guf on guf.id_usuario = u.id
+GROUP BY
+	U.ID,
+	U.NOMBRE,
+	U.APELLIDO,
+	CPAR.TOTAL_META,
+	CPAR.PORCENTAJE_PARTICIPACION,
+	GANANCIAS_TOTALES,
+	GANANCIAS_POR_COBRAR,
+	GANANCIAS_COBRADAS`

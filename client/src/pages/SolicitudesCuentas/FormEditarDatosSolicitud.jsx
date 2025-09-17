@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { REGEX_CEDULA_IDENTIDAD } from "@/utils/constants";
+import { IMAGE_SCHEMA_NO_REQUERIDO, REGEX_CEDULA_IDENTIDAD } from "@/utils/constants";
 import paisesCode from "@/utils/paises-flag.json";
 import { ComboBox } from "@/components/customs/comboBoxShadcn/ComboBox1";
 import {
@@ -39,6 +39,7 @@ import { storage } from "@/firebaseConfig";
 import { useStorageURL } from "@/hooks/useStorageURL";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { X } from "lucide-react";
+import NoImage from "@/components/customs/NoImage";
 // --- Zod schema (JSX/JS puro) ---
 const MAX_FILE_SIZE_MB = 5;
 
@@ -68,9 +69,9 @@ const formSchema = z.object({
     .min(6, "Ingrese un teléfono válido")
     .max(20, "Muy largo"),
   documento: z.string().regex(REGEX_CEDULA_IDENTIDAD, "Documento inválido"),
-  cedula_frontal: imageFileSchema,
-  cedula_reverso: imageFileSchema,
-  selfie_user: imageFileSchema,
+  cedula_frontal: IMAGE_SCHEMA_NO_REQUERIDO,
+  cedula_reverso: IMAGE_SCHEMA_NO_REQUERIDO,
+  selfie_user: IMAGE_SCHEMA_NO_REQUERIDO,
 });
 
 const defaultValues = {
@@ -186,23 +187,19 @@ export default function FormEditarDatosSolicitud({
       fd.append("telefono", values.telefono);
       fd.append("documento", values.documento);
 
-      if (values.cedula_frontal && values.cedula_frontal.length > 0) {
-        fd.append("cedula_frontal", values.cedula_frontal[0]);
+      if (values.cedula_frontal ) {
+        fd.append("cedula_frontal", values.cedula_frontal);
       }
-      if (values.cedula_reverso && values.cedula_reverso.length > 0) {
-        fd.append("cedula_reverso", values.cedula_reverso[0]);
+      if (values.cedula_reverso ) {
+        fd.append("cedula_reverso", values.cedula_reverso);
       }
 
-      if (values.selfie_user && values.selfie_user.length > 0) {
-        fd.append("selfie_user", values.selfie_user[0]);
+      if (values.selfie_user) {
+        fd.append("selfie_user", values.selfie_user);
       }
 
       // Aquí haces tu fetch/axios
       // await fetch("/api/tu-endpoint", { method: "POST", body: fd });
-      console.log(
-        "Payload listo para enviar (FormData)",
-        Object.fromEntries(fd.entries())
-      );
 
       await actualizarDatosSolicitud(id, fd);
       toast.success("Datos Actualizados con exito");
@@ -378,7 +375,7 @@ export default function FormEditarDatosSolicitud({
                     accept="image/*"
                     onChange={(e) => {
                       const files = e.target.files || undefined;
-                      field.onChange(files);
+                      field.onChange(files[0]);
                       if (files && files[0]) {
                         const url = URL.createObjectURL(files[0]);
                         setPreviewFrontal(url);
@@ -406,7 +403,7 @@ export default function FormEditarDatosSolicitud({
                     accept="image/*"
                     onChange={(e) => {
                       const files = e.target.files || undefined;
-                      field.onChange(files);
+                      field.onChange(files[0]);
                       if (files && files[0]) {
                         const url = URL.createObjectURL(files[0]);
                         setPreviewReverso(url);
@@ -433,7 +430,7 @@ export default function FormEditarDatosSolicitud({
                     accept="image/*"
                     onChange={(e) => {
                       const files = e.target.files || undefined;
-                      field.onChange(files);
+                      field.onChange(files[0]);
                       if (files && files[0]) {
                         const url = URL.createObjectURL(files[0]);
                         setPreviewSelfie(url);
@@ -466,7 +463,7 @@ export default function FormEditarDatosSolicitud({
                         className="w-full h-48 object-cover rounded-xl border"
                       />
                     </PhotoView>
-                  ) : null
+                  ) : <NoImage />
               )}
             </PhotoProvider>
           }

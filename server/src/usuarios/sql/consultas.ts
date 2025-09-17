@@ -17,5 +17,4 @@ from usuarios us
 left join grupos_usuarios gus on gus.id_usuario = us.id
 where us.activo = true and us.id  = $1
 group by us.id, us.nombre, us.apellido , is_super_admin
-
 `

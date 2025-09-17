@@ -43,5 +43,12 @@ export class ParticipantesController {
         throw error;
       }
     }
-
+  @Get('query-many')
+  async getParticipantesQueryMany(@Query() query){
+    try {
+      return this.participantesService.getParticipantesQueryMany(query);
+    } catch (error) {
+      throw error;
+    }
+  }
 }

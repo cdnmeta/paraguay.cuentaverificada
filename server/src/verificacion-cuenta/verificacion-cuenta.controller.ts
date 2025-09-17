@@ -78,9 +78,6 @@ export class VerificacionCuentaController {
         { name: 'selfie_user', maxCount: 1 },
         
       ],
-      {
-        limits: { fileSize: 2 * 1024 * 1024 }, // refuerzo Multer (por archivo)
-      },
     ),
   )
   async actualizarUsuarioVerificacion(
@@ -92,10 +89,15 @@ export class VerificacionCuentaController {
     @Res() res: Response,
   ) {
 
-    
+    console.log("file",files)
     const frontal = files.cedula_frontal?.[0];
     const reverso = files.cedula_reverso?.[0];
     const selfie_user = files.selfie_user?.[0];
+
+    console.log("file",files)
+
+    try {
+      
 
     updateVerificacionCuentaDto.id_usuario_actualizacion = req.user.userId;
 
@@ -106,6 +108,9 @@ export class VerificacionCuentaController {
     );
 
     return res.status(200).json({ message: 'Solicitud actualizada correctamente' });
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Post('rechazar')

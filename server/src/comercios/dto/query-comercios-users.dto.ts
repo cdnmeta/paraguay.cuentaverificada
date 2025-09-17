@@ -12,3 +12,13 @@ export class QueryForUsers {
   @IsOptional()
   take: number;
 }
+
+
+export class QueryManyComercios {
+  @IsOptional()
+  ruc: string;
+  @IsOptional()
+  razon_social: string;
+  @IsOptional()
+  id_estado_comercio: number;
+}

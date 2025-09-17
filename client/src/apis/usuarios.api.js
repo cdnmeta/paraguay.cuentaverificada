@@ -72,3 +72,21 @@ export const crearUsuario = async (data) => {
     },
   });
 }
+
+
+export const getUsuarioById = async (id) => {
+  return await api.get(`/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}
+
+
+export const actualizarUsuario = async (id, data) => {
+  return await api.put(`/actualizar-usuario/${id}`, data, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}

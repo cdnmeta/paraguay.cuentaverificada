@@ -16,14 +16,15 @@ import {
   crearSlug,
 } from '@/utils/funciones';
 import { FirebaseService } from '@/firebase/firebase.service';
-import { QueryForUsers } from './dto/query-comercios-users.dto';
+import { QueryForUsers, QueryManyComercios } from './dto/query-comercios-users.dto';
 import {
   cursorPaginatePrisma,
   getTakeCursorForPrisma,
 } from '@/herper/paguinationPrisma';
 import { DatabaseService } from '@/database/database.service';
-import { sqlListadoComerciosPendientes } from './sql/consultas';
+import { sqlListadoComercios, sqlListadoComerciosPendientes } from './sql/consultas';
 import * as path from 'path';
+import { DatabasePromiseService } from '@/database/database-promise.service';
 
 interface FileSolicitudVerificacion {
   comprobantePago: Express.Multer.File;
@@ -36,7 +37,22 @@ export class ComerciosService {
     private readonly firebaseService: FirebaseService, // Assuming FirebaseService is injected for file storage
 
     private readonly dbService: DatabaseService, // Assuming DatabaseService is injected for database transactions
+    private readonly databasePromiseService: DatabasePromiseService,
   ) {}
+
+  async getOpcionesFiltroComercios(){
+    try {
+      const estados = await this.prismaService.estados_comercios.findMany({
+        select: {
+          id: true,
+          descripcion: true,
+        },
+      });
+      return { estados };
+    } catch (error) {
+      throw error;
+    }
+  }
 
   async findAllForUsers(userId: number, query?: QueryForUsers) {
     try {
@@ -129,6 +145,34 @@ export class ComerciosService {
         },
       });
       return comercios;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getComerciosByMany(query: QueryManyComercios) {
+    try {
+      const whereClausule: any = {};
+      let sql = sqlListadoComercios;
+
+      sql += ' WHERE c.activo = true ';
+
+      if(query.ruc){
+        sql += ' AND c.ruc = $(ruc) ';
+        whereClausule.ruc = query.ruc;
+      }
+
+      if(query.razon_social){
+        sql += ' AND c.razon_social ILIKE $(razon_social) ';
+        whereClausule.razon_social = `%${query.razon_social}%`;  
+      }
+
+      if(query.id_estado_comercio){
+        sql += ' AND c.estado = $(id_estado_comercio) ';
+        whereClausule.id_estado_comercio = query.id_estado_comercio;  
+      }
+      const comercios = await this.databasePromiseService.result(sql, whereClausule);
+      return comercios.rows;
     } catch (error) {
       throw error;
     }

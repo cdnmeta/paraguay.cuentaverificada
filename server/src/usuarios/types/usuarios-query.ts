@@ -5,6 +5,8 @@ export interface UserByQuery {
 }
 
 export interface UsersForQueryMany {
+  estado?: string;
+  is_super_admin?: boolean;
   nombre?: string;
   documento?: string;
   email?: string;

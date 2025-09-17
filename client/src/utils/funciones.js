@@ -5,18 +5,18 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { TOKEN_CACHE_DURATION } from "./constants";
 
 export const getIdToken = async (forzarRefresh = false) => {
-  const user = auth.currentUser;
-  // Si no hay usuario autenticado, lanzamos un error
-  if (!user) {
-    throw new Error("Usuario no autenticado");
-  }
-
+  try {
+    const user = auth.currentUser;
+  if (!user) return null;
   if(forzarRefresh){
-    return await user.getIdToken(true);
+    return await user?.getIdToken(true);
   }
 
   // 🔄 Esto devuelve un idToken nuevo si está cerca de expirar
-  return await user.getIdToken();
+  return await user?.getIdToken();
+  } catch (error) {
+    console.error("Error al obtener el idToken:", error);
+  }
 };
 
 export const logout = async () => {
@@ -26,9 +26,12 @@ export const logout = async () => {
 };
 
 export const checkAuthOnStart = async () => {
+  console.log("checkAuthOnStart invoked");
   return new Promise((resolve) => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      
       if (user) {
+        console.log("Usuario autenticado:", user)
         try {
           await useAuthStore.getState().fetchUser(); // obtiene info desde backend
         } catch (err) {
@@ -93,5 +96,3 @@ export const cargarURL = async (urlImg) => {
     return null;
   }
 };
-
-

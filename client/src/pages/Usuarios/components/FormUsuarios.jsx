@@ -48,14 +48,15 @@ import { getGruposHabilitados } from "@/apis/auth.api";
 import langListDualbox from "@/assets/lang/lang-list-dualbox";
 import {
   CANT_MIN_CARACTERES_CONTRASENA,
-  IMAGE_SCHEMA,
+  IMAGE_SCHEMA_NO_REQUERIDO,
   MAXIMO_PESO_IMAGENES_BYTES,
   REGEX_CEDULA_IDENTIDAD,
 } from "@/utils/constants";
-import { crearUsuario } from "@/apis/usuarios.api";
+import { crearUsuario, getUsuarioById } from "@/apis/usuarios.api";
 import { toast } from "sonner";
 import { useAlertDialogStore } from "@/store/useAlertDialogStore";
 import { de } from "zod/v4/locales";
+import { cargarURL } from "@/utils/funciones";
 
 /**
  * Props:
@@ -283,10 +284,8 @@ export default function FormUsuario({
       if (!idUsuario) return;
       setLoading(true);
       try {
-        const resp = await fetch(`${apiBaseUrl}/usuarios/${idUsuario}`);
-        const data = await resp.json();
-        const u = data?.data ?? data;
-        if (!active) return;
+        const response = await getUsuarioById(idUsuario);
+        const u = response?.data ?? response;
         reset({
           nombre: u?.nombre ?? "",
           contrasena: "", // no se rellena por seguridad
@@ -300,15 +299,20 @@ export default function FormUsuario({
                 .map((g) => Number(g?.id ?? g?.id_grupo ?? g))
                 .filter(Boolean)
             : [],
-          observaciones: u?.observaciones ?? "",
+          porcentaje_vendedor_primera_venta: u?.porcentaje_comision_primera_venta ?? "",
+          porcentaje_vendedor_venta_recurrente: u?.porcentaje_comision_recurrente ?? "",
         });
         // previews desde paths existentes (si tu API devuelve URLs)
-        if (u?.path_cedula_frontal_url)
-          setPreviewFront(u.path_cedula_frontal_url);
-        if (u?.path_cedula_reverso_url)
-          setPreviewBack(u.path_cedula_reverso_url);
-        if (u?.selfie_url) setPreviewSelfie(u.selfie_url);
-      } catch (e) {
+        const imagePromises = [
+          u?.cedula_frente ? cargarURL(u?.cedula_frente) : Promise.resolve(null),
+          u?.cedula_reverso ? cargarURL(u?.cedula_reverso) : Promise.resolve(null),
+          u?.selfie ? cargarURL(u?.selfie) : Promise.resolve(null),
+        ];
+        const [urlFront, urlBack, urlSelfie] = await Promise.all(imagePromises);
+        setPreviewFront(urlFront);
+        setPreviewBack(urlBack);
+        setPreviewSelfie(urlSelfie);
+            } catch (e) {
         console.error("Error cargando usuario", e);
       } finally {
         if (active) setLoading(false);

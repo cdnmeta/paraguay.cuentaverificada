@@ -98,6 +98,10 @@ export class VerificarInformacionDto {
   @Matches(/^https:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|maps\.google\.[a-z.]+\/maps|maps\.google\.[a-z.]+\/\?q=|www\.google\.com\/maps)[^\s]*$/i, { message: 'Debe ser un enlace de Google Maps' })
   url_maps: string;
 
+  @IsString({ message: 'Dirección debe ser una cadena de texto' })
+  @IsNotEmpty({ message: 'La dirección es obligatoria' })
+  direccion: string;
+
   @Type(() => Number)   // 👈 transforma a número antes de validar
   @IsNumber({}, { message: 'El ID del comercio debe ser un número' })
   @IsNotEmpty({ message: 'El ID del comercio es obligatorio' })

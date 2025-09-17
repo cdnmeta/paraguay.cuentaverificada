@@ -27,7 +27,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { IsPublic } from '@/auth/decorators/public.decorator';
 import { plainToInstance } from 'class-transformer';
 import { ResponseComercioDto } from './dto/response-comercio.dto';
-import { QueryForUsers } from './dto/query-comercios-users.dto';
+import { QueryForUsers, QueryManyComercios } from './dto/query-comercios-users.dto';
 
 @Controller('comercios')
 export class ComerciosController {
@@ -39,6 +39,11 @@ export class ComerciosController {
     @Query() query: QueryForUsers,
   ) {
     return this.comerciosService.findAllForUsers(+id, query);
+  }
+
+  @Get('opciones-filtro')
+  async getOpcionesFiltroComercios() {
+    return this.comerciosService.getOpcionesFiltroComercios();
   }
 
   @IsPublic()
@@ -53,6 +58,15 @@ export class ComerciosController {
     return this.comerciosService.getComerciosAprovacionPagos();
   }
 
+  @Get("query-many")
+  async getComerciosByMany(@Query() query: QueryManyComercios) {
+    try {
+      return this.comerciosService.getComerciosByMany(query);
+    } catch (error) {
+      throw error;
+    }
+  }
+
 
   
   @Get(':id')
@@ -63,6 +77,8 @@ export class ComerciosController {
     console.log(comercioResponse);
     return comercioResponse;
   }
+
+  
 
 
 

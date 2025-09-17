@@ -13,24 +13,112 @@ if(PRODUCCION){
 
 export const TIPO_IMAGENES_PERMITIDAS = ['image/jpeg', 'image/png', 'image/jpg'];
 const MB = 1024 * 1024;
-const NUMERO_MB = 2;
+const NUMERO_MB = 5;
 export const MAXIMO_PESO_IMAGENES_BYTES = NUMERO_MB * MB;
 
-export const IMAGE_SCHEMA = z
-  .instanceof(File)
+// Esquema para imágenes NO REQUERIDAS (opcionales)
+export const IMAGE_SCHEMA_NO_REQUERIDO = z
+  .instanceof(File,{message: "El archivo un archivo valido"})
+  .optional()
   .nullable()
-  .refine(
-    (file) =>{
-      if( file?.type && !TIPO_IMAGENES_PERMITIDAS.includes(file?.type)){
-        return "Formato imagen invalido. Solo PNG, JPG y JPEG.";
-      }
-      if (file?.size > MAXIMO_PESO_IMAGENES_BYTES) {
-        return `El tamaño de la imagen debe ser menor a ${NUMERO_MB}MB.`;
-      }
-      return true;
-    }
-   
-  );
+  .refine((file) => {
+    if (!file) return true; // Si no hay archivo, es válido
+    return TIPO_IMAGENES_PERMITIDAS.includes(file.type);
+  }, {
+    message: "Formato de imagen inválido. Solo se permiten PNG, JPG y JPEG.",
+  })
+  .refine((file) => {
+    if (!file) return true; // Si no hay archivo, es válido
+    return file.size <= MAXIMO_PESO_IMAGENES_BYTES;
+  }, {
+    message: `El tamaño de la imagen debe ser menor a ${NUMERO_MB}MB.`,
+  });
+
+// Esquema para imágenes REQUERIDAS (obligatorias)
+export const IMAGE_SCHEMA_REQUERIDO = z
+  .instanceof(File, {
+    message: "La imagen es obligatoria.",
+  })
+  .refine((file) => {
+    return TIPO_IMAGENES_PERMITIDAS.includes(file.type);
+  }, {
+    message: "Formato de imagen inválido. Solo se permiten PNG, JPG y JPEG.",
+  })
+  .refine((file) => {
+    return file.size <= MAXIMO_PESO_IMAGENES_BYTES;
+  }, {
+    message: `El tamaño de la imagen debe ser menor a ${NUMERO_MB}MB.`,
+  });
+
+// Función helper para crear esquemas de imagen personalizados
+export const createImageSchema = (options = {}) => {
+  const {
+    required = false,
+    maxSizeBytes = MAXIMO_PESO_IMAGENES_BYTES,
+    allowedTypes = TIPO_IMAGENES_PERMITIDAS,
+    requiredMessage = "La imagen es obligatoria.",
+    typeMessage = "Formato de imagen inválido. Solo se permiten PNG, JPG y JPEG.",
+    sizeMessage = `El tamaño de la imagen debe ser menor a ${NUMERO_MB}MB.`,
+  } = options;
+
+  let schema = z.instanceof(File);
+
+  if (!required) {
+    schema = schema.optional().nullable();
+  } else {
+    schema = schema.refine(() => true, { message: requiredMessage });
+  }
+
+  // Validación de tipo
+  schema = schema.refine((file) => {
+    if (!required && !file) return true;
+    return allowedTypes.includes(file.type);
+  }, {
+    message: typeMessage,
+  });
+
+  // Validación de tamaño
+  schema = schema.refine((file) => {
+    if (!required && !file) return true;
+    return file.size <= maxSizeBytes;
+  }, {
+    message: sizeMessage,
+  });
+
+  return schema;
+};
+
+// Esquemas específicos para diferentes casos de uso
+export const CEDULA_FRONTAL_SCHEMA = createImageSchema({
+  required: true,
+  requiredMessage: "La imagen de la cédula frontal es obligatoria.",
+});
+
+export const CEDULA_REVERSO_SCHEMA = createImageSchema({
+  required: true,
+  requiredMessage: "La imagen de la cédula reverso es obligatoria.",
+});
+
+export const SELFIE_SCHEMA = createImageSchema({
+  required: true,
+  requiredMessage: "La selfie es obligatoria.",
+});
+
+export const LOGO_COMERCIO_SCHEMA = createImageSchema({
+  required: false,
+  requiredMessage: "El logo del comercio es opcional.",
+});
+
+// Esquema para múltiples imágenes (array)
+export const MULTIPLE_IMAGES_SCHEMA = z
+  .array(IMAGE_SCHEMA_NO_REQUERIDO)
+  .optional()
+  .refine((files) => {
+    if (!files) return true;
+    return files.length <= 5; // Máximo 5 imágenes
+  }, {
+    message: "Máximo 5 imágenes permitidas.",
+  });
 
 
 

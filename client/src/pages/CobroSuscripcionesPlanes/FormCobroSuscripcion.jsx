@@ -31,6 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { emit, EVENTS } from "@/utils/events";
 import { convertirMoneda } from "@/utils/funciones";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useEffect, useRef, useState, useTransition } from "react";
@@ -83,7 +84,7 @@ const detallesPagosSchema = z
     }
   });
 
-export default function FormCobroSuscripcion({ id_factura }) {
+export default function FormCobroSuscripcion({ id_factura,afterSubmit=()=>{} }) {
   const [cargandoInfofactura, startTransition] = useTransition();
   const [metodosPago, setMetodosPago] = useState([]);
   const [cotizaciones, setCotizaciones] = useState([]);
@@ -274,6 +275,11 @@ export default function FormCobroSuscripcion({ id_factura }) {
           }
         );
       }
+    }finally{
+      console.log("Emitir ebvento para recargar la lista de pagos");
+      emit(EVENTS.SOLICITUDES_PAGOS_ACTUALIZADA,{
+        when: new Date(),
+      })
     }
   });
 

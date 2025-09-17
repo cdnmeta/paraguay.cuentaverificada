@@ -133,12 +133,13 @@ const [urls, setUrls] = useState([]); // [{ key, label, url }]
       <PhotoProvider onVisibleChange={(open) => {
         document.body.style.pointerEvents = open ? "auto" : "none";
       }}
-      overlayRender={()=> (<>Hola</>)}
       >
         <div className="max-h-[400px] overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-2">
             {loading && <p className="text-muted-foreground">Cargando imágenes…</p>}
             {!loading && urls.map(({ key, label, url }) => (
+              <div key={key} className="flex flex-col gap-2">
+              <p className="font-semibold text-center">{label}</p>
               <PhotoView key={key} src={url}>
                 <img
                   alt={label}
@@ -148,6 +149,7 @@ const [urls, setUrls] = useState([]); // [{ key, label, url }]
                   decoding="async"
                 />
               </PhotoView>
+              </div>
             ))}
           </div>
         </div>

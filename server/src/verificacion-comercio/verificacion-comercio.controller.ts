@@ -169,8 +169,6 @@ export class VerificacionComercioController {
       [
         { name: 'foto_interior', maxCount: 1 },
         { name: 'foto_exterior', maxCount: 1 },
-        { name: 'cedula_frontal', maxCount: 1 },
-        { name: 'cedula_reverso', maxCount: 1 },
         { name: 'imagen_factura_servicio', maxCount: 1 },
       ],
       {
@@ -186,15 +184,11 @@ export class VerificacionComercioController {
     files: {
       foto_interior?: Express.Multer.File[];
       foto_exterior?: Express.Multer.File[];
-      cedula_frontal?: Express.Multer.File[];
-      cedula_reverso?: Express.Multer.File[];
       imagen_factura_servicio?: Express.Multer.File[];
     },
   ) {
     const interior = files.foto_interior?.[0];
     const exterior = files.foto_exterior?.[0];
-    const frontal = files.cedula_frontal?.[0];
-    const reverso = files.cedula_reverso?.[0];
     const factura = files.imagen_factura_servicio?.[0];
 
     validateImageOrThrow(interior, {
@@ -207,16 +201,6 @@ export class VerificacionComercioController {
       maxSizeMB: 2,
       requiredErrorMessage: 'Imagen del el exterior del local requerido',
     });
-    validateImageOrThrow(frontal, {
-      required: true,
-      maxSizeMB: 2,
-      requiredErrorMessage: 'Imagen de la cédula frontal requerida',
-    });
-    validateImageOrThrow(reverso, {
-      required: true,
-      maxSizeMB: 2,
-      requiredErrorMessage: 'Imagen de la cédula reverso requerida',
-    });
     validateImageOrThrow(factura, {
       required: true,
       maxSizeMB: 2,
@@ -227,8 +211,6 @@ export class VerificacionComercioController {
     const archivosinfo = {
       foto_interior: interior as Express.Multer.File,
       foto_exterior: exterior as Express.Multer.File,
-      cedula_frontal: frontal as Express.Multer.File,
-      cedula_reverso: reverso as Express.Multer.File,
       imagen_factura_servicio: factura as Express.Multer.File,
     };
     const id_usuario = req.user.userId;

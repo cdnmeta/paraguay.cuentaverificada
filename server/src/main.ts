@@ -35,6 +35,7 @@ async function bootstrap() {
       stopAtFirstError: true,
       exceptionFactory: (errors) => {
         const firstError = errors[0];
+        console.log("error validacion", errors[0])
         const constraints = firstError?.constraints;
         const firstMessage = constraints
           ? Object.values(constraints)[0]

@@ -12,8 +12,8 @@ export default function DashBoardSuperAdmin() {
     <div className="min-h-screen text-white">
       <h1 className="text-xl font-semibold">Panel Administradores</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
-        {secciones.map((item) => (
-          <CardOption1 key={item.title} {...item} />
+        {secciones.map((item,index) => (
+          <CardOption1 key={index} {...item} />
         ))}
       </div>
     </div>

@@ -43,8 +43,6 @@ interface DataAprobacion {
 interface FilesVerificacionComercio {
   foto_interior: Express.Multer.File;
   foto_exterior: Express.Multer.File;
-  cedula_frontal: Express.Multer.File;
-  cedula_reverso: Express.Multer.File;
   imagen_factura_servicio: Express.Multer.File;
 }
 
@@ -77,22 +75,6 @@ export class VerificacionComercioService {
       if (comercioExistente?.rowCount && comercioExistente.rowCount > 0) {
         throw new BadRequestException(
           'Ya existe un comercio registrado con este RUC',
-        );
-      }
-
-
-
-      // Verificar si el comercio ya tiene una suscripción registrada
-      const suscripcionExistente = await this.dbService.query(
-        `SELECT s.* FROM suscripciones s 
-         INNER JOIN comercio c ON s.id_comercio = c.id 
-         WHERE c.id_usuario = $1 AND s.activo = true AND s.estado in (1,2)`,
-        [createComercioDto.id_usuario],
-      );
-
-      if (suscripcionExistente?.rowCount && suscripcionExistente.rowCount > 0) {
-        throw new BadRequestException(
-          'El usuario ya tiene una suscripción activa',
         );
       }
 
@@ -467,8 +449,6 @@ export class VerificacionComercioService {
             where: { id: data.id_comercio },
             data: {
               estado: estado_asignar,
-              cedula_frontal: pathImagenes.cedula_frontal,
-              cedula_reverso: pathImagenes.cedula_reverso,
               foto_interior: pathImagenes.foto_interior,
               foto_exterior: pathImagenes.foto_exterior,
               imagen_factura_servicio: pathImagenes.imagen_factura_servicio,
@@ -477,6 +457,7 @@ export class VerificacionComercioService {
               fecha_actualizacion_estado: fecha,
               urlmaps: data.url_maps,
               correo_empresa: data.correo_empresa,
+              direccion: data.direccion,
             },
           });
           // registrar en seguimiento comercio

@@ -3,7 +3,7 @@ import React from 'react'
 import { Outlet } from 'react-router-dom';
 import { Toaster } from '@components/ui/sonner';
 import AlertCambioDeRolEmpresa from '@components/customs/AlertCambioDeRolEmpresa';
-import { ROUTE_BASE } from './config/features';
+import { ROUTE_BASE } from './config/routes';
 import NavBarCustom1 from '@/components/navbars/NavBarCustom1';
 import { AlertDialogGlobal } from '@/components/customs/AlertDialogGlobal';
 export default function LayoutSuperAdmin({children}) {

@@ -42,3 +42,21 @@ export const getComercioById = async (id) => {
     },
   });
 }
+
+
+export const getComerciosByMany = async (query) => {
+  return api.get(`/query-many`, {
+    headers: {
+      Authorization: `Bearer ${await getIdToken()}`, // Autenticación
+    },
+    params: query,
+  });
+}
+
+export const opcionesFiltroComercios = async () => {
+  return api.get(`/opciones-filtro`, {
+    headers: {
+      Authorization: `Bearer ${await getIdToken()}`, // Autenticación
+    },
+  });
+}

@@ -16,3 +16,12 @@ export const getCotizacionesEmpresa = async () => {
   });
   return response;
 };
+
+export const registrarCotizacionEmpresa = async (data) => {
+  const response = await api.post("/registrar-cotizacion", data, {
+    headers: {
+      Authorization: `Bearer ${await getIdToken()}`, // Autenticación
+    },
+  });
+  return response;
+};
