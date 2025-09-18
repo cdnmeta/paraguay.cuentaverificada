@@ -377,7 +377,7 @@ export default function FormUsuario({
 
       if (typeof afterSubmit === "function") afterSubmit?.();
         toast.success(response?.data?.message || "Usuario guardado correctamente");
-      handleLimpiar();
+      if(!isEdit) handleLimpiar();
     } catch (e) {
       console.error("Error guardando usuario", e);
       if ([400, 422].includes(e?.response?.status)) {
