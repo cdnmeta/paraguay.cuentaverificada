@@ -55,7 +55,6 @@ import {
 import { crearUsuario, getUsuarioById } from "@/apis/usuarios.api";
 import { toast } from "sonner";
 import { useAlertDialogStore } from "@/store/useAlertDialogStore";
-import { de } from "zod/v4/locales";
 import { cargarURL } from "@/utils/funciones";
 
 /**
@@ -71,6 +70,8 @@ export default function FormUsuario({
   apiBaseUrl = "/api",
   getGrupos,
 }) {
+  // Determinar modo edición antes de armar el schema
+  const isEditing = !!idUsuario;
   // ---- Dial codes (puedes reemplazar por tu fuente real) ----
   const dialCodes = useMemo(
     () =>
@@ -81,135 +82,118 @@ export default function FormUsuario({
     []
   );
 
-  // ---- Zod schema (alineado al DTO) ----
-  const schema = z
+  // Helpers de esquema
+  const percentageField = z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((v) => {
+      if (v === undefined || v === null || v === '') return null;
+      const n = typeof v === 'number' ? v : Number(v);
+      return Number.isNaN(n) ? null : n;
+    });
+
+  const baseShape = {
+    nombre: z
+      .string({ required_error: 'El nombre es obligatorio' })
+      .trim()
+      .min(1, 'El nombre es obligatorio'),
+    apellido: z.string().trim().optional().nullable(),
+    documento: z
+      .string({ required_error: 'El documento es obligatorio' })
+      .trim()
+      .regex(REGEX_CEDULA_IDENTIDAD, 'Formato cedula inválido'),
+    correo: z
+      .string({ required_error: 'El correo es obligatorio' })
+      .trim()
+      .email('El correo debe ser un correo válido'),
+    dial_code: z.string().optional().nullable(),
+    telefono: z.string().optional().nullable(),
+    grupos: z.array(z.number()).optional().nullable(),
+    cedula_frontal: z.any().optional().nullable(),
+    cedula_reverso: z.any().optional().nullable(),
+    selfie: z.any().optional().nullable(),
+    porcentaje_vendedor_primera_venta: percentageField,
+    porcentaje_vendedor_venta_recurrente: percentageField,
+  };
+
+  const schemaCreate = z
     .object({
-      nombre: z
-        .string({ required_error: "El nombre es obligatorio" })
-        .trim()
-        .min(1, "El nombre es obligatorio"),
+      ...baseShape,
       contrasena: z
-        .string({ required_error: "La contraseña es obligatoria" })
+        .string({ required_error: 'La contraseña es obligatoria' })
         .trim()
-        .min(CANT_MIN_CARACTERES_CONTRASENA, "La contraseña es obligatoria"),
+        .min(CANT_MIN_CARACTERES_CONTRASENA, 'La contraseña es obligatoria'),
       repetir_contrasena: z
-        .string({ required_error: "La contraseña es obligatoria" })
+        .string({ required_error: 'La contraseña es obligatoria' })
         .trim()
-        .min(CANT_MIN_CARACTERES_CONTRASENA, "La contraseña es obligatoria"),
-      apellido: z.string().trim().optional().nullable(),
-      documento: z
-        .string({ required_error: "El documento es obligatorio" })
-        .trim()
-        .regex(REGEX_CEDULA_IDENTIDAD, "Formato cedula inválido"),
-      correo: z
-        .string({ required_error: "El correo es obligatorio" })
-        .trim()
-        .email("El correo debe ser un correo válido"),
-      dial_code: z.string().optional().nullable(),
-      telefono: z.string().optional().nullable(),
-      // pin se omite
-      grupos: z.array(z.number()).optional().nullable(),
-      // paths del backend se rellenan al subir: no los pedimos directamente
-      // imágenes vienen como File (multipart)
-      cedula_frontal: z.any().optional().nullable(),
-      cedula_reverso: z.any().optional().nullable(),
-      selfie: z.any().optional().nullable(),
-      porcentaje_vendedor_primera_venta: z
-        .string()
-        .transform((v) => (v ? Number(v) : null))
-        .optional(),
-      porcentaje_vendedor_venta_recurrente: z
-        .string()
-        .transform((v) => (v ? Number(v) : null))
-        .optional(),
+        .min(CANT_MIN_CARACTERES_CONTRASENA, 'La contraseña es obligatoria'),
     })
     .superRefine((val, ctx) => {
-      // Si es creación (no hay idUsuario), pedimos contraseña obligatoria
-      // (Ya se valida arriba con min(1))
-      // Puedes añadir reglas extra: ej. si hay telefono, debe haber dial_code
       if (val.telefono && !val.dial_code) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Si cargas teléfono, selecciona un dial code",
-          path: ["dial_code"],
-        });
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Si cargas teléfono, selecciona un dial code', path: ['dial_code'] });
       }
-
-      if (val.contrasena != val.repetir_contrasena) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Las contraseñas no coinciden",
-          path: ["repetir_contrasena"],
-        });
+      if (val.contrasena !== val.repetir_contrasena) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Las contraseñas no coinciden', path: ['repetir_contrasena'] });
       }
-
       if (val.grupos && val.grupos.includes(3)) {
-        // 3 = vendedor
-        if (!val.porcentaje_vendedor_primera_venta) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message:
-              "El porcentaje del vendedor en la primera venta es obligatorio",
-            path: ["porcentaje_vendedor_primera_venta"],
-          });
+        if (val.porcentaje_vendedor_primera_venta == null) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje del vendedor en la primera venta es obligatorio', path: ['porcentaje_vendedor_primera_venta'] });
         }
-        if (!val.porcentaje_vendedor_venta_recurrente) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message:
-              "El porcentaje del vendedor en ventas recurrentes es obligatorio",
-            path: ["porcentaje_vendedor_venta_recurrente"],
-          });
+        if (val.porcentaje_vendedor_venta_recurrente == null) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje del vendedor en ventas recurrentes es obligatorio', path: ['porcentaje_vendedor_venta_recurrente'] });
         }
-
-        if (
-          val.porcentaje_vendedor_primera_venta < 0 ||
-          val.porcentaje_vendedor_primera_venta > 100
-        ) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "El porcentaje de venta debe estar entre 0 y 100",
-            path: ["porcentaje_vendedor_primera_venta"],
-          });
+        if (val.porcentaje_vendedor_primera_venta != null && (val.porcentaje_vendedor_primera_venta < 0 || val.porcentaje_vendedor_primera_venta > 100)) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje de venta debe estar entre 0 y 100', path: ['porcentaje_vendedor_primera_venta'] });
         }
-
-        if (
-          val.porcentaje_vendedor_venta_recurrente < 0 ||
-          val.porcentaje_vendedor_venta_recurrente > 100
-        ) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "El porcentaje de venta debe estar entre 0 y 100",
-            path: ["porcentaje_vendedor_venta_recurrente"],
-          });
+        if (val.porcentaje_vendedor_venta_recurrente != null && (val.porcentaje_vendedor_venta_recurrente < 0 || val.porcentaje_vendedor_venta_recurrente > 100)) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje de venta debe estar entre 0 y 100', path: ['porcentaje_vendedor_venta_recurrente'] });
         }
       }
-      if (!isEdit) {
-        // En creación, pedimos las 3 imágenes obligatorias si es vendedor
-        if (!val.selfie) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "La selfie es obligatoria",
-            path: ["selfie"],
-          });
-        }
-
-        if (!val.cedula_frontal) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "La cédula frontal es obligatoria",
-            path: ["cedula_frontal"],
-          });
-        }
-        if (!val.cedula_reverso) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "La cédula reverso es obligatoria",
-            path: ["cedula_reverso"],
-          });
-        }
-      }
+      // En creación, pedimos imágenes obligatorias
+      if (!val.selfie) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La selfie es obligatoria', path: ['selfie'] });
+      if (!val.cedula_frontal) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La cédula frontal es obligatoria', path: ['cedula_frontal'] });
+      if (!val.cedula_reverso) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La cédula reverso es obligatoria', path: ['cedula_reverso'] });
     });
+
+  const schemaEdit = z
+    .object({
+      ...baseShape,
+      contrasena: z.string().trim().optional().nullable(),
+      repetir_contrasena: z.string().trim().optional().nullable(),
+    })
+    .superRefine((val, ctx) => {
+      if (val.telefono && !val.dial_code) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Si cargas teléfono, selecciona un dial code', path: ['dial_code'] });
+      }
+      // Contraseña opcional en edición; validar sólo si se envía
+      if (val.contrasena || val.repetir_contrasena) {
+        const pwd = val.contrasena ?? '';
+        const rep = val.repetir_contrasena ?? '';
+        if (pwd.length < CANT_MIN_CARACTERES_CONTRASENA) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: `La contraseña debe tener al menos ${CANT_MIN_CARACTERES_CONTRASENA} caracteres`, path: ['contrasena'] });
+        }
+        if (pwd !== rep) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Las contraseñas no coinciden', path: ['repetir_contrasena'] });
+        }
+      }
+      if (val.grupos && val.grupos.includes(3)) {
+        if (val.porcentaje_vendedor_primera_venta == null) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje del vendedor en la primera venta es obligatorio', path: ['porcentaje_vendedor_primera_venta'] });
+        }
+        if (val.porcentaje_vendedor_venta_recurrente == null) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje del vendedor en ventas recurrentes es obligatorio', path: ['porcentaje_vendedor_venta_recurrente'] });
+        }
+        if (val.porcentaje_vendedor_primera_venta != null && (val.porcentaje_vendedor_primera_venta < 0 || val.porcentaje_vendedor_primera_venta > 100)) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje de venta debe estar entre 0 y 100', path: ['porcentaje_vendedor_primera_venta'] });
+        }
+        if (val.porcentaje_vendedor_venta_recurrente != null && (val.porcentaje_vendedor_venta_recurrente < 0 || val.porcentaje_vendedor_venta_recurrente > 100)) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje de venta debe estar entre 0 y 100', path: ['porcentaje_vendedor_venta_recurrente'] });
+        }
+      }
+      // En edición NO exigimos imágenes
+    });
+
+  const schema = isEditing ? schemaEdit : schemaCreate;
 
   const {
     register,
@@ -237,8 +221,7 @@ export default function FormUsuario({
   });
 
   const [loading, setLoading] = useState(false);
-  const [isEdit, setIsEdit] = useState(!!idUsuario);
-  const [dialOpen, setDialOpen] = useState(false);
+  const isEdit = isEditing;
 
   // Previews
   const [previewFront, setPreviewFront] = useState(null);
@@ -363,7 +346,7 @@ export default function FormUsuario({
 
     // porcentaje vendedores
 
-    if (values?.grupos.includes(3)) {
+  if (Array.isArray(values?.grupos) && values.grupos.includes(3)) {
       if (values.porcentaje_vendedor_primera_venta)
         formData.append(
           "porcentaje_vendedor_primera_venta",
