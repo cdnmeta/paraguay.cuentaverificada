@@ -15,7 +15,6 @@ import { PagoSuscripcionesModule } from './pago-suscripciones/pago-suscripciones
 import { FacturasSuscripcionesModule } from './facturas-suscripciones/facturas-suscripciones.module';
 import { MetodosPagoModule } from './metodos-pago/metodos-pago.module';
 import { EntidadesBancariasModule } from './entidades-bancarias/entidades-bancarias.module';
-import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { VerificacionCuentaModule } from './verificacion-cuenta/verificacion-cuenta.module';
 import { GroupsGuard } from './auth/guards/groups.guard';
@@ -56,7 +55,6 @@ import { OnlyAdminGuard } from './auth/guards/onlyAdmin.guard';
       provide: APP_GUARD,
       useClass: GroupsGuard,
     },
-    AppService,
   ]
 })
 export class AppModule {}

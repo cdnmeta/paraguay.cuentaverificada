@@ -72,8 +72,7 @@ export default function DetalleSolicitudComercio({comercio}) {
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline">Cerrar</Button>
-            </DialogClose>
-            
+            </DialogClose> 
           </DialogFooter>
         </DialogContent>
     </Dialog>

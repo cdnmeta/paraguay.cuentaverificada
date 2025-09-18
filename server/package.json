@@ -21,7 +21,9 @@
     "deploy": "npm run build && npm run migrate:deploy",
     "migrate:dev": "npx prisma migrate dev",
     "migrate:deploy": "npx prisma migrate deploy",
-    "generate:prisma": "npx prisma generate"
+    "generate:prisma": "npx prisma generate",
+    "seed:superadmin": "node -r ts-node/register -r tsconfig-paths/register scripts/seed-superadmin.ts",
+    "seed:superadmin:force": "node -r ts-node/register -r tsconfig-paths/register scripts/seed-superadmin.ts --force"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
