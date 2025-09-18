@@ -692,6 +692,15 @@ export class VerificacionComercioService {
       const comercioActualizado = await this.prismaService.$transaction(
         async (prisma) => {
           const fecha_actualizacion = new Date();
+          const numero_nuv_actual =  await prisma.empresa_config.findFirst({
+            select: { nuv_actual: true,nuv_fin:true },
+            where: { id: 1 },
+          });
+
+          if (!numero_nuv_actual?.nuv_actual) throw new BadRequestException('No se ha configurado el número NUV en la empresa');
+
+          if(numero_nuv_actual?.nuv_fin ==  numero_nuv_actual?.nuv_actual) throw new BadRequestException('No hay más NUV disponibles, contactar con el administrador');
+
           const comercio = await prisma.comercio.update({
             where: { id: id_comercio },
             data: {
@@ -700,6 +709,15 @@ export class VerificacionComercioService {
               fecha_actualizacion: fecha_actualizacion,
               fecha_actualizacion_estado: fecha_actualizacion,
               verificado:true,
+              codigo_nuv: String(numero_nuv_actual!.nuv_actual),
+            },
+          });
+
+          // actualizar el numero NUV en la empresa config
+          await prisma.empresa_config.update({
+            where: { id: 1 },
+            data: {
+              nuv_actual: numero_nuv_actual!.nuv_actual + 1,
             },
           });
 

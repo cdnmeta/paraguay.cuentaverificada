@@ -16,13 +16,19 @@ import {
   crearSlug,
 } from '@/utils/funciones';
 import { FirebaseService } from '@/firebase/firebase.service';
-import { QueryForUsers, QueryManyComercios } from './dto/query-comercios-users.dto';
+import {
+  QueryForUsers,
+  QueryManyComercios,
+} from './dto/query-comercios-users.dto';
 import {
   cursorPaginatePrisma,
   getTakeCursorForPrisma,
 } from '@/herper/paguinationPrisma';
 import { DatabaseService } from '@/database/database.service';
-import { sqlListadoComercios, sqlListadoComerciosPendientes } from './sql/consultas';
+import {
+  sqlListadoComercios,
+  sqlListadoComerciosPendientes,
+} from './sql/consultas';
 import * as path from 'path';
 import { DatabasePromiseService } from '@/database/database-promise.service';
 
@@ -40,7 +46,7 @@ export class ComerciosService {
     private readonly databasePromiseService: DatabasePromiseService,
   ) {}
 
-  async getOpcionesFiltroComercios(){
+  async getOpcionesFiltroComercios() {
     try {
       const estados = await this.prismaService.estados_comercios.findMany({
         select: {
@@ -131,7 +137,7 @@ export class ComerciosService {
   async buscarComercios(query: any) {
     try {
       const comercios = await this.prismaService.comercio.findMany({
-        select:{
+        select: {
           id: true,
           razon_social: true,
           ruc: true,
@@ -157,21 +163,24 @@ export class ComerciosService {
 
       sql += ' WHERE c.activo = true ';
 
-      if(query.ruc){
+      if (query.ruc) {
         sql += ' AND c.ruc = $(ruc) ';
         whereClausule.ruc = query.ruc;
       }
 
-      if(query.razon_social){
+      if (query.razon_social) {
         sql += ' AND c.razon_social ILIKE $(razon_social) ';
-        whereClausule.razon_social = `%${query.razon_social}%`;  
+        whereClausule.razon_social = `%${query.razon_social}%`;
       }
 
-      if(query.id_estado_comercio){
+      if (query.id_estado_comercio) {
         sql += ' AND c.estado = $(id_estado_comercio) ';
-        whereClausule.id_estado_comercio = query.id_estado_comercio;  
+        whereClausule.id_estado_comercio = query.id_estado_comercio;
       }
-      const comercios = await this.databasePromiseService.result(sql, whereClausule);
+      const comercios = await this.databasePromiseService.result(
+        sql,
+        whereClausule,
+      );
       return comercios.rows;
     } catch (error) {
       throw error;

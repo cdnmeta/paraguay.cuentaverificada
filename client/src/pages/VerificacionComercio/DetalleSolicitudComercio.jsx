@@ -57,7 +57,7 @@ export default function DetalleSolicitudComercio({comercio}) {
   return (
     <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline">
+          <Button title="Ver detalles" variant="outline">
             <EyeIcon />
           </Button>
         </DialogTrigger>

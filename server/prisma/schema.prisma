@@ -22,6 +22,7 @@ model comercio {
   codigo_pais                String?
   fecha_eliminacion          DateTime?                  @db.Timestamptz(6)
   fecha_actualizacion        DateTime?                  @db.Timestamptz(6)
+  codigo_nuv                 String?
   id_usuario                 Int
   id_usuario_creacion        Int?
   id_usuario_actualizacion   Int?
@@ -70,6 +71,9 @@ model empresa_config {
   email                String?
   fecha_creacion       DateTime? @default(now()) @db.Timestamptz(6)
   fecha_actualizacion  DateTime? @db.Timestamptz(6)
+  nuv_inicio           Int?
+  nuv_actual           Int?
+  nuv_fin             Int?
   activo               Boolean?  @default(true)
   id_moneda_base       Int
   id_plan_verificacion Int

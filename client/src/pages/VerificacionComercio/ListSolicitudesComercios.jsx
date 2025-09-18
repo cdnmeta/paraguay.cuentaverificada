@@ -41,16 +41,17 @@ const ListSolicitudesComercios = ({ comercios,id_usuario,onSeleccionarComercio =
           {comercios.map((comercio) => (
             <div
               key={comercio.id}
-              className="flex items-center justify-between border rounded-md px-4 py-2 bg-muted"
+              className="flex justify-between ite border rounded-md px-4 py-2 bg-muted"
             >
-              <div>
+              <div className="flex flex-col">
                 <p className="font-medium">{comercio.razon_social}</p>
                 <p className="text-sm text-muted-foreground">
                   RUC: {comercio.ruc}
                 </p>
-              </div>
-              <div className="space-x-1">
                 <BadgeEstadoComercio estado={comercio?.estados_comercios.id} />
+              </div>
+              <div className="flex flex-col items-center md:flex-row lg:flex-row gap-2">
+                
                 <DetalleSolicitudComercio comercio={comercio} />
                 {
                   [2,3,5,6].includes(comercio?.estados_comercios.id) && (
