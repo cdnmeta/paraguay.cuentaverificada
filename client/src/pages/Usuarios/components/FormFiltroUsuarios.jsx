@@ -4,8 +4,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Search, Trash } from "lucide-react";
+import { Plus, Search, Trash } from "lucide-react";
 import { getUsersByQuery } from "@/apis/usuarios.api";
+import { useNavigate } from "react-router-dom";
 
 export default function FormFiltroUsuarios({ onResults, onLoadingChange }) {
   const { register, handleSubmit, reset } = useForm({
@@ -17,6 +18,8 @@ export default function FormFiltroUsuarios({ onResults, onLoadingChange }) {
       telefono: ""
     }
   });
+
+  const navigate = useNavigate();
 
   const handleOnSubmit = async (data) => {
     try {
@@ -44,6 +47,8 @@ export default function FormFiltroUsuarios({ onResults, onLoadingChange }) {
     reset();
     onResults([]);
   };
+
+  const handleAgregarUsuarios = () => navigate("../registrar",{relative:"path"})
 
   return (
     <form onSubmit={handleSubmit(handleOnSubmit)} className="p-4 border rounded-md bg-white">
@@ -84,6 +89,10 @@ export default function FormFiltroUsuarios({ onResults, onLoadingChange }) {
         <Button type="button" variant="outline" onClick={handleLimpiar}>
           <Trash className="mr-2 h-4 w-4" />
           Limpiar
+        </Button>
+        <Button type="button" variant="outline" onClick={handleAgregarUsuarios}>
+          <Plus className="mr-2 h-4 w-4" />
+          Agregar usuarios
         </Button>
       </div>
     </form>
