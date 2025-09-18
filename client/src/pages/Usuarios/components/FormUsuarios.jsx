@@ -52,7 +52,7 @@ import {
   MAXIMO_PESO_IMAGENES_BYTES,
   REGEX_CEDULA_IDENTIDAD,
 } from "@/utils/constants";
-import { crearUsuario, getUsuarioById } from "@/apis/usuarios.api";
+import { actualizarUsuario, crearUsuario, getUsuarioById } from "@/apis/usuarios.api";
 import { toast } from "sonner";
 import { useAlertDialogStore } from "@/store/useAlertDialogStore";
 import { cargarURL } from "@/utils/funciones";
@@ -370,7 +370,7 @@ export default function FormUsuario({
     try {
       let response = null;
       if (isEdit) {
-        //response = await editarUsuario(idUsuario, formData);
+        response = await actualizarUsuario(idUsuario, formData);
       } else {
         response = await crearUsuario(formData);
       }
