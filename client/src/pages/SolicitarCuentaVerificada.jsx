@@ -36,6 +36,7 @@ import { crearSolicitudCuenta } from "@/apis/verificacionCuenta.api";
 import { REGEX_CEDULA_IDENTIDAD } from "@/utils/constants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@radix-ui/react-dropdown-menu";
+import { Link } from "react-router-dom";
 
 
 const MB = 1024 * 1024;
@@ -135,7 +136,7 @@ export default function SolicitarCuentaVerificada() {
           cuenta.
         </div>
 
-        <Card className="w-md">
+        <Card className="max-w-sm">
           <CardHeader>
             <CardTitle className="text-2xl text-center font-bold">
               Crear Cuenta
@@ -308,6 +309,17 @@ export default function SolicitarCuentaVerificada() {
                       ? "Enviando..."
                       : "Enviar Solicitud"}
                   </Button>
+                  <div className="text-center mt-4">
+                    <span className="text-sm text-muted-foreground">
+                      ¿Ya tienes una cuenta?{" "}
+                    </span>
+                    <Link 
+                      to="/login"
+                      className="text-sm font-medium text-primary hover:text-primary/80 underline decoration-primary underline-offset-4 transition-colors"
+                    >
+                      Iniciar Sesión
+                    </Link>
+                  </div>
                 </div>
               </form>
             </Form>
