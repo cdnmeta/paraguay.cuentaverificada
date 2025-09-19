@@ -34,4 +34,6 @@ export class UsersForQueryManyDto {
   documento?: string;
   @IsOptional()
   email?: string;
+  @IsOptional()
+  id_grupo?: string;
 }

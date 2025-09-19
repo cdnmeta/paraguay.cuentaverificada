@@ -226,7 +226,7 @@ export class UsuariosService {
             };
             dataGruposAsiganar.vendedorData = dataVendedor;
           }
-          
+
           await this.asignarGrupos(dataGruposAsiganar, tx);
         }
 
@@ -342,6 +342,11 @@ export class UsuariosService {
       if (email) {
         sql += ` and u.email = $(email) `;
         whereClause.email = email.trim();
+      }
+
+      if( query.id_grupo ){
+        sql += ` and jsonb_path_exists(u.roles_asignados, '$[*] ? (@.id == $(id_grupo))') `;
+        whereClause.id_grupo = parseInt(query.id_grupo.toString());
       }
       console.log(sql, whereClause);
       const resultUser = await this.dbPromise.result(sql, whereClause);
@@ -675,6 +680,18 @@ export class UsuariosService {
       });
 
       return { message: 'Usuario actualizado exitosamente' };
+    } catch (error) {
+      throw error;
+    }
+  }
+  async getFiltrosUsuarios() {
+    try {
+      const grupos = await this.prismaService.grupos.findMany({
+        select: { id: true, descripcion: true },
+        orderBy: { id: 'asc' },
+      });
+
+      return { grupos };
     } catch (error) {
       throw error;
     }

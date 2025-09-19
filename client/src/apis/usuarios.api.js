@@ -90,3 +90,11 @@ export const actualizarUsuario = async (id, data) => {
     },
   });
 }
+
+export const filtrosUsuarios = async () => {
+  return await api.get(`/filtros`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}

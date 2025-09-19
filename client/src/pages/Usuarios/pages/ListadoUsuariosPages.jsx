@@ -75,7 +75,6 @@ export default function ListadoUsuariosPages() {
         }
         return <span>{comisiones}%</span>;
       },
-      filterFn: "includesString",
     },
     {
       header: "Por. Comisión Recurrente",
@@ -86,6 +85,10 @@ export default function ListadoUsuariosPages() {
         }
         return <span>{comisiones}%</span>;
       },
+    },
+    {
+      accessorKey: "codigo_vendedor",
+      header: "Cod. Vendedor",
     },
     {
       header: "Acciones",

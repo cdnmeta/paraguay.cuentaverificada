@@ -236,6 +236,19 @@ export class UsuariosController {
     }
   }
 
+  @Get('filtros')
+  async getFiltrosUsuarios() {
+    try {
+      const filtros = await this.usuariosService.getFiltrosUsuarios();
+      console.log(filtros)
+      return filtros;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // fin rutas específicas
+
   // ⚠️ IMPORTANTE: Esta ruta dinámica debe ir AL FINAL
   // para evitar conflictos con rutas específicas
   @Get(':id')
@@ -255,4 +268,6 @@ export class UsuariosController {
       throw error;
     }
   }
+
+  
 }
