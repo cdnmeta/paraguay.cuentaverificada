@@ -12,25 +12,30 @@ import AprobarcionComerciosPage from "@/pages/AprobarcionComerciosPage";
 import ListadoSolicitudesCuentasPage from "@/pages/SolicitudesCuentas/ListadoSolicitudesCuentasPage";
 import ListadoParticipantesPage from "@/pages/Participantes/ListadoParticipantesPage";
 import { UsuariosRoutes } from "@/pages/Usuarios/usuarios.routes";
-import FormCotizacion from '@/pages/cotizacionesEmpresa/components/FormCotizacion';
+import FormCotizacion from "@/pages/cotizacionesEmpresa/components/FormCotizacion";
 import CotizacionEmpresaPage from "@/pages/cotizacionesEmpresa/page/CotizacionEmpresaPage";
 const DashBoardSuperAdmin = lazy(() => import("./DashBoardSuperAdmin"));
-
 
 export function SuperAdminRoutes({ user }) {
   const isAuthorized = (u) => u?.is_super_admin === true;
 
-
-  const opcionesPageListaSolicitudes =  {
-    tipoLista: 'todas',
-  }
-    
+  const opcionesPageListaSolicitudes = {
+    opcionesHabilitar: {
+      aprobarSolicitudes: true,
+      rechazarSolicitudes: true,
+      generarTokenUsuario: true,
+    },
+    columnasHabilitar: {
+      ver_columna_verificador: true,
+    },
+    tipoLista: "todas", // 'mis-solicitudes', 'todas'
+  };
 
   return (
     <Route
       path={ROUTE_BASE}
       element={
-        <ProtectedRoute isAuthorized={isAuthorized(user)} redirectPath="/" >
+        <ProtectedRoute isAuthorized={isAuthorized(user)} redirectPath="/">
           <AdminLayout />
         </ProtectedRoute>
       }
@@ -46,8 +51,7 @@ export function SuperAdminRoutes({ user }) {
       />
 
       {/* Rutas específicas transformadas desde la configuración */}
-    
-     
+
       {/* Gestión de Participantes */}
       <Route
         path="participantes/listado"
@@ -57,34 +61,25 @@ export function SuperAdminRoutes({ user }) {
           </Suspense>
         }
       />
-      <Route
-        path="participantes"
-        element={<AgregarParticipantePage />}
-      />
-      <Route
-        path="comercios/listado"
-        element={<ListadoComercioPages />}
-      />
-      <Route
-        path="solicitudes-pago"
-        element={<AprobacionPagosComercio />}
-      />
+      <Route path="participantes" element={<AgregarParticipantePage />} />
+      <Route path="comercios/listado" element={<ListadoComercioPages />} />
+      <Route path="solicitudes-pago" element={<AprobacionPagosComercio />} />
       <Route
         path="aprovacion-comercios"
-        element={<AprobarcionComerciosPage/>}
+        element={<AprobarcionComerciosPage />}
       />
       <Route
         path="solicitudes-cuentas"
-        element={<ListadoSolicitudesCuentasPage opcionesPage={opcionesPageListaSolicitudes} />}
+        element={
+          <ListadoSolicitudesCuentasPage
+            opcionesPage={opcionesPageListaSolicitudes}
+          />
+        }
       />
-      <Route 
-      path="cotizacion-empresa"
-      element={(<CotizacionEmpresaPage />)}
-      />
-      
-      {/*usuarios rutas*/}
-      {UsuariosRoutes({user})}
+      <Route path="cotizacion-empresa" element={<CotizacionEmpresaPage />} />
 
+      {/*usuarios rutas*/}
+      {UsuariosRoutes({ user })}
     </Route>
   );
 }

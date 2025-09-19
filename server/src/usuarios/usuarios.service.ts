@@ -212,20 +212,22 @@ export class UsuariosService {
         });
         // si viene el id del usuario que registra, actualizar el campo
         if (dto.grupos && dto.grupos.length > 0) {
-          const dataVendedor: VendedorDataDto = {
-            porcentaje_vendedor_primera_venta:
-              dto.porcentaje_vendedor_primera_venta || 0,
-            porcentaje_vendedor_venta_recurrente:
-              dto.porcentaje_vendedor_venta_recurrente || 0,
+          const dataGruposAsiganar: AsignarGruposDto = {
+            id_usuario: newUser.id,
+            grupos: dto.grupos,
           };
-          await this.asignarGrupos(
-            {
-              id_usuario: newUser.id,
-              grupos: dto.grupos,
-              vendedorData: dataVendedor,
-            },
-            tx,
-          );
+
+          if (dto.grupos.includes(3)) {
+            const dataVendedor: VendedorDataDto = {
+              porcentaje_vendedor_primera_venta:
+                dto.porcentaje_vendedor_primera_venta || 0,
+              porcentaje_vendedor_venta_recurrente:
+                dto.porcentaje_vendedor_venta_recurrente || 0,
+            };
+            dataGruposAsiganar.vendedorData = dataVendedor;
+          }
+          
+          await this.asignarGrupos(dataGruposAsiganar, tx);
         }
 
         return newUser;
@@ -276,13 +278,19 @@ export class UsuariosService {
   async getUsersByQuery(query: UsersForQueryManyDto): Promise<any[]> {
     const { documento, email, nombre, is_super_admin, estado, activo } = query;
 
-    console.log(query)
+    console.log(query);
     const whereClause: any = {};
-    
+
     // Convertir strings a booleans cuando sea necesario
-    const isActivoBoolean = activo === 'true' ? true : activo === 'false' ? false : undefined;
-    const isSuperAdminBoolean = is_super_admin === 'true' ? true : is_super_admin === 'false' ? false : undefined;
-    
+    const isActivoBoolean =
+      activo === 'true' ? true : activo === 'false' ? false : undefined;
+    const isSuperAdminBoolean =
+      is_super_admin === 'true'
+        ? true
+        : is_super_admin === 'false'
+          ? false
+          : undefined;
+
     try {
       let sql = `select 
        U.ID,
@@ -339,7 +347,7 @@ export class UsuariosService {
       const resultUser = await this.dbPromise.result(sql, whereClause);
       return resultUser.rows;
     } catch (error) {
-      console.log(error)
+      console.log(error);
       throw error;
     }
   }
@@ -481,10 +489,10 @@ export class UsuariosService {
   async getUsuarioById(id: number) {
     try {
       const usuario = await this.prismaService.usuarios.findFirst({
-        include:{
-          usuarios_grupos:{
-            select:{id_grupo:true}
-          }
+        include: {
+          usuarios_grupos: {
+            select: { id_grupo: true },
+          },
         },
         where: { id },
       });
@@ -500,7 +508,7 @@ export class UsuariosService {
   async actualizarUsuario(
     id: number,
     dto: ActualizarUsuarioDTO,
-    files?: UsuariosArchivos | any
+    files?: UsuariosArchivos | any,
   ) {
     try {
       // Verificar que el usuario existe
@@ -508,9 +516,9 @@ export class UsuariosService {
         where: { id, activo: true },
         include: {
           usuarios_grupos: {
-            select: { id_grupo: true }
-          }
-        }
+            select: { id_grupo: true },
+          },
+        },
       });
 
       if (!usuarioExistente) {
@@ -523,17 +531,16 @@ export class UsuariosService {
           AND: [
             { id: { not: id } }, // Excluir el usuario actual
             {
-              OR: [
-                { email: dto.correo },
-                { documento: dto.documento }
-              ]
-            }
-          ]
-        }
+              OR: [{ email: dto.correo }, { documento: dto.documento }],
+            },
+          ],
+        },
       });
 
       if (conflictoUsuario) {
-        throw new BadRequestException('El correo o documento ya están siendo usados por otro usuario');
+        throw new BadRequestException(
+          'El correo o documento ya están siendo usados por otro usuario',
+        );
       }
 
       let uidUserFirebase = usuarioExistente.uid_firebase;
@@ -559,58 +566,75 @@ export class UsuariosService {
           // Actualizar también en Firebase
           if (uidUserFirebase) {
             await this.firebaseService.auth.updateUser(uidUserFirebase, {
-              password: dto.contrasena
+              password: dto.contrasena,
             });
           }
         }
 
         // Actualizar PIN si se proporciona
         if (dto.pin) {
-          
           datosActualizacion.pin = await encrypt(dto.pin);
         }
 
         // Manejar archivos si se proporcionan
         const { cedulaFrente, cedulaReverso, selfie } = files || {};
-        
-        if (cedulaFrente) {
-          const { crearNombreArchivoDesdeMulterFile } = await import('@/utils/funciones');
-          const { FIREBASE_STORAGE_FOLDERS } = await import('@/firebase/constantsFirebase');
 
-          const nombreArchivo =  usuarioExistente.cedula_frente ? usuarioExistente.cedula_frente : crearNombreArchivoDesdeMulterFile(cedulaFrente);
+        if (cedulaFrente) {
+          const { crearNombreArchivoDesdeMulterFile } = await import(
+            '@/utils/funciones'
+          );
+          const { FIREBASE_STORAGE_FOLDERS } = await import(
+            '@/firebase/constantsFirebase'
+          );
+
+          const nombreArchivo = usuarioExistente.cedula_frente
+            ? usuarioExistente.cedula_frente
+            : crearNombreArchivoDesdeMulterFile(cedulaFrente);
           const filePath = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombreArchivo}`;
           const rutaArchivo = await this.firebaseService.subirArchivoPrivado(
             cedulaFrente.buffer,
             filePath,
-            cedulaFrente.mimetype
+            cedulaFrente.mimetype,
           );
           datosActualizacion.cedula_frente = rutaArchivo;
         }
 
         if (cedulaReverso) {
-          const { crearNombreArchivoDesdeMulterFile } = await import('@/utils/funciones');
-          const { FIREBASE_STORAGE_FOLDERS } = await import('@/firebase/constantsFirebase');
+          const { crearNombreArchivoDesdeMulterFile } = await import(
+            '@/utils/funciones'
+          );
+          const { FIREBASE_STORAGE_FOLDERS } = await import(
+            '@/firebase/constantsFirebase'
+          );
 
-          const nombreArchivo =  usuarioExistente.cedula_reverso ? usuarioExistente.cedula_reverso : crearNombreArchivoDesdeMulterFile(cedulaReverso);
+          const nombreArchivo = usuarioExistente.cedula_reverso
+            ? usuarioExistente.cedula_reverso
+            : crearNombreArchivoDesdeMulterFile(cedulaReverso);
           const filePath = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombreArchivo}`;
           const rutaArchivo = await this.firebaseService.subirArchivoPrivado(
             cedulaReverso.buffer,
             filePath,
-            cedulaReverso.mimetype
+            cedulaReverso.mimetype,
           );
           datosActualizacion.cedula_reverso = rutaArchivo;
         }
 
         if (selfie) {
-          const { crearNombreArchivoDesdeMulterFile } = await import('@/utils/funciones');
-          const { FIREBASE_STORAGE_FOLDERS } = await import('@/firebase/constantsFirebase');
+          const { crearNombreArchivoDesdeMulterFile } = await import(
+            '@/utils/funciones'
+          );
+          const { FIREBASE_STORAGE_FOLDERS } = await import(
+            '@/firebase/constantsFirebase'
+          );
 
-          const nombreArchivo =  usuarioExistente.selfie ? usuarioExistente.selfie : crearNombreArchivoDesdeMulterFile(selfie);
+          const nombreArchivo = usuarioExistente.selfie
+            ? usuarioExistente.selfie
+            : crearNombreArchivoDesdeMulterFile(selfie);
           const filePath = `${FIREBASE_STORAGE_FOLDERS.selfieUsuarios}/${nombreArchivo}`;
           const rutaArchivo = await this.firebaseService.subirArchivoPrivado(
             selfie.buffer,
             filePath,
-            selfie.mimetype
+            selfie.mimetype,
           );
           datosActualizacion.selfie = rutaArchivo;
         }
@@ -618,19 +642,24 @@ export class UsuariosService {
         // Actualizar datos básicos del usuario
         const usuarioActualizado = await tx.usuarios.update({
           where: { id },
-          data: datosActualizacion
+          data: datosActualizacion,
         });
 
         // Actualizar grupos si se proporcionan
         if (dto.grupos && Array.isArray(dto.grupos)) {
-          await this.asignarGrupos({
-            id_usuario: id,
-            grupos: dto.grupos,
-            vendedorData:{
-              porcentaje_vendedor_primera_venta: dto.porcentaje_vendedor_primera_venta ?? undefined,
-              porcentaje_vendedor_venta_recurrente: dto.porcentaje_vendedor_venta_recurrente ?? undefined,
-            }
-          }, tx);
+          await this.asignarGrupos(
+            {
+              id_usuario: id,
+              grupos: dto.grupos,
+              vendedorData: {
+                porcentaje_vendedor_primera_venta:
+                  dto.porcentaje_vendedor_primera_venta ?? undefined,
+                porcentaje_vendedor_venta_recurrente:
+                  dto.porcentaje_vendedor_venta_recurrente ?? undefined,
+              },
+            },
+            tx,
+          );
         }
 
         // Actualizar información en Firebase si es necesario
@@ -638,7 +667,7 @@ export class UsuariosService {
           await this.firebaseService.auth.updateUser(uidUserFirebase, {
             email: dto.correo,
             password: dto.contrasena ? dto.contrasena : undefined,
-            displayName: `${dto.nombre} ${dto.apellido || ''}`.trim()
+            displayName: `${dto.nombre} ${dto.apellido || ''}`.trim(),
           });
         }
 

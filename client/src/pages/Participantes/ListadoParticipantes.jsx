@@ -259,6 +259,9 @@ export default function ListadoParticipantes({
     defaultColumnas.total_meta_comprada && {
         accessorKey: "total_meta_comprada",
         header: "Meta Comprada",
+        cell: ({ row }) => (
+          <span>{(row.original.total_meta_comprada).toLocaleString('es-ES', { style: 'currency', currency: 'USD' })}</span>
+        ),
     },
 
     defaultColumnas.total_meta_comprada && {
