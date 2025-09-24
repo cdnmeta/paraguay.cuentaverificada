@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PhotoView, PhotoProvider } from "react-photo-view";
-import { X, Upload, Image as ImageIcon, Trash2 } from "lucide-react";
+import { X, Upload, Image as ImageIcon, Trash2, Camera, RotateCcw, Square } from "lucide-react";
 import { toast } from "sonner";
+import Webcam from "react-webcam";
 import {
   schemaCreateRecordatorio,
   schemaUpdateRecordatorio,
@@ -18,6 +19,7 @@ import recordatoriosAPI from "../services/recordatoriosAPI";
 import { cargarURL } from "@/utils/funciones";
 import "react-photo-view/dist/react-photo-view.css";
 import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
+import { set } from "date-fns";
 
 const FormRecordatorio = ({ id_recordatorio = null }) => {
   const [loading, setLoading] = useState(false);
@@ -25,6 +27,15 @@ const FormRecordatorio = ({ id_recordatorio = null }) => {
   const [imagenesPrevias, setImagenesPrevias] = useState([]);
   const [imagenesAEliminar, setImagenesAEliminar] = useState([]);
   const [mapeoImagenes, setMapeoImagenes] = useState({}); // Mapeo: URL completa -> ruta original
+  
+  // Estados para cámara
+  const [showCamera, setShowCamera] = useState(false);
+  const [facingMode, setFacingMode] = useState("environment"); // "environment" para trasera, "user" para frontal
+  
+  const webcamRef = useRef(null);
+
+  // Detectar si es móvil
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   const isEdit = Boolean(id_recordatorio);
   const schema = isEdit ? schemaUpdateRecordatorio : schemaCreateRecordatorio;
@@ -172,6 +183,39 @@ const FormRecordatorio = ({ id_recordatorio = null }) => {
     setImagenesPrevias((prev) => [...prev, urlImagen]);
   };
 
+  // Funciones para cámara
+  const capture = useCallback(() => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (imageSrc) {
+      // Convertir base64 a blob y luego a File
+      fetch(imageSrc)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
+          const currentImages = watch("imagenes") || [];
+          setValue("imagenes", [...currentImages, file]);
+          toast.success("Foto capturada exitosamente");
+          setShowCamera(false);
+        })
+        .catch(error => {
+          console.error("Error al capturar foto:", error);
+          toast.error("Error al capturar la foto");
+        });
+    }
+  }, [webcamRef, setValue, watch]);
+
+  const switchCamera = () => {
+    setFacingMode(prevMode => prevMode === "user" ? "environment" : "user");
+  };
+
+  const openCamera = () => {
+    setShowCamera(true);
+  };
+
+  const closeCamera = () => {
+    setShowCamera(false);
+  };
+
   return (
     <div className="container mx-auto py-6 px-4">
       <Card className="max-w-2xl mx-auto">
@@ -293,25 +337,97 @@ const FormRecordatorio = ({ id_recordatorio = null }) => {
                   <Label htmlFor="imagenes">
                     {isEdit ? "Agregar Nuevas Imágenes" : "Imágenes"} (Opcional)
                   </Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                    <Label htmlFor="imagenes" className="cursor-pointer">
-                      <span className="text-primary hover:underline">
-                        Haz clic para seleccionar imágenes
-                      </span>
-                      <Input
-                        id="imagenes"
-                        type="file"
-                        multiple
-                        accept="image/png,image/jpg,image/jpeg"
-                        className="hidden"
-                        onChange={handleImageChange}
-                      />
-                    </Label>
-                    <p className="text-sm text-gray-500 mt-1">
-                      PNG, JPG o JPEG (máximo 5MB cada una)
-                    </p>
+                  
+                  {/* Opciones de carga de imagen */}
+                  <div className="flex gap-2 mb-4">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center flex-1">
+                      <Upload className="w-6 h-6 mx-auto text-gray-400 mb-2" />
+                      <Label htmlFor="imagenes" className="cursor-pointer">
+                        <span className="text-primary hover:underline">
+                          Seleccionar desde galería
+                        </span>
+                        <Input
+                          id="imagenes"
+                          type="file"
+                          multiple
+                          accept="image/png,image/jpg,image/jpeg"
+                          className="hidden"
+                          onChange={handleImageChange}
+                        />
+                      </Label>
+                    </div>
+                    
+                    <div className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center flex-1">
+                      <Camera className="w-6 h-6 mx-auto text-blue-400 mb-2" />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={openCamera}
+                        className="text-blue-600 hover:text-blue-800 border-none p-0 h-auto"
+                      >
+                        Usar cámara
+                      </Button>
+                    </div>
                   </div>
+
+                  <p className="text-sm text-gray-500">
+                    PNG, JPG o JPEG (máximo 5MB cada una)
+                  </p>
+
+                  {/* Modal de cámara */}
+                  {showCamera && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                      <div className="bg-white p-4 rounded-lg max-w-md w-full mx-4">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-lg font-semibold">Tomar Foto</h3>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={closeCamera}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="relative">
+                          <Webcam
+                            audio={false}
+                            ref={webcamRef}
+                            screenshotFormat="image/jpeg"
+                            width="100%"
+                            videoConstraints={{
+                              facingMode: facingMode,
+                            }}
+                            className="rounded-lg"
+                          />
+                        </div>
+                        
+                        <div className="flex justify-center gap-4 mt-4">
+                          {isMobile && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={switchCamera}
+                              className="flex items-center gap-2"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                              Cambiar cámara
+                            </Button>
+                          )}
+                          
+                          <Button
+                            type="button"
+                            onClick={capture}
+                            className="flex items-center gap-2"
+                          >
+                            <Camera className="h-4 w-4" />
+                            Capturar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Preview de nuevas imágenes */}
                   {watchedImagenes.length > 0 && (
