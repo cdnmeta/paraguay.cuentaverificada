@@ -29,8 +29,7 @@ import LayoutVerificador from "./components/layouts/LayoutVerificador";
 import { routes as verificadorRoutes } from "./pages/Verificador/verficador.routes";
 import { SuperAdminRoutes } from "./pages/Dashsboards/SuperAdmin/admin.routes";
 import { ParticipantesRoutes } from "./pages/Dashsboards/Participante/participantes.routes";
-import { UsuariosRoutes } from "./pages/Usuarios/usuarios.routes";
-import RecordatoriosUsuariosRoutes from "./pages/RecordatoriosUsuarios";
+import RecordatoriosUsuariosRoutes from "./pages/recordatoriosUsuarios";
 import { RecoveryPinPage, ResetPinPage, ResetPasswordPage } from "./pages/recovery";
 
 export default function App() {
