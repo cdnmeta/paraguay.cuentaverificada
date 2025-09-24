@@ -58,4 +58,50 @@ export const getGruposHabilitados = async () => {
   return response;
 };
 
+// Funciones para recuperación de PIN
+export const solicitarRecoveryPin = async (data) => {
+  const response = await api.post("/solicitud-recovery-pin", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return response.data;
+};
+
+export const verificarToken = async (token, cedula) => {
+  const response = await api.get(`/verificar-token?token=${token}&cedula=${cedula}`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return response.data;
+};
+
+export const resetPin = async (data) => {
+  const response = await api.post("/recovery-pin", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return response.data;
+};
+
+export const refreshToken = async (data) => {
+  const response = await api.post("/refresh-token", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return response.data;
+};
+
+export const resetPassword = async (data) => {
+  const response = await api.post("/reset-contrasena", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return response.data;
+};
+
 export default api;

@@ -7,7 +7,7 @@ import { PROTECTED_ROUTES } from "@/utils/routes.routes";
 import { CheckCircle2Icon } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-
+import {routes as RecordatoriosUsuariosRoutes} from '@/pages/recordatoriosUsuarios/config/routes';
 const emociones = [
   { emoji: "😄", label: "Entusiasmado" },
   { emoji: "😊", label: "Contento" },
@@ -17,7 +17,12 @@ const emociones = [
   { emoji: "😇", label: "Sorpréndeme" },
 ];
 
-const secciones = [
+
+
+export default function DashBoardUsarioProtegido() {
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const secciones = [
   {
     icon: "/icons/2179332.png",
     title: "Cuenta",
@@ -41,6 +46,7 @@ const secciones = [
   {
     icon: "/icons/80957-74a5697e.png",
     title: "¿Dónde lo guardé?",
+    onClick: () => navigate(`/${RecordatoriosUsuariosRoutes.index}`),
     desc: "Que no se te olvide nada",
   },
   {
@@ -59,10 +65,6 @@ const secciones = [
     desc: "Autoayuda + asistencia personalizada",
   },
 ];
-
-export default function DashBoardUsarioProtegido() {
-  const { user } = useAuthStore();
-  const navigate = useNavigate();
   return (
     <div className="min-h-screen text-white">
       <div className="w-full flex justify-center mb-6 px-2">

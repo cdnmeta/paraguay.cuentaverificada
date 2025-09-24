@@ -1,0 +1,65 @@
+/* ====================================
+   CUSTOM STYLES
+   Your personal styles and overrides
+==================================== */
+
+/* ==============================
+   PARTICLE EFFECTS & ANIMATIONS
+============================== */
+
+.particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.15) 2px, transparent 2px);
+  background-size: 3px 60px;
+  animation: fall 10s linear infinite;
+}
+
+@keyframes fall {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100vh; }
+}
+
+/* ==============================
+   GLOW EFFECTS
+============================== */
+
+.glow {
+  box-shadow: 0 0 20px rgba(0, 255, 135, 0.6), 0 0 60px rgba(0, 255, 135, 0.4);
+  border: 2px solid rgba(0, 255, 135, 0.3);
+}
+
+/* ==============================
+   BREATHING ANIMATION
+============================== */
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* ==============================
+   THIRD PARTY OVERRIDES
+============================== */
+
+/* PhotoView Component Styles */
+.PhotoView-Portal { 
+  position: fixed; 
+  inset: 0; 
+  z-index: 60; 
+}
+
+/* ==============================
+   UTILITY CLASSES
+============================== */
+
+/* Add your custom utility classes here */

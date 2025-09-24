@@ -9,14 +9,17 @@ import { UsuariosModule } from 'src/usuarios/usuarios.module';
 import { PrismaModule } from '@/prisma/prisma.module';
 import { FirebaseModule } from '@/firebase/firebase.module';
 import { VerificacionCuentaModule } from '@/verificacion-cuenta/verificacion-cuenta.module';
+import { RequireUserPinGuard } from './guards/requireUserPin.guard';
+import { EmailModule } from '@/email/email.module';
 
 @Module({
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy,RequireUserPinGuard],
   imports: [
     ConfigModule,
     FirebaseModule,
     PrismaModule,
     DatabaseModule,
+    EmailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

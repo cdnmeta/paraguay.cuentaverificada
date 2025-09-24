@@ -22,7 +22,8 @@ import { ParticipantesModule } from './participantes/participantes.module';
 import { ParticipacionEmpresaModule } from './participacion-empresa/participacion-empresa.module';
 import { WinstonModule } from 'nest-winston';
 import { winstonOptions } from './logger/logger.config';
-import { OnlyAdminGuard } from './auth/guards/onlyAdmin.guard';
+import { RecordatoriosModule } from './recordatorios/recordatorios.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -45,6 +46,8 @@ import { OnlyAdminGuard } from './auth/guards/onlyAdmin.guard';
     VerificacionCuentaModule,
     ParticipantesModule,
     ParticipacionEmpresaModule,
+    RecordatoriosModule,
+    EmailModule,
   ],
   providers: [
     {

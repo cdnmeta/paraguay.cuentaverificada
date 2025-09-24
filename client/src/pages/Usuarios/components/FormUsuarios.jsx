@@ -37,6 +37,8 @@ import {
   ChevronDown,
   ChevronsUp,
   ChevronsDown,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import paisesCode from "@/utils/paises-flag.json";
 
@@ -222,6 +224,10 @@ export default function FormUsuario({
 
   const [loading, setLoading] = useState(false);
   const isEdit = isEditing;
+  
+  // Password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
 
   // Previews
   const [previewFront, setPreviewFront] = useState(null);
@@ -473,12 +479,28 @@ export default function FormUsuario({
                     </span>
                   )}
                 </Label>
-                <Input
-                  placeholder="••••••••"
-                  type="password"
-                  autoComplete="new-password"
-                  {...register("contrasena")}
-                />
+                <div className="relative">
+                  <Input
+                    placeholder="••••••••"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    {...register("contrasena")}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
                 {errors.contrasena && (
                   <p className="text-sm text-red-500">
                     {errors.contrasena.message}
@@ -495,12 +517,28 @@ export default function FormUsuario({
                     </span>
                   )}
                 </Label>
-                <Input
-                  placeholder="••••••••"
-                  type="password"
-                  autoComplete="new-password"
-                  {...register("repetir_contrasena")}
-                />
+                <div className="relative">
+                  <Input
+                    placeholder="••••••••"
+                    type={showRepeatPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    {...register("repetir_contrasena")}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowRepeatPassword(!showRepeatPassword)}
+                  >
+                    {showRepeatPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
                 {errors.repetir_contrasena && (
                   <p className="text-sm text-red-500">
                     {errors.repetir_contrasena.message}

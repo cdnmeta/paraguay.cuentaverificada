@@ -125,8 +125,8 @@ export default function ListCotizacionesEmpresa({ className = "" }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Par de Monedas</TableHead>
-                  <TableHead className="text-right">Cambio de Ventas</TableHead>
-                  <TableHead className="text-right">Monto de Pagos</TableHead>
+                  <TableHead className="text-right">Compra</TableHead>
+                  <TableHead className="text-right">Venta</TableHead>
                   <TableHead className="text-center">Última Actualización</TableHead>
                   <TableHead className="text-center">Estado</TableHead>
                 </TableRow>
@@ -150,7 +150,7 @@ export default function ListCotizacionesEmpresa({ className = "" }) {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="font-mono font-medium">
-                        {formatearMonto(cotizacion.monto)}
+                        {formatearMonto(cotizacion.monto_compra)}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {cotizacion.moneda_destino_iso}
@@ -158,7 +158,7 @@ export default function ListCotizacionesEmpresa({ className = "" }) {
                     </TableCell>
                     <TableCell className="text-right">
                         <div className="font-mono font-medium">
-                        {formatearMonto(cotizacion.monto_pagos)}
+                        {formatearMonto(cotizacion.monto_venta)}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {cotizacion.moneda_destino_iso}

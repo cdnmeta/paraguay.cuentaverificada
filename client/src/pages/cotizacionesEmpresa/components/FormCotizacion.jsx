@@ -32,7 +32,7 @@ import { registrarCotizacionEmpresa } from "@/apis/cotizacion-empresa.api";
 import { emit, EVENTS } from "@/utils/events";
 
 // ====== Validación ======
-const schema = z
+/* const schema = z
   .object({
     origen: z
       .string({ required_error: "Seleccioná la moneda base" })
@@ -44,10 +44,29 @@ const schema = z
       .string()
       .min(1, "Ingresá el monto de venta")
       .regex(/^\d+(\.\d{1,5})?$/, "El monto de venta debe ser un número válido"),
-    monto_pagos: z
+    monto_compra: z
       .string()
       .min(1, "Ingresá el monto de pagos")
       .regex(/^\d+(\.\d{1,5})?$/, "El monto de pagos debe ser un número válido"),
+  })
+  .refine((data) => data.origen !== data.destino, {
+    message: "La moneda base y destino deben ser distintas",
+    path: ["destino"],
+  }); */
+
+
+  const schema = z
+  .object({
+    origen: z
+      .string({ required_error: "Seleccioná la moneda base" })
+      .min(1, "Seleccioná la moneda base"),
+    destino: z
+      .string({ required_error: "Seleccioná la moneda destino" })
+      .min(1, "Seleccioná la moneda destino"),
+    monto_venta: z
+      .coerce.number({ invalid_type_error: "El monto de venta debe ser un número válido",required_error: "El monto de venta es obligatorio" }).positive("El monto de venta debe ser un número positivo"),
+    monto_compra: z
+      .coerce.number({ invalid_type_error: "El monto de compra debe ser un número válido",required_error: "El monto de compra es obligatorio" }).positive("El monto de compra debe ser un número positivo"),
   })
   .refine((data) => data.origen !== data.destino, {
     message: "La moneda base y destino deben ser distintas",
@@ -70,9 +89,8 @@ export default function FormCotizacion({ loading = false, className = "" }) {
       origen: "",
       destino: "",
       monto_venta: "",
-      monto_pagos: "",
+      monto_compra: "",
     },
-    mode: "onBlur", // Cambiar a onBlur para que la validación refine se ejecute correctamente
   });
 
   // Cargar las monedas al montar el componente
@@ -108,7 +126,7 @@ export default function FormCotizacion({ loading = false, className = "" }) {
         id_moneda_origen: Number(values.origen),
         id_moneda_destino: Number(values.destino),
         monto_venta: parseFloat(values.monto_venta),
-        monto_pagos: parseFloat(values.monto_pagos),
+        monto_compra: parseFloat(values.monto_compra),
       };
       await registrarCotizacionEmpresa(dataEnviar);
       toast.success("Cotización registrada con éxito");
@@ -181,6 +199,7 @@ export default function FormCotizacion({ loading = false, className = "" }) {
           <div className="flex justify-center md:pb-2">
             <Button
               type="button"
+              title="Intercambiar origen ↔ destino"
               variant="secondary"
               onClick={handleSwap}
               disabled={
@@ -189,7 +208,6 @@ export default function FormCotizacion({ loading = false, className = "" }) {
                 !form.getValues("destino")
               }
               className="h-10 w-full md:w-10"
-              title="Intercambiar origen ↔ destino"
             >
               <ArrowLeftRight className="h-4 w-4" />
               <span className="sr-only">Intercambiar</span>
@@ -235,13 +253,29 @@ export default function FormCotizacion({ loading = false, className = "" }) {
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+
+          {/* Input monto_compra */}
+          <FormField
+            control={form.control}
+            name="monto_compra"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Compra</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           {/*Input monto_venta */}
           <FormField
             control={form.control}
             name="monto_venta"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Monto de venta</FormLabel>
+                <FormLabel>Venta</FormLabel>
                 <FormControl>
                   <Input type="number" {...field} />
                 </FormControl>
@@ -250,20 +284,7 @@ export default function FormCotizacion({ loading = false, className = "" }) {
             )}
           />
 
-          {/* Input monto_pagos */}
-          <FormField
-            control={form.control}
-            name="monto_pagos"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Monto de pagos</FormLabel>
-                <FormControl>
-                  <Input type="number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          
         </div>
         {/* Submit */}
         <div className="flex md:pb-2">

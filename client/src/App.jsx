@@ -12,7 +12,7 @@ import { useEffect } from "react";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import { checkAuthOnStart } from "./utils/funciones";
 import VerificacionComercioPage from "./pages/VerificacionComercioPage";
-import { PROTECTED_ROUTES } from "./utils/routes.routes";
+import { PROTECTED_ROUTES, PUBLIC_ROUTES } from "./utils/routes.routes";
 import DashboardApp from "./components/layouts/DashboardLayoutApp";
 import LoadingSpinner from "./components/customs/loaders/LoadingSpinner";
 import DptoLegalRoutes, { dtoLegalRoutes } from "./pages/departamento-legal/dpto-legal.routes";
@@ -30,6 +30,8 @@ import { routes as verificadorRoutes } from "./pages/Verificador/verficador.rout
 import { SuperAdminRoutes } from "./pages/Dashsboards/SuperAdmin/admin.routes";
 import { ParticipantesRoutes } from "./pages/Dashsboards/Participante/participantes.routes";
 import { UsuariosRoutes } from "./pages/Usuarios/usuarios.routes";
+import RecordatoriosUsuariosRoutes from "./pages/RecordatoriosUsuarios";
+import { RecoveryPinPage, ResetPinPage, ResetPasswordPage } from "./pages/recovery";
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
@@ -47,6 +49,9 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/login/:token" element={<LoginToken />} />
         <Route path="/recuperar" element={<RecuperarContrasena />} />
+        <Route path="/recovery-pin" element={<RecoveryPinPage />} />
+        <Route path="/reset-pin" element={<ResetPinPage />} />
+        <Route path={`${PUBLIC_ROUTES.resetPassword}`} element={<ResetPasswordPage />} />
         <Route path="/verificado" element={<Verificado />} />
         <Route path="/solicitar-cuenta-verificada" element={<SolicitarCuentaVerificada />} />
         <Route path="/verificacion-cuenta" element={<InicializarContrasenaPin />} />
@@ -68,6 +73,7 @@ export default function App() {
             path={PROTECTED_ROUTES.misDatos}
             element={<MisDatosPage />}
           />
+          {RecordatoriosUsuariosRoutes()}
 
           
         </Route>

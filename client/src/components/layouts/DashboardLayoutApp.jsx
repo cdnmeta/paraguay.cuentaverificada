@@ -7,6 +7,7 @@ import { PROTECTED_ROUTES } from "@/utils/routes.routes";
 import Navbar from "../navbars/Navbar";
 import { useAuthStore } from "@/hooks/useAuthStorge";
 import AlertCambioDeRolEmpresa from "../customs/AlertCambioDeRolEmpresa";
+
 const navbar = {
   logo: {
     url: PROTECTED_ROUTES.dashboard,
@@ -72,7 +73,7 @@ export default function DashboardApp({ children }) {
       </header>
 
       {/* Contenido principal */}
-      <main className="relative w-full px-4 py-6">
+      <main className="relative w-full px-4">
         {children ? children : <Outlet />}
       </main>
 
@@ -82,7 +83,6 @@ export default function DashboardApp({ children }) {
           © {new Date().getFullYear()} Cuenta Verificada
         </p>
       </footer>
-
       <Toaster position="top-right" />
       <AlertCambioDeRolEmpresa user={user} />
     </div>

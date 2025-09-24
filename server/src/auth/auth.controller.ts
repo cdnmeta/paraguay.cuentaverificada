@@ -7,9 +7,12 @@ import {
   MaxFileSizeValidator,
   ParseFilePipe,
   Post,
+  Put,
+  Query,
   Req,
   Res,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { IsPublic } from './decorators/public.decorator';
@@ -28,9 +31,12 @@ import { UsuarioRegisterResponseDto } from './dto/usuarioResponse.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { cert } from 'firebase-admin/app';
 import { PrismaService } from '@/prisma/prisma.service';
-import { InicializarPasswordPinByToken } from './dto/password-recovery.dto';
-import { OnlyAdminGuard } from './guards/onlyAdmin.guard';
+import { CambiarContrasenaDto, InicializarPasswordPinByToken, RecoveryPinDto, SolicitudRecoveryPinDto, SolicitudRecoveryPinPayloadDto, ValidacionTokenDto } from './dto/password-recovery.dto';
+import { RefreshTokenDto, RefreshTokenResponseDto } from './dto/refresh-token.dto';
 import { IsOnlyAdmin } from './decorators/onlyAdmin.decorator';
+import { RequireUserPinGuard } from './guards/requireUserPin.guard';
+import { AuthenticatedRequest } from './types/AuthenticatedRequest';
+import { URL_ORIGINS } from '@/utils/constants';
 
 @Controller('auth')
 export class AuthController {
@@ -111,6 +117,24 @@ export class AuthController {
   }
 
   @IsPublic()
+  @Post('refresh-token')
+  async refreshTokenWithCredentials(@Body() refreshTokenDto: RefreshTokenDto, @Res() res: Response) {
+    try {
+      // Validar el token y obtener información del usuario
+      const result = await this.authService.refreshTokenWithCedula(refreshTokenDto);
+  
+
+      return res.status(200).json({
+        message: 'Token refrescado correctamente',
+        token: result.token,
+        cedula: result.cedula
+      });
+    } catch (error) {
+     throw error
+    }
+  }
+
+  @IsPublic()
   @Post('logout')
   async logout(@Res() res: Response) {
     res.clearCookie('access_token');
@@ -149,6 +173,59 @@ export class AuthController {
     try {
       const grupos = await this.authService.getGruposHabilitados();
       return res.status(200).json(grupos);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+
+  @IsPublic()
+  @Post("solicitud-recovery-pin")
+  async recoveryPin(@Body() body: SolicitudRecoveryPinPayloadDto, @Res() res: Response, @Req() req: AuthenticatedRequest) {
+    try {
+      console.log(req)
+      let url_origen = URL_ORIGINS[0]
+      if(!url_origen) throw new BadRequestException('No se pudo determinar el origen de la solicitud. Asegúrese de que la cabecera "Origin" esté presente.');
+      const data: SolicitudRecoveryPinDto = {
+        ...body,
+        url_origen: url_origen,
+      }
+      await this.authService.SolicitudRecoveryPin(data);
+      return res.status(200).json({ message: 'PIN de recuperación enviado exitosamente' });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @IsPublic()
+  @Get("verificar-token")
+  async verifyToken(@Query() query: ValidacionTokenDto, @Res() res: Response) {
+    try {
+      if(!query.token) throw new BadRequestException('El token no puede estar vacío');
+      await this.authService.verificarToken(query);
+      return res.status(200).json({ message: 'Token valido' });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @IsPublic()
+  @Post("recovery-pin")
+  async resetPin(@Body() body: RecoveryPinDto, @Res() res: Response) {
+    try {
+      await this.authService.resetPin(body);
+      return res.status(200).json({ message: 'PIN restablecido exitosamente' });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @IsPublic()
+  @Post("reset-contrasena")
+  async resetContrasena(@Body() body: CambiarContrasenaDto, @Res() res: Response) {
+    try {
+      await this.authService.resetContrasenaWithCedula(body);
+      return res.status(200).json({ message: 'Contraseña restablecida exitosamente' });
     } catch (error) {
       throw error;
     }

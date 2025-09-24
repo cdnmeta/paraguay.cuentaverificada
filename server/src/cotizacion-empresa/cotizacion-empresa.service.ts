@@ -33,8 +33,8 @@ export class CotizacionEmpresaService {
         data: {
           id_moneda_origen: data.id_moneda_origen, // regitrar en moneda origen la moneda base de la empresa
           id_moneda_destino: data.id_moneda_destino,
-          monto: data.monto_venta, // monto de venta
-          monto_pagos: data.monto_pagos,
+          monto_compra: data.monto_compra,
+          monto_venta: data.monto_venta,
           id_usuario_creacion: data.id_usuario_registro,
           activo: true,
           fecha_creacion: new Date(),
@@ -54,6 +54,8 @@ export class CotizacionEmpresaService {
         ce.id_moneda_destino,
         ce.monto,
 		ce.monto_pagos,
+    ce.monto_compra,
+    ce.monto_venta,
 		(us.nombre || ' ' || us.apellido ) as nombre_usuario_registro,
         COALESCE(ce.fecha_actualizacion, ce.fecha_creacion) AS fecha,
         mo.nombre  AS moneda_origen_nombre,
@@ -96,7 +98,7 @@ export class CotizacionEmpresaService {
     idMonedaOrigen: number,     // moneda con la que llega el monto a convertir (A)
     idMonedaDestino: number,    // moneda objetivo (B)
     monto: number,
-  ) {
+  ) : Promise<TasaAplicada> {
 
     // Si las monedas son iguales, no hay conversión
     if(idMonedaDestino === idMonedaOrigen) {
@@ -105,8 +107,8 @@ export class CotizacionEmpresaService {
         idMonedaOrigen,
         idMonedaDestino,
         montoOrigen: monto,
-        tasaAplicada: 1,
-        montoConvertido: monto,
+        tasaAplicada: {compra: 1, venta: 1},
+        montoConvertido: {compra: monto, venta: monto},
         ruta: 'DIRECTO',
         detalle: 'No se requiere conversión, las monedas son iguales.',
       };
@@ -119,6 +121,8 @@ export class CotizacionEmpresaService {
         id_moneda_origen: true,   // A_cot
         id_moneda_destino: true,  // B_cot
         monto: true,               // tasa A_cot -> B_cot
+        monto_compra: true,
+        monto_venta: true,
         activo: true,
       },
     });
@@ -128,6 +132,14 @@ export class CotizacionEmpresaService {
     }
     if (cot.activo === false) {
       throw new BadRequestException(`La cotización ${idCotizacion} no está activa.`);
+    }
+
+
+    if(!cot.monto_compra || cot.monto_compra <= 0) {
+      throw new BadRequestException(`La cotización ${idCotizacion} tiene una tasa de compra inválida (${cot.monto_compra}).`);
+    }
+    if(!cot.monto_venta || cot.monto_venta <= 0) {
+      throw new BadRequestException(`La cotización ${idCotizacion} tiene una tasa de venta inválida (${cot.monto_venta}).`);
     }
 
     // Determinar si la operación solicitada es DIRECTO o INVERSO respecto a la cotización
@@ -145,21 +157,26 @@ export class CotizacionEmpresaService {
       );
     }
 
-    let tasaAplicada: number;
+    let tasaAplicada: any = {}; // devolver la tasa aplicadoa en compra - venta
     let ruta: 'DIRECTO' | 'INVERSO';
 
     if (esInverso) {
       if (cot.monto === 0) {
         throw new BadRequestException('No se puede invertir una tasa con valor 0.');
       }
-      tasaAplicada = 1 / cot.monto; // B->A
+      tasaAplicada.compra =  (1 / cot.monto_compra); // B->A
+      tasaAplicada.venta = (1 / cot.monto_venta);   // B->A
       ruta = 'INVERSO';
     } else {
-      tasaAplicada = cot.monto;     // A->B
+      tasaAplicada.venta =  cot.monto_venta; // A->B
+      tasaAplicada.compra = cot.monto_compra; // A->B
       ruta = 'DIRECTO';
     }
 
-    const montoConvertido = monto * tasaAplicada;
+    const montoConvertido:any = {};
+
+    montoConvertido.compra = monto * tasaAplicada.compra;
+    montoConvertido.venta = monto * tasaAplicada.venta;
 
     return {
       idCotizacion: cot.id,
@@ -171,8 +188,8 @@ export class CotizacionEmpresaService {
       ruta,
       detalle:
         ruta === 'INVERSO'
-          ? `Se aplicó tasa inversa: (B→A) = 1 / ${cot.monto}`
-          : `Se aplicó tasa directa: (A→B) = ${cot.monto}`,
+          ? `Se aplicó tasa inversa: (B→A)`
+          : `Se aplicó tasa directa: (A→B)`,
     };
   }
 

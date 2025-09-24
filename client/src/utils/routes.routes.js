@@ -9,6 +9,8 @@ export const PUBLIC_ROUTES = {
   solicitarCuentaVerificada: "/solicitar-cuenta-verificada",
   subirCedula: "/subir-cedula",
   panel: "/panel",
+  resetPassword: "/reset-password",
+  recoveryPin: "/recovery-pin",
 };
 
 export const PROTECTED_ROUTES = {

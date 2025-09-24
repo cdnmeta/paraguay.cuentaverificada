@@ -201,13 +201,15 @@ export default function FormCobroSuscripcion({ id_factura,afterSubmit=()=>{} }) 
     const totalFacturaUSD = convertirMoneda(cotizaciones, totalFactura, monedaFactura, 1);
     const totalfacturaPYG = convertirMoneda(cotizaciones, totalFactura, monedaFactura, 2);
 
+    console.log("totales", totalFacturaUSD, totalfacturaPYG);
+
     // saldos convertidos a moneda
-    const saldoUSD = totalFacturaUSD - pagadoUSD - convertirMoneda(cotizaciones, pagadoGS, 2, monedaFactura);
-    const saldoGS = totalfacturaPYG - pagadoGS - convertirMoneda(cotizaciones, pagadoUSD, monedaFactura, 2);
+    const saldoUSD = totalFacturaUSD.venta - pagadoUSD - convertirMoneda(cotizaciones, pagadoGS, 2, monedaFactura).venta;
+    const saldoGS = totalfacturaPYG.venta - pagadoGS - convertirMoneda(cotizaciones, pagadoUSD, monedaFactura, 2).venta;
 
     console.log(saldoUSD, saldoGS);
 
-    console.log(totalFacturaUSD, pagadoUSD , convertirMoneda(cotizaciones, pagadoGS, monedaFactura, 1));
+    console.log(totalFacturaUSD, pagadoUSD , convertirMoneda(cotizaciones, pagadoGS, monedaFactura, 1).venta);
 
     return { 
       saldoUSD,

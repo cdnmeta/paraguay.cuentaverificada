@@ -28,13 +28,13 @@ export const seccionesFeatures = [
     path: `${ROUTE_BASE}/solicitudes-pago`,
   },
   {
-    title: "Aprovacion de Comericos",
+    title: "Aprobacion de Comericos",
     desc:  "Aprobar comercio verificado",
     icon: "/icons/2179332.png",
     path: `${ROUTE_BASE}/aprovacion-comercios`,
   },
   {
-    title: "Aprovacion de solicitudes de cuentas",
+    title: "Aprobacion de solicitudes de cuentas",
     desc:  "Aprobar solicitudes de cuentas",
     icon: "/icons/2179332.png",
     path: `${ROUTE_BASE}/solicitudes-cuentas`,

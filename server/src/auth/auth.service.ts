@@ -22,10 +22,19 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { FirebaseService } from '@/firebase/firebase.service';
 import { FIREBASE_STORAGE_FOLDERS } from '@/firebase/constantsFirebase';
 import { createHash } from 'crypto';
-import { InicializarPasswordPinByToken } from './dto/password-recovery.dto';
+import {
+  CambiarContrasenaDto,
+  InicializarPasswordPinByToken,
+  RecoveryPinDto,
+  SolicitudRecoveryPinDto,
+  ValidacionTokenDto,
+} from './dto/password-recovery.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UsuariosService } from '@/usuarios/usuarios.service';
 import { VerificacionCuentaService } from '@/verificacion-cuenta/verificacion-cuenta.service';
 import { TokenSolicitud } from '@/verificacion-cuenta/types/token-solicitudes';
+import { EmailService } from '@/email/email.service';
+import { RecoveryPinEmail } from '@/email/types/recovery';
 interface UsuariosArchivosRegister {
   cedulaFrente?: Express.Multer.File;
 }
@@ -39,6 +48,7 @@ export class AuthService {
     private readonly firebaseService: FirebaseService, // Asegúrate de tener este servicio configurado
     private readonly usuariosService: UsuariosService,
     private readonly verificacionCuentaService: VerificacionCuentaService,
+    private readonly emailService: EmailService,
   ) {}
   async setTokenResponse(
     res: Response,
@@ -76,7 +86,8 @@ export class AuthService {
     };
   }
 
-  async verificarToken(token: string, verificar_exp = true) {
+  async verificarToken(data: ValidacionTokenDto, verificar_exp = true) {
+    const { token } = data;
     try {
       const tokenHash = createHash('sha256').update(token).digest('hex');
 
@@ -87,6 +98,21 @@ export class AuthService {
 
       if (!tokenData) {
         throw new NotFoundException('Token no encontrado');
+      }
+
+      // buscar usuario
+      const user = await this.prismaService.usuarios.findFirst({
+        where: { id: tokenData.id_usuario, activo: true },
+      });
+
+      if (!user) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+
+      if (user.documento != data.cedula) {
+        throw new BadRequestException(
+          'El token no corresponde a esta solicitud',
+        );
       }
 
       // verificar si el token ha expirado
@@ -248,7 +274,7 @@ export class AuthService {
       // registrar el nuevo token
       const fecha_vencimiento = new Date();
       fecha_vencimiento.setHours(fecha_vencimiento.getHours() + 1); // Establecer la fecha de vencimiento a 1 hora a partir de ahora
-      await this.prismaService.usuario_tokens.create({
+      const tokenCreado = await this.prismaService.usuario_tokens.create({
         data: {
           id_usuario: id_usuario,
           token_hash: tokenHash,
@@ -260,7 +286,7 @@ export class AuthService {
       if (!userExist.documento)
         throw new BadRequestException('El usuario no tiene documento asociado');
 
-      return { token, tokenHash };
+      return { token, tokenHash, idToken: tokenCreado.id };
     } catch (error) {
       throw error;
     }
@@ -306,7 +332,7 @@ export class AuthService {
         documento: user.documento,
         correo: user.correo,
         telefono: user.telefono,
-        dial_code: user.dial_code
+        dial_code: user.dial_code,
       };
 
       await this.prismaService.$transaction(async (prisma) => {
@@ -359,18 +385,175 @@ export class AuthService {
     };
   }
 
-
-   async getGruposHabilitados(){
+  async getGruposHabilitados() {
     try {
       const grupos = await this.prismaService.grupos.findMany({
-        select: {id:true,descripcion:true},
-        where: {id: {
-          notIn: [4]  // excluir inversionista
-        }} ,
+        select: { id: true, descripcion: true },
+        where: {
+          id: {
+            notIn: [4], // excluir inversionista
+          },
+        },
       });
       return grupos;
     } catch (error) {
-      throw error
+      throw error;
     }
-   }
+  }
+
+  async SolicitudRecoveryPin(dto: SolicitudRecoveryPinDto) {
+    let idTokenCreado: number | null = null;
+    try {
+      const userEncontrado = await this.prismaService.usuarios.findFirst({
+        where: { documento: dto.cedula, activo: true, email: dto.correo },
+      });
+
+      if (!userEncontrado) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+
+      // Aquí puedes agregar la lógica para enviar el PIN de recuperación
+
+      // generar token temporal para restablecer el pin
+
+      const { token, idToken } = await this.generarTokenForUser(
+        userEncontrado.id,
+      );
+      idTokenCreado = idToken;
+
+      // armar la url de recuperación y enviar correo
+
+      if (!userEncontrado.email)
+        throw new BadRequestException(
+          'Usuario no tiene correo electrónico asociado',
+        );
+
+      const dataCorreo: RecoveryPinEmail = {
+        nombreDestinatario: `${userEncontrado.nombre} ${userEncontrado.apellido ? userEncontrado.apellido : ''}`,
+        destinatario: userEncontrado.email,
+        url: `${dto.url_origen}/reset-pin?token=${token}&cedula=${userEncontrado.documento}`,
+      };
+
+      console.log(dataCorreo);
+
+      const resultCorreo =
+        await this.emailService.sendPinRecoveryEmail(dataCorreo);
+      console.log(resultCorreo);
+    } catch (error) {
+      if (idTokenCreado) {
+        // eliminar el token creado
+        await this.prismaService.usuario_tokens.delete({
+          where: { id: idTokenCreado },
+        });
+      }
+      throw error;
+    }
+  }
+
+  async resetPin(dto: RecoveryPinDto) {
+    try {
+      // Verificar el token
+
+      const dataValidarToken: ValidacionTokenDto = {
+        token: dto.token,
+        cedula: dto.cedula,
+      };
+      const tokenValido = await this.verificarToken(dataValidarToken);
+      if (!tokenValido) {
+        throw new BadRequestException('Token inválido');
+      }
+
+      // Verificar la cédula
+      const usuario = await this.prismaService.usuarios.findFirst({
+        where: { documento: dto.cedula, activo: true },
+      });
+      if (!usuario) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+
+      // Actualizar el PIN
+      const pinHaheado = await encrypt(dto.pin);
+      await this.prismaService.usuarios.update({
+        where: { id: usuario.id },
+        data: { pin: pinHaheado },
+      });
+
+      return { message: 'PIN actualizado exitosamente' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Refrescar token usando cédula y token como credenciales
+   * Usa el sistema de tokens hasheados de la tabla usuario_tokens
+   */
+  async refreshTokenWithCedula(refreshTokenDto: RefreshTokenDto) {
+    const { token, cedula } = refreshTokenDto;
+
+    try {
+      // 1. Hashear el token para buscar en la base de datos
+      const tokenHash = createHash('sha256').update(token).digest('hex');
+
+      // 2. Buscar el token en la tabla usuario_tokens
+
+      const dataValidarToken: ValidacionTokenDto = {
+        token: token,
+        cedula: cedula,
+      };
+
+      const tokenValido = await this.verificarToken(dataValidarToken);
+
+      // 3. crear token ya validado
+
+      const tokenNuevo = await this.generarTokenForUser(tokenValido.id_usuario);
+
+      return { token: tokenNuevo.token, cedula: cedula };
+    } catch (error) {
+      console.error('Error en refreshTokenWithCedula:', error);
+      throw error;
+    }
+  }
+
+  async resetContrasenaWithCedula(dto: CambiarContrasenaDto) {
+    try {
+      //1. buscar cedula
+      const usuario = await this.prismaService.usuarios.findFirst({
+        where: { documento: dto.cedula, activo: true },
+      });
+      if (!usuario) throw new NotFoundException('Usuario no encontrado');
+
+      //2. verificar token (si hay)
+
+      if(dto.token){
+        const dataValidarToken: ValidacionTokenDto = {
+          token: dto.token,
+          cedula: dto.cedula,
+        };
+        const tokenValido = await this.verificarToken(dataValidarToken);
+        if (!tokenValido) {
+          throw new BadRequestException('Token inválido');
+        }
+
+      }
+
+      // 3. Validar pin (Obligatorio)
+      if (!usuario.pin) throw new BadRequestException('Usuario no tiene un pin configurado');
+      const pinMatches = await verify(dto.pin, usuario.pin);
+      if (!pinMatches) throw new BadRequestException('Pin incorrecto');
+
+      //4. actualizar contraseña
+      const passHaheado = await encrypt(dto.password);
+      await this.prismaService.usuarios.update({
+        where: { id: usuario.id },
+        data: { password: passHaheado },
+      });
+
+      return { message: 'Contraseña actualizada exitosamente' };
+
+
+    } catch (error) {
+      throw error;
+    }
+  }
 }

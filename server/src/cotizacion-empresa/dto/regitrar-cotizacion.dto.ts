@@ -16,10 +16,8 @@ export class CotizacionDto {
   monto_venta: number;
 
   @IsNumber({}, { message: 'El monto debe ser un número' })
-  @IsNotEmpty({ message: 'El monto pagos es obligatorio' })
-  monto_pagos: number;
-
-
+  @IsNotEmpty({ message: 'El monto compra es obligatorio' })
+  monto_compra: number;
 
   @IsNumber({}, { message: 'El id de la moneda debe ser un número' })
   @IsOptional()

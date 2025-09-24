@@ -20,7 +20,7 @@ export default function DefaultLayout({children}) {
       {/* <div className="absolute inset-0 bg-black bg-opacity-90 -z-20" /> */}
 
       {/* Contenido */}
-      <main className="relative min-h-screen py-6 z-0">
+      <main className="relative min-h-screen z-0">
         {children ? children : <Outlet />}
       </main>
       <Toaster position="top-right" />

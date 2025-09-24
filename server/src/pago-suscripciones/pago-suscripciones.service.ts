@@ -27,7 +27,7 @@ export class PagoSuscripcionesService {
 
       let montoConvertir: number = 1;
 
-      let montoConvertido: any = {};
+
 
       let facturaCancelada = false;
 
@@ -60,7 +60,7 @@ export class PagoSuscripcionesService {
         );
       }
 
-      montoConvertido = await this.cotizacionService.convertirPorIdCotizacion(
+     const montoConvertido = await this.cotizacionService.convertirPorIdCotizacion(
         crearPagoDto.id_cotizacion,
         crearPagoDto.id_moneda,
         factura.id_moneda,
@@ -89,7 +89,7 @@ export class PagoSuscripcionesService {
       }
 
       const haySobrante =
-        totalPagado + montoConvertido.montoConvertido > factura.total_factura;
+        totalPagado + montoConvertido.montoConvertido.venta > factura.total_factura;
 
       if (haySobrante) {
         throw new BadRequestException(
@@ -99,7 +99,7 @@ export class PagoSuscripcionesService {
 
       // si el se cancela la factura
       if (
-        totalPagado + montoConvertido.montoConvertido ==
+        totalPagado + montoConvertido.montoConvertido.venta ==
         factura.total_factura
       ) {
         facturaCancelada = true;
@@ -126,7 +126,7 @@ export class PagoSuscripcionesService {
             fecha_pago: crearPagoDto.fecha_pago,
             id_factura: crearPagoDto.id_factura,
             id_cotizacion: crearPagoDto.id_cotizacion,
-            monto_base: Number(montoConvertido.montoConvertido.toFixed(2)),
+            monto_base: Number(montoConvertido.montoConvertido.venta.toFixed(2)),
             monto: Number(crearPagoDto.monto.toFixed(2)),
             id_moneda: crearPagoDto.id_moneda,
             metodo_pago: crearPagoDto.id_metodo_pago,

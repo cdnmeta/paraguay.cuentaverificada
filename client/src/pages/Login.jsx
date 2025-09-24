@@ -194,7 +194,13 @@ const Login = () => {
                   to={PUBLIC_ROUTES.solicitarCuentaVerificada}
                   className="text-blue-600 underline block mt-2"
                 >
-                  ¿No tenés cuenta? Soliictar una cuenta ahora
+                  ¿No tenés cuenta? Solicitar una cuenta ahora
+                </Link>
+                <Link
+                  to={PUBLIC_ROUTES.resetPassword}
+                  className="text-blue-600 underline block mt-2"
+                >
+                  ¿Olvidaste tu contraseña? Restablecer contraseña
                 </Link>
               </div>
             </form>

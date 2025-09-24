@@ -29,7 +29,6 @@ import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { AgregarGrupoUsuario, CrearUsuarioDTO } from './dto/register-usuarios';
 import { ActualizarUsuarioDTO } from './dto/actualizar-usuario.dto';
 import { AuthenticatedRequest } from '@/auth/types/AuthenticatedRequest';
-import { OnlyAdminGuard } from '@/auth/guards/onlyAdmin.guard';
 import { IsOnlyAdmin } from '@/auth/decorators/onlyAdmin.decorator';
 
 @Controller('usuarios')

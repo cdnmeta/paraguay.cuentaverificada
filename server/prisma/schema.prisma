@@ -51,8 +51,10 @@ model cotizacion_empresa {
   id                                                    Int                           @id @default(autoincrement())
   id_moneda_origen                                      Int
   id_moneda_destino                                     Int
-  monto                                                 Float
+  monto                                                 Float?
   monto_pagos                                           Float?
+  monto_compra                                          Float?
+  monto_venta                                           Float?
   fecha_creacion                                        DateTime                      @default(now()) @db.Timestamptz(6)
   fecha_actualizacion                                   DateTime?                     @db.Timestamptz(6)
   id_usuario_creacion                                   Int?
@@ -293,6 +295,7 @@ model usuarios {
   usuarios_grupos             usuarios_grupos[]
   pagos_factura_suscripciones pagos_factura_suscripciones[]
   ganancias_futuras           ganancias_futuras[]
+  recordatorios                recordatorios[]
 
 }
 
@@ -393,4 +396,20 @@ model ganancias_futuras {
   observacion               String?
   facturas                 factura_suscripciones? @relation(fields: [id_factura], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_facturas_id_ganancias_futuras")
   usuarios                 usuarios? @relation(fields: [id_usuario], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_usuarios_id_ganancias_futuras")
+}
+
+// table de donde lo guarde
+
+model recordatorios {
+  id          Int       @id @default(autoincrement())
+  titulo      String?    @db.Text 
+  descripcion String?    @db.Text
+  url_imagen  String[]  @db.Text
+  id_estado   Int       @default(1)
+  activo      Boolean   @default(true)
+  id_usuario  Int  
+  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  usuarios    usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_recordatorios")
+
 }

@@ -41,6 +41,27 @@ export class FirebaseService {
     }
   }
 
+  async eliminarArchivo(ruta: string): Promise<void> {
+    try {
+      const archivoRef = this.storage.file(ruta);
+      await archivoRef.delete();
+    } catch (error) {
+      console.error('Error eliminando archivo de Firebase:', error);
+      throw error;
+    }
+  }
+
+  async verificarExistenciaArchivo(ruta: string): Promise<boolean> {
+    try {
+      const archivoRef = this.storage.file(ruta);
+      const [exists] = await archivoRef.exists();
+      return exists;
+    } catch (error) {
+      console.error('Error verificando existencia de archivo:', error);
+      return false;
+    }
+  }
+
   verifyIdToken = async (token: string) => {
     try {
       const decodedToken = await this.firebaseApp.auth().verifyIdToken(token);

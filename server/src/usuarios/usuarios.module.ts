@@ -4,10 +4,13 @@ import { UsuariosService } from './usuarios.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { FirebaseModule } from '@/firebase/firebase.module';
 import { DatabaseModule } from '@/database/database.module';
+import { VendedoresController } from './vendedores-empresa/vendedores-empresa.controller';
+import { VendedoresEmpresaService } from './vendedores-empresa/vendedores-empresa.service';
+
 
 @Module({
-  controllers: [UsuariosController],
-  providers: [UsuariosService],
+  controllers: [UsuariosController, VendedoresController],
+  providers: [UsuariosService, VendedoresEmpresaService],
   imports: [PrismaModule, FirebaseModule, DatabaseModule],
   exports: [UsuariosService],
 })
