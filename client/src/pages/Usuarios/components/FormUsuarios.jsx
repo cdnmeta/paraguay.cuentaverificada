@@ -108,7 +108,7 @@ export default function FormUsuario({
       .string({ required_error: 'El correo es obligatorio' })
       .trim()
       .email('El correo debe ser un correo válido'),
-    dial_code: z.string().optional().nullable(),
+    codigo_pais: z.string().optional().nullable(),
     telefono: z.string().optional().nullable(),
     grupos: z.array(z.number()).optional().nullable(),
     cedula_frontal: z.any().optional().nullable(),
@@ -131,8 +131,8 @@ export default function FormUsuario({
         .min(CANT_MIN_CARACTERES_CONTRASENA, 'La contraseña es obligatoria'),
     })
     .superRefine((val, ctx) => {
-      if (val.telefono && !val.dial_code) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Si cargas teléfono, selecciona un dial code', path: ['dial_code'] });
+      if (val.telefono && !val.codigo_pais) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Si cargas teléfono, selecciona un dial code', path: ['codigo_pais'] });
       }
       if (val.contrasena !== val.repetir_contrasena) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Las contraseñas no coinciden', path: ['repetir_contrasena'] });
@@ -164,8 +164,8 @@ export default function FormUsuario({
       repetir_contrasena: z.string().trim().optional().nullable(),
     })
     .superRefine((val, ctx) => {
-      if (val.telefono && !val.dial_code) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Si cargas teléfono, selecciona un dial code', path: ['dial_code'] });
+      if (val.telefono && !val.codigo_pais) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Si cargas teléfono, selecciona un dial code', path: ['codigo_pais'] });
       }
       // Contraseña opcional en edición; validar sólo si se envía
       if (val.contrasena || val.repetir_contrasena) {
@@ -214,7 +214,7 @@ export default function FormUsuario({
       apellido: "",
       documento: "",
       correo: "",
-      dial_code: "",
+      codigo_pais: "",
       telefono: "",
      porcentaje_vendedor_primera_venta: "",
      porcentaje_vendedor_venta_recurrente: "",
@@ -281,7 +281,7 @@ export default function FormUsuario({
           apellido: u?.apellido ?? "",
           documento: u?.documento ?? "",
           correo: u?.email ?? u?.correo ?? "",
-          dial_code: u?.dial_code ?? "+595",
+          codigo_pais: u?.codigo_pais ?? "+595",
           telefono: u?.telefono ?? "",
           grupos: Array.isArray(u?.grupos)
             ? u.grupos
@@ -343,7 +343,10 @@ export default function FormUsuario({
     }
 
     if (values.apellido) formData.append("apellido", values.apellido);
-    if (values.dial_code) formData.append("dial_code", values.dial_code);
+
+    // buscar el dial code correspondiente
+    const codigoPais = paisesCode.find((p) => p.codigo === values.codigo_pais);
+    if (codigoPais) formData.append("dial_code", codigoPais.countryCode);
     if (values.telefono) formData.append("telefono", values.telefono);
 
     // grupos como números
@@ -552,20 +555,20 @@ export default function FormUsuario({
                   <Label>Codigo Pais</Label>
                   <Controller
                     control={control}
-                    name="dial_code"
+                    name="codigo_pais"
                     render={({ field }) => (
                       <ComboBox
                         value={field.value}
                         items={dialCodes}
                         onChange={field.onChange}
                         placeholder="Código"
-                        error={!!errors.dial_code}
+                        error={!!errors.codigo_pais}
                       />
                     )}
                   />
-                  {errors.dial_code && (
+                  {errors.codigo_pais && (
                     <p className="text-sm text-red-500">
-                      {errors.dial_code.message}
+                      {errors.codigo_pais.message}
                     </p>
                   )}
                 </div>

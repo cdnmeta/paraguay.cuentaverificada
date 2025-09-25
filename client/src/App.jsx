@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Pacto from "./components/Pacto";
 import CrearCuenta from "./pages/CrearCuenta";
 import Login from "./pages/Login";
@@ -45,7 +45,7 @@ export default function App() {
     <Routes>
       <Route element={<DefaultLayout />}>
         <Route index element={<CrearCuenta />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={user ? <Navigate to="/panel" /> : <Login />} />
         <Route path="/login/:token" element={<LoginToken />} />
         <Route path="/recuperar" element={<RecuperarContrasena />} />
         <Route path="/recovery-pin" element={<RecoveryPinPage />} />
@@ -56,7 +56,6 @@ export default function App() {
         <Route path="/verificacion-cuenta" element={<InicializarContrasenaPin />} />
         <Route path="/pacto" element={<Pacto />} />
         <Route path="*" element={<h1>404 Not Found</h1>} />
-        <Route path="mi-cuenta" element={<MisDatosPage />} />
       </Route>
       <Route element={<DashboardApp />}>
         <Route element={<ProtectedRoute isAuthorized={!!user} />}>

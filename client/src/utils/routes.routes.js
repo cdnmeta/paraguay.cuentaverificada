@@ -16,7 +16,7 @@ export const PUBLIC_ROUTES = {
 export const PROTECTED_ROUTES = {
   admin: "/admin",
   dashboard: "/panel",
-  misDatos: "/cuenta",
+  misDatos: "/mi-cuenta",
   verificacionComercio: "/verificacion-comercio",
 };
 

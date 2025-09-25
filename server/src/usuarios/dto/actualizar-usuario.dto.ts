@@ -18,7 +18,7 @@ import { VendedorDataDto } from './grupos.dto';
 export class ActualizarUsuarioDTO {
   @IsString({ message: 'Nombre debe ser una cadena' })
   @IsNotEmpty({ message: 'El nombre es obligatorio' })
-  nombre: string;
+  nombre?: string;
 
   @IsString({ message: 'El apellido debe ser una cadena' })
   @IsOptional()
@@ -26,11 +26,11 @@ export class ActualizarUsuarioDTO {
 
   @IsString({ message: 'El documento debe ser una cadena' })
   @IsNotEmpty({ message: 'El documento es obligatorio' })
-  documento: string;
+  documento?: string;
 
   @IsEmail({}, { message: 'El correo debe ser un correo válido' })
   @IsNotEmpty({ message: 'El correo es obligatorio' })
-  correo: string;
+  correo?: string;
 
   @IsString({ message: 'Sexo debe ser una cadena' })
   @IsEnum(['1', '2'], { message: 'Opción de sexo no válida' })
@@ -99,4 +99,60 @@ export class ActualizarUsuarioDTO {
   @Min(0, { message: 'El porcentaje no puede ser negativo' })
   @Max(100, { message: 'El porcentaje no puede ser mayor a 100' })
   porcentaje_vendedor_venta_recurrente?: number | null;
+}
+
+
+export class CambiarContrasenaPayloadDTO {
+  @IsString({ message: 'La contraseña actual debe ser una cadena' })
+  @IsNotEmpty({ message: 'La contraseña actual es obligatoria' })
+  contrasena: string;
+
+  @IsString({message:"El pin es obligatorio"})
+  @IsNotEmpty({message:"El pin es obligatorio"})
+  pin: string;
+
+  
+}
+
+export class ActualizarMisDatos {
+  @Transform(({ value }) => {
+    if (value === null || value === undefined) return undefined;
+    if (typeof value !== 'string') return value;
+    const v = value.trim();
+    return v === '' ? undefined : v;
+  })
+  @IsEmail({}, { message: 'Email debe ser un correo válido' })
+  @IsOptional()
+  correo?: string;
+
+  @IsString({ message: 'Teléfono debe ser una cadena' })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === null || value === undefined) return undefined;
+    if (typeof value !== 'string') return value;
+    const v = value.trim();
+    return v === '' ? undefined : v;
+  })
+  telefono?: string;
+
+  @IsString({ message: 'Dial code debe ser una cadena' })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === null || value === undefined) return undefined;
+    if (typeof value !== 'string') return value;
+    const v = value.trim();
+    return v === '' ? undefined : v;
+  })
+  dial_code?: string;
+
+
+  @IsString({ message: 'Dirección debe ser una cadena' })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === null || value === undefined) return undefined;
+    if (typeof value !== 'string') return value;
+    const v = value.trim();
+    return v === '' ? undefined : v;
+  })
+  direccion?: string
 }

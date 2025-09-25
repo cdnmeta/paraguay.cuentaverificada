@@ -25,6 +25,10 @@ import { DatabasePromiseService } from '@/database/database-promise.service';
 import { Prisma } from '@prisma/client';
 import { AsignarGruposDto, VendedorDataDto } from './dto/grupos.dto';
 import { ActualizarUsuarioDTO } from './dto/actualizar-usuario.dto';
+import {
+  ActualizarDireccionUsuarioDTO,
+  CrearDireccionUsuarioDTO,
+} from './dto/direciones-usuario.dto';
 
 @Injectable()
 export class UsuariosService {
@@ -344,7 +348,7 @@ export class UsuariosService {
         whereClause.email = email.trim();
       }
 
-      if( query.id_grupo ){
+      if (query.id_grupo) {
         sql += ` and jsonb_path_exists(u.roles_asignados, '$[*] ? (@.id == $(id_grupo))') `;
         whereClause.id_grupo = parseInt(query.id_grupo.toString());
       }
@@ -530,22 +534,24 @@ export class UsuariosService {
         throw new NotFoundException('Usuario no encontrado');
       }
 
-      // Verificar que el email y documento no estén siendo usados por otro usuario
-      const conflictoUsuario = await this.prismaService.usuarios.findFirst({
-        where: {
-          AND: [
-            { id: { not: id } }, // Excluir el usuario actual
-            {
-              OR: [{ email: dto.correo }, { documento: dto.documento }],
-            },
-          ],
-        },
-      });
+      if (dto.documento || dto.correo) {
+        // Verificar que el email y documento no estén siendo usados por otro usuario
+        const conflictoUsuario = await this.prismaService.usuarios.findFirst({
+          where: {
+            AND: [
+              { id: { not: id } }, // Excluir el usuario actual
+              {
+                OR: [{ email: dto.correo }, { documento: dto.documento }],
+              },
+            ],
+          },
+        });
 
-      if (conflictoUsuario) {
-        throw new BadRequestException(
-          'El correo o documento ya están siendo usados por otro usuario',
-        );
+        if (conflictoUsuario) {
+          throw new BadRequestException(
+            'El correo o documento ya están siendo usados por otro usuario',
+          );
+        }
       }
 
       let uidUserFirebase = usuarioExistente.uid_firebase;
@@ -692,6 +698,93 @@ export class UsuariosService {
       });
 
       return { grupos };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async obtenerDireccionesUsuarioById(id_usuario: number) {
+    try {
+      const direcciones =
+        await this.prismaService.direcciones_usuarios.findMany({
+          where: { id_usuario, activo: true },
+        });
+      return direcciones;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async agregarDireccionUsuario(body: CrearDireccionUsuarioDTO) {
+    try {
+      const nuevaDireccion =
+        await this.prismaService.direcciones_usuarios.create({
+          data: {
+            id_usuario: body.id_usuario,
+            titulo: body.titulo,
+            direccion: body.direccion,
+            url_maps: body.url_maps,
+            referencia: body.referencia,
+          },
+        });
+      return nuevaDireccion;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async actualizarDireccionUsuario(
+    id: number,
+    body: ActualizarDireccionUsuarioDTO,
+  ) {
+    try {
+      const direccionExistente =
+        await this.prismaService.direcciones_usuarios.findFirst({
+          where: { id, activo: true },
+        });
+      if (!direccionExistente)
+        throw new NotFoundException('Dirección no encontrada');
+      const direccionActualizada =
+        await this.prismaService.direcciones_usuarios.update({
+          where: { id },
+          data: {
+            titulo: body.titulo,
+            direccion: body.direccion,
+            url_maps: body.url_maps,
+            referencia: body.referencia,
+          },
+        });
+      return direccionActualizada;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async obtenerDireccionById(id: number) {
+    try {
+      const direccion = await this.prismaService.direcciones_usuarios.findFirst({
+        where: { id, activo: true },
+      });
+      if (!direccion) throw new NotFoundException('Dirección no encontrada');
+      return direccion;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async eliminarDireccionUsuarioById(id: number) {
+    try {
+      const direccionExistente =
+        await this.prismaService.direcciones_usuarios.findFirst({
+          where: { id, activo: true },
+        });
+      if (!direccionExistente)
+        throw new NotFoundException('Dirección no encontrada');
+      await this.prismaService.direcciones_usuarios.update({
+        where: { id },
+        data: { activo: false },
+      });
+      return { message: 'Dirección eliminada correctamente' };
     } catch (error) {
       throw error;
     }

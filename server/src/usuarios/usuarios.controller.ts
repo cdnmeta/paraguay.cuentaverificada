@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -11,6 +12,7 @@ import {
   Req,
   Res,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { SolicitudCuentaDto } from '../verificacion-cuenta/dto/solicitud-cuenta.dto';
@@ -24,12 +26,26 @@ import { validateImageOrThrow } from '@/pipes/ImageValiationPipe';
 import { Response } from 'express';
 import { IsPublic } from '@/auth/decorators/public.decorator';
 import { UserByQueryDto, UsersForQueryManyDto } from './dto/usuarios-query.dto';
-import { UserResponseDto, UserResponseViewData } from './dto/user-response.dto';
+import {
+  MisDatosResponseDto,
+  UserResponseDto,
+  UserResponseViewData,
+} from './dto/user-response.dto';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { AgregarGrupoUsuario, CrearUsuarioDTO } from './dto/register-usuarios';
-import { ActualizarUsuarioDTO } from './dto/actualizar-usuario.dto';
+import {
+  ActualizarMisDatos,
+  ActualizarUsuarioDTO,
+  CambiarContrasenaPayloadDTO,
+} from './dto/actualizar-usuario.dto';
 import { AuthenticatedRequest } from '@/auth/types/AuthenticatedRequest';
 import { IsOnlyAdmin } from '@/auth/decorators/onlyAdmin.decorator';
+import { RequireUserPinGuard } from '@/auth/guards/requireUserPin.guard';
+import {
+  ActualizarDireccionUsuarioDTO,
+  CrearDireccionUsuarioDTO,
+  CrearDireccionUsuarioPayloadDTO,
+} from './dto/direciones-usuario.dto';
 
 @Controller('usuarios')
 export class UsuariosController {
@@ -78,8 +94,8 @@ export class UsuariosController {
   @Get('query-one')
   async getUserByQuery(@Query() query: UserByQueryDto) {
     try {
-      console.log("query", query)
-      if (query && Object.keys(query).length === 0 ) {
+      console.log('query', query);
+      if (query && Object.keys(query).length === 0) {
         throw new BadRequestException('No query parameters provided');
       }
       const user = await this.usuariosService.getUserByQuery(query);
@@ -152,11 +168,11 @@ export class UsuariosController {
         requiredErrorMessage: 'Imagen de la selfie es requerida',
       });
 
-      const filesUser:UsuariosArchivos = {
+      const filesUser: UsuariosArchivos = {
         cedulaFrente: frontal,
         cedulaReverso: reverso,
-        selfie: selfie
-      }
+        selfie: selfie,
+      };
       body.id_usuario_registro = req.user.userId;
       const newUser = await this.usuariosService.crearUsuario(body, filesUser);
       return res.status(200).json({
@@ -192,7 +208,7 @@ export class UsuariosController {
       const frontal = files.cedula_frontal?.[0];
       const reverso = files.cedula_reverso?.[0];
       const selfie = files.selfie?.[0];
-      
+
       // Validar imágenes solo si se proporcionan (para actualización son opcionales)
       if (frontal) {
         validateImageOrThrow(frontal, {
@@ -201,7 +217,7 @@ export class UsuariosController {
           requiredErrorMessage: 'Imagen de la cédula frontal no válida',
         });
       }
-      
+
       if (reverso) {
         validateImageOrThrow(reverso, {
           required: false,
@@ -209,7 +225,7 @@ export class UsuariosController {
           requiredErrorMessage: 'Imagen de la cédula reverso no válida',
         });
       }
-      
+
       if (selfie) {
         validateImageOrThrow(selfie, {
           required: false,
@@ -221,12 +237,12 @@ export class UsuariosController {
       const filesUser: UsuariosArchivos = {
         cedulaFrente: frontal,
         cedulaReverso: reverso,
-        selfie: selfie
+        selfie: selfie,
       };
 
       body.id_usuario_actualizacion = req.user.userId;
       await this.usuariosService.actualizarUsuario(id, body, filesUser);
-      
+
       return res.status(200).json({
         message: 'Usuario actualizado exitosamente',
       });
@@ -239,8 +255,88 @@ export class UsuariosController {
   async getFiltrosUsuarios() {
     try {
       const filtros = await this.usuariosService.getFiltrosUsuarios();
-      console.log(filtros)
+      console.log(filtros);
       return filtros;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('mis-datos')
+  async getMisDatos(@Req() req: AuthenticatedRequest) {
+    try {
+      const usuario = await this.usuariosService.getUsuarioById(
+        req.user.userId,
+      );
+      const userResponse = plainToInstance(MisDatosResponseDto, usuario, {
+        excludeExtraneousValues: true,
+      });
+      return userResponse;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Put('mis-datos')
+  async actualizarMisDatos(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: ActualizarMisDatos,
+  ) {
+    try {
+      await this.usuariosService.actualizarUsuario(req.user.userId, body, {});
+      return { message: 'Datos actualizados exitosamente' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Post('cambiar-contrasena')
+  @UseGuards(RequireUserPinGuard)
+  async cambiarContrasena(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: CambiarContrasenaPayloadDTO,
+  ) {
+    try {
+      const dataEnviar: ActualizarUsuarioDTO = {
+        contrasena: body.contrasena,
+      };
+      await this.usuariosService.actualizarUsuario(
+        req.user.userId,
+        dataEnviar,
+        {},
+      );
+      return { message: 'Contraseña cambiada exitosamente' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Post('mis-direcciones')
+  async agregarDireccionUsuario(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: CrearDireccionUsuarioPayloadDTO,
+  ) {
+    try {
+      const data: CrearDireccionUsuarioDTO = {
+        ...body,
+        id_usuario: req.user.userId,
+      };
+      const direccion =
+        await this.usuariosService.agregarDireccionUsuario(data);
+      return { message: 'Dirección agregada exitosamente' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('mis-direcciones')
+  async obtenerDireccionesUsuario(@Req() req: AuthenticatedRequest) {
+    try {
+      const direcciones =
+        await this.usuariosService.obtenerDireccionesUsuarioById(
+          req.user.userId,
+        );
+      return direcciones;
     } catch (error) {
       throw error;
     }
@@ -254,19 +350,69 @@ export class UsuariosController {
   async getUsuarioById(@Param('id', ParseIntPipe) id: number) {
     try {
       const usuario = await this.usuariosService.getUsuarioById(id);
-      console.log(usuario)
-      const usuarioResponse = plainToInstance(UserResponseViewData, {
-        ...usuario,
-        porcentaje_comision_primera_venta: usuario.porcentaje_comision_primera_venta?.toNumber(),
-        porcentaje_comision_recurrente: usuario.porcentaje_comision_recurrente?.toNumber(),
-      }, {
-        excludeExtraneousValues: true,
-      });
+      console.log(usuario);
+      const usuarioResponse = plainToInstance(
+        UserResponseViewData,
+        {
+          ...usuario,
+          porcentaje_comision_primera_venta:
+            usuario.porcentaje_comision_primera_venta?.toNumber(),
+          porcentaje_comision_recurrente:
+            usuario.porcentaje_comision_recurrente?.toNumber(),
+        },
+        {
+          excludeExtraneousValues: true,
+        },
+      );
       return usuarioResponse;
     } catch (error) {
       throw error;
     }
   }
 
-  
+
+  @Get('mis-direcciones/:id')
+  async obtenerDireccionUsuarioById(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    try {
+      const direccion = await this.usuariosService.obtenerDireccionById(id);
+      return direccion;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Put('mis-direcciones/:id')
+  async actualizarDireccionUsuario(
+    @Req() req: AuthenticatedRequest,
+    @Res() res: Response,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: ActualizarDireccionUsuarioDTO,
+  ) {
+    try {
+      await this.usuariosService.actualizarDireccionUsuario(id, body);
+      return res
+        .status(200)
+        .json({ message: 'Dirección actualizada exitosamente' });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Delete("mis-direcciones/:id")
+  async eliminarDireccionUsuario(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response) {
+      try {
+        await this.usuariosService.eliminarDireccionUsuarioById(id);
+        return res
+          .status(200)
+          .json({ message: 'Dirección eliminada exitosamente' });
+      } catch (error) {
+        throw error;
+      }
+    }
 }

@@ -98,3 +98,74 @@ export const filtrosUsuarios = async () => {
     },
   });
 }
+
+
+export const getMisDatos = async () => {
+  return await api.get(`/mis-datos`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}
+
+export const actualizarMisDatos = async (data) => {
+  return await api.put(`/mis-datos`, data, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`,
+      'Content-Type': 'application/json'
+    },
+  });
+}
+
+
+export const cambiarContrasena = async (data) => {
+  return await api.post(`/cambiar-contrasena`, data, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}
+
+// ===== ENDPOINTS PARA DIRECCIONES DE USUARIOS =====
+
+export const obtenerMisDirecciones = async () => {
+  return await api.get(`/mis-direcciones`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}
+
+export const obtenerDireccionPorId = async (id) => {
+  return await api.get(`/mis-direcciones/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}
+
+export const crearDireccion = async (data) => {
+  return await api.post(`/mis-direcciones`, data, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`,
+      'Content-Type': 'application/json'
+    },
+  });
+}
+
+export const actualizarDireccion = async (id, data) => {
+  return await api.put(`/mis-direcciones/${id}`, data, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`,
+      'Content-Type': 'application/json'
+    },
+  });
+}
+
+export const eliminarDireccion = async (id) => {
+  return await api.delete(`/mis-direcciones/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}

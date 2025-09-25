@@ -296,6 +296,7 @@ model usuarios {
   pagos_factura_suscripciones pagos_factura_suscripciones[]
   ganancias_futuras           ganancias_futuras[]
   recordatorios                recordatorios[]
+  recordatorios_usuarios      direcciones_usuarios[]
 
 }
 
@@ -411,5 +412,22 @@ model recordatorios {
   fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
   fecha_actualizacion DateTime? @db.Timestamptz(6)
   usuarios    usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_recordatorios")
+
+}
+
+
+// tabla de direcciones del usuario
+
+model direcciones_usuarios {
+  id          Int       @id @default(autoincrement())
+  titulo      String    @db.Text 
+  direccion   String    @db.Text
+  url_maps    String    @db.Text
+  referencia  String    @db.Text
+  activo      Boolean   @default(true)
+  id_usuario  Int  
+  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  usuarios    usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_direcciones_usuarios")
 
 }

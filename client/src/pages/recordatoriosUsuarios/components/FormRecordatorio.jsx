@@ -20,13 +20,17 @@ import { cargarURL } from "@/utils/funciones";
 import "react-photo-view/dist/react-photo-view.css";
 import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
 import { set } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import routes from "../config/routes";
 
-const FormRecordatorio = ({ id_recordatorio = null }) => {
+const FormRecordatorio = ({ id_recordatorio = null}) => {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [imagenesPrevias, setImagenesPrevias] = useState([]);
   const [imagenesAEliminar, setImagenesAEliminar] = useState([]);
   const [mapeoImagenes, setMapeoImagenes] = useState({}); // Mapeo: URL completa -> ruta original
+
+  const navigate = useNavigate();
   
   // Estados para cámara
   const [showCamera, setShowCamera] = useState(false);
@@ -150,6 +154,8 @@ const FormRecordatorio = ({ id_recordatorio = null }) => {
         toast.success("Recordatorio creado exitosamente");
         reset();
       }
+
+      navigate(`/${routes.index}`)
     } catch (error) {
       console.error("Error al guardar recordatorio:", error);
       toast.error(

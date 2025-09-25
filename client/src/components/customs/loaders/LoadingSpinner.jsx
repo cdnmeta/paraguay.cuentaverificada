@@ -2,7 +2,6 @@ import { Loader2 } from "lucide-react";
 
 const LoadingSpinner = ({
   message = "Cargando sesión...",
-  variant = "default",
 }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -27,17 +26,16 @@ const LoadingSpinner = ({
         {/* Indicador de progreso animado */}
         <div className="w-32 h-1 bg-secondary rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary rounded-full animate-pulse"
+            className="h-full bg-primary rounded-full animate-pulse shimmer-animation"
             style={{
               background:
                 "linear-gradient(90deg, transparent, hsl(var(--primary)), transparent)",
-              animation: "shimmer 2s infinite",
             }}
           />
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes shimmer {
           0% {
             transform: translateX(-100%);
@@ -45,6 +43,9 @@ const LoadingSpinner = ({
           100% {
             transform: translateX(100%);
           }
+        }
+        .shimmer-animation {
+          animation: shimmer 2s infinite;
         }
       `}</style>
     </div>

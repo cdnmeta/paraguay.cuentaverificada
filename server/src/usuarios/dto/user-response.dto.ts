@@ -57,3 +57,28 @@ export class UserResponseViewData {
   @Expose()
   porcentaje_comision_recurrente?: number;
 }
+
+
+export class MisDatosResponseDto {
+  id: number;
+  @Expose()
+  documento: string;
+  @Expose()
+  email: string;
+
+  @Expose()
+  nombre: string;
+
+  @Expose()
+  apellido: string;
+
+  @Expose()
+  dial_code: string;
+
+  @Expose()
+  telefono: string;
+
+  @Expose()
+  direccion: string;
+
+}

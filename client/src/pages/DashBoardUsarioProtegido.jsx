@@ -26,6 +26,7 @@ export default function DashBoardUsarioProtegido() {
   {
     icon: "/icons/2179332.png",
     title: "Cuenta",
+    onClick: () => navigate(`${PROTECTED_ROUTES.misDatos}`),
     desc: "Datos - Seguridad - Más",
   },
   {
