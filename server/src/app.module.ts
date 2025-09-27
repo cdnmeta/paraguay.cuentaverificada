@@ -24,6 +24,7 @@ import { WinstonModule } from 'nest-winston';
 import { winstonOptions } from './logger/logger.config';
 import { RecordatoriosModule } from './recordatorios/recordatorios.module';
 import { EmailModule } from './email/email.module';
+import { SemaforoFinancieroModule } from './semaforo_financiero/semaforo_financiero.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { EmailModule } from './email/email.module';
     ParticipacionEmpresaModule,
     RecordatoriosModule,
     EmailModule,
+    SemaforoFinancieroModule,
   ],
   providers: [
     {

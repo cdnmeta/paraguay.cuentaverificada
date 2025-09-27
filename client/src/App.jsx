@@ -31,6 +31,8 @@ import { SuperAdminRoutes } from "./pages/Dashsboards/SuperAdmin/admin.routes";
 import { ParticipantesRoutes } from "./pages/Dashsboards/Participante/participantes.routes";
 import RecordatoriosUsuariosRoutes from "./pages/recordatoriosUsuarios";
 import { RecoveryPinPage, ResetPinPage, ResetPasswordPage } from "./pages/recovery";
+import SemaforoFinancieroPage from "./pages/SemaforoFinanciero/pages/SemaforoFinancieroPage";
+import SemaforoFinancieroRoutes from "./pages/SemaforoFinanciero";
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
@@ -59,6 +61,7 @@ export default function App() {
       </Route>
       <Route element={<DashboardApp />}>
         <Route element={<ProtectedRoute isAuthorized={!!user} />}>
+          {SemaforoFinancieroRoutes()}
           <Route
             path={PROTECTED_ROUTES.dashboard}
             element={<DashBoardUsarioProtegido />}

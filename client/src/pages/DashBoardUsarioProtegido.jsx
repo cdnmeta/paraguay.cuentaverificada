@@ -42,6 +42,7 @@ export default function DashBoardUsarioProtegido() {
   {
     icon: "/icons/443115.png",
     title: "Semáforo Financiero",
+    onClick: () => navigate(`/semaforo-financiero`),
     desc: "No permitas que tus finanzas lleguen al rojo",
   },
   {
@@ -75,7 +76,7 @@ export default function DashBoardUsarioProtegido() {
           <AlertDescription>
             <div className="flex gap-2 ">
               <p>
-                Te gustaría <b>Verifiacar un comercio</b>
+                Te gustaría <b>Verificar un comercio</b>
               </p>
             </div>
             <Button
