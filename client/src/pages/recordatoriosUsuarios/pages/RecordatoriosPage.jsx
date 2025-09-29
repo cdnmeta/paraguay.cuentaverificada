@@ -313,10 +313,10 @@ const RecordatoriosPage = () => {
   );
 
   return (
-    <div className="container mx-auto py-6 px-4">
+    <div>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row lg:flex-row items-center justify-between">
             <div className="flex items-center gap-2">
               <User className="w-6 h-6" />
               <CardTitle>Mis Recordatorios</CardTitle>

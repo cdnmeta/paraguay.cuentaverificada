@@ -131,7 +131,8 @@ const [urls, setUrls] = useState([]); // [{ key, label, url }]
       <Separator className="my-3" />
 
       <PhotoProvider onVisibleChange={(open) => {
-        document.body.style.pointerEvents = open ? "auto" : "none";
+        // Corregido: cuando está abierto debe ser "auto", cuando está cerrado debe restaurar el valor original
+        document.body.style.pointerEvents = open ? "auto" : "";
       }}
       >
         <div className="max-h-[400px] overflow-y-auto">

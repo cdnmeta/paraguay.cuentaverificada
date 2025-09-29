@@ -1,7 +1,7 @@
 // Dashboard.jsx
-import CardOption1 from "@/components/customs/CardOption1";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/hooks/useAuthStorge";
 import { PROTECTED_ROUTES } from "@/utils/routes.routes";
 import { CheckCircle2Icon } from "lucide-react";
@@ -89,22 +89,31 @@ export default function DashBoardUsarioProtegido() {
         </Alert>
       </div>
       <div className="max-w-7xl mx-auto text-center space-y-4">
-        <p className="text-xl italic">
+        <p className="text-foreground text-xl italic">
           Hola, {`${user?.nombre} ${user?.apellido}`}
         </p>
-        <h1 className="text-3xl font-bold">¿Cómo te sientes hoy?</h1>
+        <h1 className=" text-foreground text-3xl font-bold">¿Cómo te sientes hoy?</h1>
 
         {/* Emociones */}
-        <div className="bg-black bg-opacity-50 rounded-xl p-6 shadow-lg mt-4">
+        <div className="bg-background/90 backdrop-blur-sm border border-border/50 rounded-xl p-6 shadow-lg">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
             {emociones.map((item, i) => (
-              <div key={i} className="flex flex-col items-center space-y-1">
-                <p className="text-3xl">{item.emoji}</p>
-                <p className="text-sm">{item.label}</p>
-              </div>
+              <Card 
+                key={i} 
+                className="cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-105 group bg-background/50 backdrop-blur-sm border border-border/30 hover:border-primary/50 hover:bg-primary/5"
+              >
+                <CardContent className="flex flex-col items-center p-4 space-y-2">
+                  <div className="text-4xl group-hover:scale-110 transition-transform duration-300">
+                    {item.emoji}
+                  </div>
+                  <p className="text-sm font-medium text-center group-hover:text-primary transition-colors">
+                    {item.label}
+                  </p>
+                </CardContent>
+              </Card>
             ))}
           </div>
-          <p className="text-sm italic mt-4">
+          <p className="text-sm italic mt-4 text-muted-foreground">
             ✨ Seleccioná tu ánimo y dejá que Dios te hable hoy
           </p>
         </div>
@@ -112,7 +121,29 @@ export default function DashBoardUsarioProtegido() {
         {/* Secciones */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
           {secciones.map((item, i) => (
-            <CardOption1 key={i} {...item} />
+            <Card 
+              key={i} 
+              className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 group bg-background/95 backdrop-blur-sm border border-border/50 hover:border-primary/50"
+              onClick={item.onClick}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto mb-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                  <img 
+                    src={item.icon} 
+                    alt={item.title}
+                    className="w-8 h-8 object-contain filter group-hover:brightness-110 transition-all"
+                  />
+                </div>
+                <CardTitle className="text-lg font-semibold text-center group-hover:text-primary transition-colors">
+                  {item.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <CardDescription className="text-center text-muted-foreground text-sm leading-relaxed">
+                  {item.desc}
+                </CardDescription>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

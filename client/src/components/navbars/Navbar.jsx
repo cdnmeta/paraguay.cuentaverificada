@@ -41,7 +41,10 @@ export default function Navbar() {
       key: "role",
       label: "Cambiar Rol",
       icon: RefreshCw,
-      onClick: () => setOpenDialogGruposEmpresa(true),
+      onClick: () => {
+        console.log("como asi", user);
+        setOpenDialogGruposEmpresa(true)
+      },
     },
     { key: "sep1", type: "separator" },
     {
@@ -112,66 +115,12 @@ export default function Navbar() {
   };
 
   return (
-    <div className="container flex h-16 items-center justify-between px-4">
+    <div className="container  flex h-16 items-center justify-between px-4 ">
       {/* Logo */}
       <div className="flex items-center space-x-2">
         <Link to={PROTECTED_ROUTES.dashboard} className="flex items-center space-x-2">
           <LogoCuentaVerificada className="h-8 w-auto" />
         </Link>
-      </div>
-
-      {/* Lado derecho: Avatar + Menú móvil */}
-      <div className="flex items-center space-x-2">
-        {/* Dropdown del usuario */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarImage
-                  src="/placeholder.svg?height=32&width=32"
-                  alt="Usuario"
-                />
-                <AvatarFallback>
-                  {(user?.nombre?.[0] || "U").toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            {USER_MENU_ITEMS.map(renderUserItem)}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Menú móvil (Sheet) */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Abrir menú</span>
-            </Button>
-          </SheetTrigger>
-
-          <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-            <div className="flex flex-col space-y-4 mt-4">
-              <div className="flex items-center space-x-2 pb-4 border-b">
-                <LogoCuentaVerificada />
-              </div>
-
-              <nav className="flex flex-col space-y-2">
-                {/* Navegación principal */}
-                {NAV_ITEMS.map((item) => renderMobileItem(item))}
-
-                {/* Opciones de usuario (reutilizamos la misma config) */}
-                <div className="mt-4 border-t pt-4">
-                  {USER_MENU_ITEMS.filter((i) => i.type !== "separator").map((item) =>
-                    renderMobileItem(item)
-                  )}
-                </div>
-              </nav>
-            </div>
-          </SheetContent>
-        </Sheet>
       </div>
     </div>
   );

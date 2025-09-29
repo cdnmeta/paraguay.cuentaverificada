@@ -224,8 +224,8 @@ export default function SemaforoFinancieroPage() {
   }
 
   return (
-    <div className=" bg-white shadow border rounded-2xl p-6 max-w-7xl mx-auto">
-      <div className="  mb-6 flex items-center justify-between">
+    <div className="">
+      <div className="grid mb-6 items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Semáforo Financiero</h1>
           <p className="text-muted-foreground">
@@ -281,15 +281,15 @@ export default function SemaforoFinancieroPage() {
             </h2>
 
             {/* Tarjetas de Resumen */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 mb-6">
               {/* Ingresos */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Ingreso Fijo</CardTitle>
-                  <ArrowUpRight className="h-4 w-4 text-green-600" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Ingreso Fijo</CardTitle>
+                  <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-sm lg:text-2xl font-bold text-green-600">
                     {formatMoney(monedaData.ingreso_fijo, monedaData.moneda)}
                   </div>
                 </CardContent>
@@ -297,11 +297,11 @@ export default function SemaforoFinancieroPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Ingreso Ocasional</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Ingreso Ocasional</CardTitle>
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-500">
+                  <div className="text-sm lg:text-2xl font-bold text-green-500">
                     {formatMoney(monedaData.ingreso_ocasional, monedaData.moneda)}
                   </div>
                 </CardContent>
@@ -309,11 +309,11 @@ export default function SemaforoFinancieroPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Egreso Fijo</CardTitle>
-                  <ArrowDownLeft className="h-4 w-4 text-red-600" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Egreso Fijo</CardTitle>
+                  <ArrowDownLeft className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
+                  <div className="text-sm lg:text-2xl font-bold text-red-600">
                     {formatMoney(monedaData.egreso_fijo, monedaData.moneda)}
                   </div>
                 </CardContent>
@@ -321,11 +321,11 @@ export default function SemaforoFinancieroPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Egreso Ocasional</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-red-500" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Egreso Ocasional</CardTitle>
+                  <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-500">
+                  <div className="text-sm lg:text-2xl font-bold text-red-500">
                     {formatMoney(monedaData.egreso_ocasional, monedaData.moneda)}
                   </div>
                 </CardContent>
@@ -333,11 +333,11 @@ export default function SemaforoFinancieroPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Por Cobrar (Cobrados)</CardTitle>
-                  <Banknote className="h-4 w-4 text-blue-600" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Por Cobrar (Cobrados)</CardTitle>
+                  <Banknote className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-sm lg:text-2xl font-bold text-blue-600">
                     {formatMoney(monedaData.ingresos_por_cobrar_cobrados, monedaData.moneda)}
                   </div>
                 </CardContent>
@@ -347,11 +347,11 @@ export default function SemaforoFinancieroPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Por Pagar (Pagados)</CardTitle>
-                  <CreditCard className="h-4 w-4 text-orange-600" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Por Pagar (Pagados)</CardTitle>
+                  <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">
+                  <div className="text-sm lg:text-2xl font-bold text-orange-600">
                     {formatMoney(monedaData.egresos_por_pagar_pagados, monedaData.moneda)}
                   </div>
                 </CardContent>
@@ -359,11 +359,11 @@ export default function SemaforoFinancieroPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Saldo Mensual</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Saldo Mensual</CardTitle>
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${getSaldoColor(monedaData.saldo_mensual)}`}>
+                  <div className={`text-sm lg:text-2xl font-bold ${getSaldoColor(monedaData.saldo_mensual)}`}>
                     {formatMoney(monedaData.saldo_mensual, monedaData.moneda)}
                   </div>
                 </CardContent>
@@ -371,11 +371,11 @@ export default function SemaforoFinancieroPage() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Saldo Diario</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Saldo Diario</CardTitle>
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${getSaldoColor(monedaData.saldo_diario)}`}>
+                  <div className={`text-sm lg:text-2xl font-bold ${getSaldoColor(monedaData.saldo_diario)}`}>
                     {formatMoney(monedaData.saldo_diario, monedaData.moneda)}
                   </div>
                 </CardContent>
@@ -403,7 +403,7 @@ export default function SemaforoFinancieroPage() {
 
             {/* Tabs de Movimientos */}
             <Tabs defaultValue="1" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-5">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 xl:grid-cols-6 mb-10 lg:mb-0 ">
                 <TabsTrigger value="1" className="text-xs lg:text-sm">
                   <ArrowUpRight className="w-3 h-3 mr-1" />
                   I. Fijo
@@ -446,12 +446,14 @@ export default function SemaforoFinancieroPage() {
                           <p>No hay movimientos de tipo "{getTipoMovimientoLabel(tipoMovimiento)}" en {monedaData.moneda}</p>
                         </div>
                       ) : (
-                        <TablaSemaforoMovimientos
+                        <div className="grid grid-cols-1">
+                          <TablaSemaforoMovimientos
                           movimientos={getMovimientosPorTipo(monedaData.movimientos, tipoMovimiento)}
                           moneda={monedaData.moneda}
                           onEdit={handleEditMovimiento}
                           onDelete={handleDeleteMovimiento}
                         />
+                        </div>
                       )}
                     </CardContent>
                   </Card>

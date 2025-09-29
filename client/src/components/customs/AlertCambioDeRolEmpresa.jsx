@@ -16,10 +16,11 @@ import { useGruposEmpresaStore } from "@/store/useGrupoEmpresaStore";
 import { useGruposEmpresa } from "@/hooks/useGrupoEmpresa";
 import { useNavigate } from "react-router-dom";
 import { getUrlDashboardGrupos } from "@/utils/routes.routes";
+import { useDialogCleanup } from "@/hooks/useBodyPointerEvents";
 const AlertCambioDeRolEmpresa = ({user}) => {
     useGruposEmpresa(user?.id); // carga automática al montar
-    const closeRef = useRef(null);
     const navigate = useNavigate();
+    const { cleanupPointerEvents } = useDialogCleanup();
 
   const gruposEmpresa = useGruposEmpresaStore((state) => state.gruposEmpresa);
   const grupoSeleccionado = useGruposEmpresaStore((state) => state.grupoSeleccionado);
@@ -31,7 +32,12 @@ const AlertCambioDeRolEmpresa = ({user}) => {
   );
   const handleCambioGrupo = async (id) => {
     setGrupoSeleccionado(id);
-    closeRef.current.click(); // Cierra el diálogo
+    //closeRef.current.click(); // Cierra el diálogo
+    setOpenDialogGruposEmpresa(false);
+    
+    // Limpiar pointer-events del body después de cerrar el diálogo
+    cleanupPointerEvents();
+    
     // Aquí puedes navegar al grupo seleccionado
     navigate(getUrlDashboardGrupos(id));
   }
@@ -52,8 +58,17 @@ const AlertCambioDeRolEmpresa = ({user}) => {
       </li>
     );
   };
+  const handleOpenChange = (open) => {
+    setOpenDialogGruposEmpresa(open);
+    
+    // Si se está cerrando el diálogo, limpiar pointer-events
+    if (!open) {
+      cleanupPointerEvents();
+    }
+  };
+
   return (
-    <Dialog open={openDialogGruposEmpresa} onOpenChange={setOpenDialogGruposEmpresa}>
+    <Dialog open={openDialogGruposEmpresa} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Cambiar Rol de Empresa ({getGrupoSeleccionado()?.descripcion})</DialogTitle>
@@ -67,7 +82,7 @@ const AlertCambioDeRolEmpresa = ({user}) => {
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button ref={closeRef} variant="outline">Cerrar</Button>
+            <Button variant="outline">Cerrar</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

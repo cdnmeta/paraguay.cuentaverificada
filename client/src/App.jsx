@@ -13,7 +13,7 @@ import ProtectedRoute from "./utils/ProtectedRoute";
 import { checkAuthOnStart } from "./utils/funciones";
 import VerificacionComercioPage from "./pages/VerificacionComercioPage";
 import { PROTECTED_ROUTES, PUBLIC_ROUTES } from "./utils/routes.routes";
-import DashboardApp from "./components/layouts/DashboardLayoutApp";
+import DashboardApp from "./components/layouts/DashboardLayoutApp/DashboardLayoutApp";
 import LoadingSpinner from "./components/customs/loaders/LoadingSpinner";
 import DptoLegalRoutes, { dtoLegalRoutes } from "./pages/departamento-legal/dpto-legal.routes";
 import FacturaPlanesPage from "./pages/FacturaPlanes/FacturaPlanesPage";

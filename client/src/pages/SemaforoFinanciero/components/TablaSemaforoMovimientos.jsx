@@ -79,19 +79,20 @@ const TablaSemaforoMovimientos = ({ movimientos, moneda, onEdit, onDelete }) => 
   }
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Título</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead className="text-right">Monto</TableHead>
-            <TableHead>Fecha</TableHead>
-            <TableHead>Observación</TableHead>
-            <TableHead className="text-center">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
+    <div className="overflow-x-auto -mx-6 px-6">
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Título</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead className="text-right">Monto</TableHead>
+              <TableHead>Fecha</TableHead>
+              <TableHead>Observación</TableHead>
+              <TableHead className="text-center">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
         <TableBody>
           {movimientos.map((movimiento) => (
             <TableRow key={movimiento.id}>
