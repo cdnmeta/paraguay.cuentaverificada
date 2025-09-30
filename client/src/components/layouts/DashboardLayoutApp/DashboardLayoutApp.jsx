@@ -1,12 +1,13 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import { Toaster } from "@components/ui/sonner";
-import Navbar1 from "../navbars/Navbar1";
+import Navbar1 from "../../navbars/Navbar1";
 import { Book, Menu, Sunset, Trees, Zap } from "lucide-react";
 import { PROTECTED_ROUTES } from "@/utils/routes.routes";
-import Navbar from "../navbars/Navbar";
+import Navbar from "../../navbars/Navbar";
 import { useAuthStore } from "@/hooks/useAuthStorge";
-import AlertCambioDeRolEmpresa from "../customs/AlertCambioDeRolEmpresa";
+import AlertCambioDeRolEmpresa from "../../customs/AlertCambioDeRolEmpresa";
+//import './dashboard-background.css';
 
 const navbar = {
   logo: {
@@ -56,35 +57,53 @@ const navbar = {
   },
 };
 
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layouts/DashboardLayoutApp/sidebar/app-sidebar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+
 export default function DashboardApp({ children }) {
   const user = useAuthStore((state) => state.user);
   return (
-    <div className="grid min-h-screen grid-rows-[auto_1fr_auto] relative">
-      {/* Fondo galáctico (fondo absoluto detrás del layout) */}
-      <div
-        className="absolute inset-0 -z-10 bg-cover bg-center"
-        style={{ backgroundImage: "url('/img/fondo-planeta.jpg')" }}
-        aria-hidden="true"
-      />
+    <>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset className="relative z-10">
+          <header className="bg-green-500 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4">
+              <SidebarTrigger className="-ml-1" />
+            </div>
+            <Navbar />
+          </header>
 
-      {/* Header sticky */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <Navbar  />
-      </header>
+          {/* Contenido principal */}
+          <main className="flex-1 p-4">
+            <div className="border shadow-2xl rounded-xl min-h-full p-6">
+              {children ? children : <Outlet />}
+            </div>
+          </main>
 
-      {/* Contenido principal */}
-      <main className="relative w-full px-4">
-        {children ? children : <Outlet />}
-      </main>
-
-      {/* Footer */}
-      <footer className="w-full border-t bg-background/80 text-sm text-center py-4">
-        <p className="text-muted-foreground">
-          © {new Date().getFullYear()} Cuenta Verificada
-        </p>
-      </footer>
+          {/* Footer */}
+          <footer className="dashboard-footer w-full text-sm text-center py-4">
+            <p className="text-muted-foreground">
+              © {new Date().getFullYear()} Cuenta Verificada
+            </p>
+          </footer>
+        </SidebarInset>
+      </SidebarProvider>
       <Toaster position="top-right" />
       <AlertCambioDeRolEmpresa user={user} />
-    </div>
+    </>
   );
 }

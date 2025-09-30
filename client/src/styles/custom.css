@@ -48,6 +48,18 @@
 }
 
 
+/* Prevenir problemas de pointer-events cuando se combinan múltiples librerías */
+body[style*="pointer-events: none"] {
+  pointer-events: auto !important;
+}
+
+/* Pero permitir que los overlays de modales funcionen correctamente */
+.modal-overlay,
+[data-state="open"][role="dialog"] ~ *,
+[data-radix-portal] {
+  pointer-events: auto !important;
+}
+
 /* ==============================
    UTILITY CLASSES
 ============================== */

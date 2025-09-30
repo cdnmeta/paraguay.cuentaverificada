@@ -5,7 +5,7 @@ import FormUsuario from "./components/FormUsuarios";
 import ProtectedRoute from "@/utils/ProtectedRoute";
 import { routes } from "./config/routes";
 import ListadoUsuariosPages from "./pages/ListadoUsuariosPages";
-import DashboardApp from "@/components/layouts/DashboardLayoutApp";
+import DashboardApp from "@/components/layouts/DashboardLayoutApp/DashboardLayoutApp";
 import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
 
 

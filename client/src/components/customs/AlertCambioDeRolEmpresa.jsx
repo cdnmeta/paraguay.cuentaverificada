@@ -37,7 +37,7 @@ const AlertCambioDeRolEmpresa = ({ user }) => {
   const handleCambioGrupo = async (id) => {
     console.log("cambio de rol", id);
     setGrupoSeleccionado(id);
-    setOpenDialogGruposEmpresa(false); // Cierra el diálogo
+    closeRef.current.click(); // Cierra el diálogo
     // Aquí puedes navegar al grupo seleccionado
     navigate(getUrlDashboardGrupos(id));
   };
@@ -58,11 +58,17 @@ const AlertCambioDeRolEmpresa = ({ user }) => {
       </li>
     );
   };
+  const handleOpenChange = (open) => {
+    setOpenDialogGruposEmpresa(open);
+    
+    // Si se está cerrando el diálogo, limpiar pointer-events
+    if (!open) {
+      cleanupPointerEvents();
+    }
+  };
+
   return (
-    <Dialog
-      open={openDialogGruposEmpresa}
-      onOpenChange={setOpenDialogGruposEmpresa}
-    >
+    <Dialog open={openDialogGruposEmpresa} onOpenChange={setOpenDialogGruposEmpresa}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>

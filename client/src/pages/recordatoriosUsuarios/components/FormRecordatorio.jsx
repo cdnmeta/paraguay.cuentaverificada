@@ -285,14 +285,18 @@ const FormRecordatorio = ({ id_recordatorio = null}) => {
                               <img
                                 src={url}
                                 alt={`Imagen ${index + 1}`}
-                                className="w-full h-32 object-cover rounded-lg cursor-pointer border-2 border-gray-200 hover:border-primary transition-colors"
+                                className="w-full h-32 object-cover rounded-lg cursor-pointer border-2 border-gray-200"
                               />
                             </PhotoView>
                             <Button
                               type="button"
                               variant="destructive"
                               size="icon"
-                              className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className={`absolute top-2 right-2 border bg-white h-6 w-6 transition-opacity ${
+                                isMobile 
+                                  ? 'opacity-100' 
+                                  : 'opacity-0 group-hover:opacity-100'
+                              }`}
                               onClick={() => markImageForDeletion(url)}
                             >
                               <X className="h-3 w-3" />
@@ -451,7 +455,11 @@ const FormRecordatorio = ({ id_recordatorio = null}) => {
                               type="button"
                               variant="destructive"
                               size="icon"
-                              className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className={`absolute top-2 right-2 h-6 w-6 transition-opacity ${
+                                isMobile 
+                                  ? 'opacity-100' 
+                                  : 'opacity-0 group-hover:opacity-100'
+                              }`}
                               onClick={() => removeNewImage(index)}
                             >
                               <X className="h-3 w-3" />
