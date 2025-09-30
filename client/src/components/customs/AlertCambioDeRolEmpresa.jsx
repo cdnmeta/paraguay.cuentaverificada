@@ -14,9 +14,11 @@ import { useGruposEmpresaStore } from "@/store/useGrupoEmpresaStore";
 import { useGruposEmpresa } from "@/hooks/useGrupoEmpresa";
 import { useNavigate } from "react-router-dom";
 import { getUrlDashboardGrupos } from "@/utils/routes.routes";
-const AlertCambioDeRolEmpresa = ({ user }) => {
-  useGruposEmpresa(user?.id); // carga automática al montar
-  const navigate = useNavigate();
+import { useDialogCleanup } from "@/hooks/useBodyPointerEvents";
+const AlertCambioDeRolEmpresa = ({user}) => {
+    useGruposEmpresa(user?.id); // carga automática al montar
+    const navigate = useNavigate();
+    const { cleanupPointerEvents } = useDialogCleanup();
 
   const gruposEmpresa = useGruposEmpresaStore((state) => state.gruposEmpresa);
   const grupoSeleccionado = useGruposEmpresaStore(
@@ -37,7 +39,12 @@ const AlertCambioDeRolEmpresa = ({ user }) => {
   const handleCambioGrupo = async (id) => {
     console.log("cambio de rol", id);
     setGrupoSeleccionado(id);
-    closeRef.current.click(); // Cierra el diálogo
+    //closeRef.current.click(); // Cierra el diálogo
+    setOpenDialogGruposEmpresa(false);
+    
+    // Limpiar pointer-events del body después de cerrar el diálogo
+    cleanupPointerEvents();
+    
     // Aquí puedes navegar al grupo seleccionado
     navigate(getUrlDashboardGrupos(id));
   };
@@ -68,7 +75,7 @@ const AlertCambioDeRolEmpresa = ({ user }) => {
   };
 
   return (
-    <Dialog open={openDialogGruposEmpresa} onOpenChange={setOpenDialogGruposEmpresa}>
+    <Dialog open={openDialogGruposEmpresa} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
