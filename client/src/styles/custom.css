@@ -47,19 +47,14 @@
   animation: breathe 3s ease-in-out infinite;
 }
 
-/* ==============================
-   THIRD PARTY OVERRIDES
-============================== */
-
-/* PhotoView Component Styles */
-.PhotoView-Portal { 
-  position: fixed; 
-  inset: 0; 
-  z-index: 60; 
-}
 
 /* ==============================
    UTILITY CLASSES
 ============================== */
 
 /* Add your custom utility classes here */
+
+/* Prevenir problemas de pointer-events cuando se combinan múltiples librerías */
+body {
+  pointer-events: auto !important;
+}

@@ -9,32 +9,38 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { collection, doc, getDoc, query } from "firebase/firestore";
-import { use, useEffect, useRef, useState } from "react";
 import { Checkbox } from "../ui/checkbox";
 import { useGruposEmpresaStore } from "@/store/useGrupoEmpresaStore";
 import { useGruposEmpresa } from "@/hooks/useGrupoEmpresa";
 import { useNavigate } from "react-router-dom";
 import { getUrlDashboardGrupos } from "@/utils/routes.routes";
-const AlertCambioDeRolEmpresa = ({user}) => {
-    useGruposEmpresa(user?.id); // carga automática al montar
-    const closeRef = useRef(null);
-    const navigate = useNavigate();
+const AlertCambioDeRolEmpresa = ({ user }) => {
+  useGruposEmpresa(user?.id); // carga automática al montar
+  const navigate = useNavigate();
 
   const gruposEmpresa = useGruposEmpresaStore((state) => state.gruposEmpresa);
-  const grupoSeleccionado = useGruposEmpresaStore((state) => state.grupoSeleccionado);
-  const setGrupoSeleccionado = useGruposEmpresaStore((state) => state.setGrupoSeleccionado);
-  const openDialogGruposEmpresa = useGruposEmpresaStore((state) => state.openDialogGruposEmpresa);
-  const setOpenDialogGruposEmpresa = useGruposEmpresaStore((state) => state.setOpenDialogGruposEmpresa);
+  const grupoSeleccionado = useGruposEmpresaStore(
+    (state) => state.grupoSeleccionado
+  );
+  const setGrupoSeleccionado = useGruposEmpresaStore(
+    (state) => state.setGrupoSeleccionado
+  );
+  const openDialogGruposEmpresa = useGruposEmpresaStore(
+    (state) => state.openDialogGruposEmpresa
+  );
+  const setOpenDialogGruposEmpresa = useGruposEmpresaStore(
+    (state) => state.setOpenDialogGruposEmpresa
+  );
   const getGrupoSeleccionado = useGruposEmpresaStore(
     (state) => state.getGrupoSeleccionado
   );
   const handleCambioGrupo = async (id) => {
+    console.log("cambio de rol", id);
     setGrupoSeleccionado(id);
-    closeRef.current.click(); // Cierra el diálogo
+    setOpenDialogGruposEmpresa(false); // Cierra el diálogo
     // Aquí puedes navegar al grupo seleccionado
     navigate(getUrlDashboardGrupos(id));
-  }
+  };
 
   const ItemGrupo = (grupo) => {
     return (
@@ -53,10 +59,15 @@ const AlertCambioDeRolEmpresa = ({user}) => {
     );
   };
   return (
-    <Dialog open={openDialogGruposEmpresa} onOpenChange={setOpenDialogGruposEmpresa}>
+    <Dialog
+      open={openDialogGruposEmpresa}
+      onOpenChange={setOpenDialogGruposEmpresa}
+    >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Cambiar Rol de Empresa ({getGrupoSeleccionado()?.descripcion})</DialogTitle>
+          <DialogTitle>
+            Cambiar Rol de Empresa ({getGrupoSeleccionado()?.descripcion})
+          </DialogTitle>
           <DialogDescription>
             <ul className="space-y-2 mt-4">
               {gruposEmpresa.map((grupo) => (
@@ -67,7 +78,7 @@ const AlertCambioDeRolEmpresa = ({user}) => {
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button ref={closeRef} variant="outline">Cerrar</Button>
+            <Button variant="outline">Cerrar</Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

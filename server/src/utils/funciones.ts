@@ -100,3 +100,15 @@ export const calcularFechaVencimiento = (data: IFechaVencimiento): Date | null =
 
 
 export const redondearDecimales = (n: number,decimales:number = 2) => Number(n.toFixed(decimales));
+
+export const generarCodigoNumericoAleatorio = (
+  opts: { longitud?: number; desde?: number; hasta?: number } = {}
+): string => {
+  const { longitud = 6, desde = 0, hasta = 9 } = opts;
+  let resultado = '';
+  for (let i = 0; i < longitud; i++) {
+    resultado += Math.floor(Math.random() * (hasta - desde + 1)) + desde;
+  }
+  return resultado;
+}
+

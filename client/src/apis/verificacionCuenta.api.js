@@ -91,3 +91,13 @@ export const generarTokenSolicitudById = async (id) => {
     });
     return response;
 };
+
+export const validarCodigoSolicitud = async (data) => {
+    const response = await api.post(`/validar-codigo-solicitud`, data);
+    return response;
+};
+
+export const enviarCodigoVerificacion = async (data) => {
+    const response = await api.post(`/enviar-codigo-verificacion`, data);
+    return response;
+};

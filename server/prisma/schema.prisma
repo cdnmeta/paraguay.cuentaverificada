@@ -159,12 +159,13 @@ model usuarios_solicitudes_cuenta {
   cedula_frontal String?
   cedula_reverso String?
   selfie         String?
-  id_estado      Int     @default(1)
+  id_estado      Int     @default(1) // 1= pendiente verificar cod 2= pendiente verificacion 3= verificado 4= rechazado
   observacion     String?
   fecha_creacion  DateTime  @default(now()) @db.Timestamptz()
   fecha_actualizacion DateTime? @db.Timestamptz()
   fecha_anulacion DateTime? @db.Timestamptz()
   activo         Boolean   @default(true)
+  codigo_verificacion String?
   id_verificador  Int?
   id_usuario_actualizacion Int?
   id_usuario_anulacion Int?

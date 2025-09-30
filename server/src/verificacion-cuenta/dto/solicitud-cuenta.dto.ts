@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class SolicitudCuentaDto {
     @IsString({ message: 'Nombre debe ser una cadena' })
@@ -25,6 +25,19 @@ export class SolicitudCuentaDto {
     @IsString({ message: 'Código de marcación debe ser una cadena' })
     @IsNotEmpty({ message: 'Código de marcación es requerido' })
     dial_code: string;
+}
+
+
+
+export class ValidarCodigoSolicitudDto {
+    @IsString({ message: 'Código de verificación debe ser una cadena' })
+    @IsNotEmpty({ message: 'Código de verificación es requerido' })
+    @MinLength(6, { message: 'Código de verificación debe tener al menos 6 caracteres' })
+    codigo_verificacion: string;
+
+    @IsNotEmpty({ message: 'ID de usuario es requerido' })
+    @IsNumber({}, { message: 'ID de usuario debe ser un número' })
+    id_usuario: number;
 }
 
 

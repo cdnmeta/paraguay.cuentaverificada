@@ -13,12 +13,12 @@ import {
 } from './dto/update-verificacion-cuenta.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { ImagenesVerificacionCuenta } from './types/imagenes-verificacion';
-import { crearNombreArchivoDesdeMulterFile } from '@/utils/funciones';
+import { crearNombreArchivoDesdeMulterFile, generarCodigoNumericoAleatorio } from '@/utils/funciones';
 import * as path from 'path';
 import { FirebaseService } from '@/firebase/firebase.service';
 import { FIREBASE_STORAGE_FOLDERS } from '@/firebase/constantsFirebase';
 import { AuthService } from '@/auth/auth.service';
-import { SolicitudCuentaDto } from './dto/solicitud-cuenta.dto';
+import { SolicitudCuentaDto, ValidarCodigoSolicitudDto } from './dto/solicitud-cuenta.dto';
 import { generateToken } from '@/utils/security';
 import { createHash } from 'crypto';
 import { TokenSolicitud } from './types/token-solicitudes';
@@ -28,6 +28,7 @@ import {
   listadoSolicitudes,
 } from './sql/consultas';
 import { AprobarCuentaOpciones } from './types/services';
+import { EmailService } from '@/email/email.service';
 @Injectable()
 export class VerificacionCuentaService {
   constructor(
@@ -36,6 +37,7 @@ export class VerificacionCuentaService {
     private readonly dbservice: DatabaseService,
     @Inject(forwardRef(() => AuthService))
     private authService: AuthService,
+    private emailService: EmailService,
   ) {}
 
   async listadoUsuariosSolicitudes() {
@@ -54,7 +56,7 @@ export class VerificacionCuentaService {
     try {
       const clasulaWhere = {
         id_estado: {
-          in: [1, 2, 3, 4],
+          in: [2, 3, 4],
         },
         id_verificador: id_verificador,
       };
@@ -270,6 +272,8 @@ export class VerificacionCuentaService {
     }
   }
 
+
+
   async registrarSolicitudCuenta(dto: SolicitudCuentaDto) {
     try {
       const userExisteCorreo =
@@ -307,6 +311,19 @@ export class VerificacionCuentaService {
           'No se encontró un verificador disponible',
         );
       }
+
+      // generar codigo de verificacion
+      const codigo_verificacion = generarCodigoNumericoAleatorio()
+
+      // enviar correo al usuario con el codigo de verificacion
+        const alias = `${dto.nombre} ${dto.apellido ? dto.apellido : ''}`
+        const dataCorreo = {
+          to: `'${alias} <${dto.correo}>'`,
+          codigo_verificacion: codigo_verificacion
+        }
+        
+        await this.emailService.sendCodVerificacionSolicitudCuenta(dataCorreo)
+
       // guardar cedula en firebase
       const userSolicitud =
         await this.prismaService.usuarios_solicitudes_cuenta.create({
@@ -318,9 +335,86 @@ export class VerificacionCuentaService {
             telefono: dto.telefono,
             documento: dto.documento,
             id_verificador: usuarioAsignar.rows[0].id,
+            codigo_verificacion: codigo_verificacion,
           },
         });
+
+        
+        
+
+      
       return userSolicitud;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async validarSolicitudCuenta(dto:ValidarCodigoSolicitudDto){
+    try {
+      const solicitud = await this.prismaService.usuarios_solicitudes_cuenta.findFirst({
+        where:{
+          id:dto.id_usuario,
+          activo:true,
+          id_estado:1, // solo si esta en estado 1 (creado)
+        },
+      });
+
+      if (!solicitud) {
+        throw new NotFoundException('Solicitud no encontrada');
+      }
+
+      // Validar código
+      if (solicitud.codigo_verificacion !== dto.codigo_verificacion) {
+        throw new BadRequestException('Código de verificación inválido');
+      }
+
+      // Actualizar solicitud para marcar como peindiente verificar solicitud
+
+      const solicitudActualizada = await this.prismaService.usuarios_solicitudes_cuenta.update({
+        where: { id: dto.id_usuario },
+        data: {
+          id_estado: 2, // estado 2 es "pendiente"
+          fecha_actualizacion: new Date(),
+          id_usuario_actualizacion: dto.id_usuario,
+        }
+      })
+
+      return solicitudActualizada;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async obtenerCodigoVerificacion(id_usuario: number){
+    try {
+      const solicitud = await this.prismaService.usuarios_solicitudes_cuenta.findFirst({
+        where:{
+          id:id_usuario,
+          activo:true,
+          id_estado:1, // solo si esta en estado 1 (creado)
+        },
+      });
+
+      if (!solicitud) {
+        throw new NotFoundException('Solicitud no encontrada');
+      }
+
+      // generar nuevo codigo de verificacion
+      const nuevoCodigo = generarCodigoNumericoAleatorio();
+
+      // actualizar solicitud con nuevo codigo
+      await this.prismaService.usuarios_solicitudes_cuenta.update({
+        where: { id: id_usuario },
+        data: { codigo_verificacion: nuevoCodigo },
+      });
+
+      // enviar correo al usuario con el codigo de verificacion
+      const alias = `${solicitud.nombre} ${solicitud.apellido ? solicitud.apellido : ''}`
+      const dataCorreo = {
+        to: `'${alias} <${solicitud.correo}>'`,
+        codigo_verificacion: nuevoCodigo
+      };
+      await this.emailService.sendCodVerificacionSolicitudCuenta(dataCorreo)
     } catch (error) {
       throw error;
     }

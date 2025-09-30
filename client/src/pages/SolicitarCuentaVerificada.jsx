@@ -31,12 +31,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { crearSolicitudCuenta } from "@/apis/verificacionCuenta.api";
+import { crearSolicitudCuenta, enviarCodigoVerificacion, validarCodigoSolicitud } from "@/apis/verificacionCuenta.api";
 import { REGEX_CEDULA_IDENTIDAD } from "@/utils/constants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@radix-ui/react-dropdown-menu";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 
 const MB = 1024 * 1024;
@@ -62,9 +64,19 @@ const schema = z.object({
   telefono: z.string().trim().min(6, "Teléfono inválido"),
 });
 
+const otpSchema = z.object({
+  codigo_verificacion: z.string().min(6, "El código debe tener 6 dígitos").max(6, "El código debe tener 6 dígitos"),
+});
+
 export default function SolicitarCuentaVerificada() {
   const [paises, setPaises] = useState([]);
   const [openConfirm, setOpenConfirm] = useState(false);
+  const [mostrarVerificacion, setMostrarVerificacion] = useState(false);
+  const [idUsuario, setIdUsuario] = useState(null);
+  const [datosUsuario, setDatosUsuario] = useState(null);
+
+  const navigate = useNavigate();
+  const [enviadoCodigo, setEnviadoCodigo] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -80,6 +92,24 @@ export default function SolicitarCuentaVerificada() {
     mode: "onChange",
   });
 
+  const otpForm = useForm({
+    resolver: zodResolver(otpSchema),
+    defaultValues: {
+      codigo_verificacion: "",
+    },
+    mode: "onChange",
+  });
+
+const loadUserByURL = () => {
+    const userByURL = new URLSearchParams(window.location.search).get("us");
+    console.log(window.location.search)
+    if (userByURL && !isNaN(Number(userByURL))) {
+      // Aquí podrías cargar datos adicionales si es necesario
+      setIdUsuario(Number(userByURL));
+      setMostrarVerificacion(true);
+    }
+}
+
   useEffect(() => {
     setPaises(
       paisesCode.map((p) => ({
@@ -88,6 +118,7 @@ export default function SolicitarCuentaVerificada() {
         img: p.flag,
       }))
     );
+  loadUserByURL();
   }, []);
 
   const getDataPais = (codigo) => {
@@ -106,14 +137,25 @@ export default function SolicitarCuentaVerificada() {
         telefono: data.telefono,
       };
 
-      // Llamada real (descomenta cuando tengas API)
-      await crearSolicitudCuenta(payload);
+      // Llamada real - capturar respuesta con el ID del usuario
+      const response = await crearSolicitudCuenta(payload);
 
-      toast.success("Cuenta solicitada con éxito ✅");
+      toast.success("Cuenta solicitada con éxito ✅ Revisa tu CORREO obtener el código de verificación");
+
+      const {data:dataResponse} = response.data;
+      
       setOpenConfirm(false);
+      
+      setTimeout(() => {
       form.reset();
-      // aquí puedes redirigir si quieres
+      // mandar la la misma pagina con el id del usuario
+      const newURL = `${window.location.origin}${window.location.pathname}?us=${dataResponse.id}`;
+      window.open(newURL, "_self");
+      },1500);
+
+      // No resetear el form aquí para mantener los datos si es necesario
     } catch (err) {
+      console.log(err)
       if ([400].includes(err?.response?.status)) {
         toast.error(err?.response?.data?.message);
         return;
@@ -122,30 +164,84 @@ export default function SolicitarCuentaVerificada() {
     }
   };
 
+  const onSubmitOTP = async (data) => {
+    try {
+      const payload = {
+        id_usuario: idUsuario,
+        codigo_verificacion: data.codigo_verificacion,
+      };
+
+      // Llamada a la API de verificación usando la función del archivo apis
+      await validarCodigoSolicitud(payload);
+      
+      toast.success("¡Código verificado exitosamente! Tu cuenta ha sido creada.");
+      
+      // Resetear formularios y estados
+      form.reset();
+      otpForm.reset();
+      setIdUsuario(null);
+      setDatosUsuario(null);
+      
+      const timeout = setTimeout(() => {navigate("/login");},1500);
+      return () => clearTimeout(timeout);
+      
+    } catch (err) {
+      console.error('Error validando código:', err);
+      if (err?.response?.status === 400) {
+        toast.error(err?.response?.data?.message || "Código inválido. Intenta nuevamente.");
+      } else {
+        toast.error("Error en la verificación. Intenta nuevamente.");
+      }
+    }
+  };
+
+
+
+  const handleSolicitarCodigo = async () => {
+   try {
+     setEnviadoCodigo(true);
+     if (!idUsuario) {
+      toast.error("No hay una solicitud activa para reenviar el código.");
+      return;
+    }
+
+    await enviarCodigoVerificacion({ id_usuario: idUsuario });
+    toast.success("Código de verificación reenviado.");
+    otpForm.reset();
+   } catch (error) {
+     console.error("Error reenviando código:", error);
+     toast.error("Error al reenviar el código. Intenta nuevamente.");
+   }finally {
+      setEnviadoCodigo(false);
+   }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-white px-4 py-10 relative">
       {/* reCAPTCHA container (invisible) */}
       <div id="recaptcha-container" />
 
       <div className="flex flex-col gap-3 mt-6 z-10 w-full max-w-sm">
-        <div className="bg-red-900 border border-red-600 text-sm text-white p-3 rounded">
-          ⚠️ Al hacer clic en{" "}
-          <span className="underline font-bold">"Crear cuenta"</span>, aceptás
-          bajo juramento que el documento es tuyo. El uso de documentos ajenos o
-          falsos puede derivar en sanciones legales y el bloqueo inmediato de la
-          cuenta.
-        </div>
+        {!mostrarVerificacion ? (
+          // Formulario principal de solicitud
+          <>
+            <div className="bg-red-900 border border-red-600 text-sm text-white p-3 rounded">
+              ⚠️ Al hacer clic en{" "}
+              <span className="underline font-bold">"Crear cuenta"</span>, aceptás
+              bajo juramento que el documento es tuyo. El uso de documentos ajenos o
+              falsos puede derivar en sanciones legales y el bloqueo inmediato de la
+              cuenta.
+            </div>
 
-        <Card className="max-w-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center font-bold">
-              Crear Cuenta
-            </CardTitle>
-            <CardDescription>
-              Completa el formulario. Te enviaremos un código por SMS para
-              verificar tu número antes de registrar la cuenta.
-            </CardDescription>
-          </CardHeader>
+            <Card className="max-w-sm">
+              <CardHeader>
+                <CardTitle className="text-2xl text-center font-bold">
+                  Crear Cuenta
+                </CardTitle>
+                <CardDescription>
+                  Completa el formulario. Te enviaremos un código por correo para que verifiques tu identidad.
+                </CardDescription>
+              </CardHeader>
 
           <CardContent>
             <Form {...form}>
@@ -325,6 +421,73 @@ export default function SolicitarCuentaVerificada() {
             </Form>
           </CardContent>
         </Card>
+          </>
+        ) : (
+          // Formulario de verificación OTP
+          <Card className="max-w-sm">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center font-bold">
+                Verificar Código
+              </CardTitle>
+              <CardDescription>
+                Hemos enviado un código de 6 dígitos al correo con el que te registraste
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...otpForm}>
+                <form onSubmit={otpForm.handleSubmit(onSubmitOTP)} className="space-y-6">
+                  <FormField
+                    name="codigo_verificacion"
+                    control={otpForm.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Código de Verificación</FormLabel>
+                        <FormControl>
+                          <InputOTP
+                            maxLength={6}
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="justify-center"
+                          >
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={otpForm.formState.isSubmitting}
+                    >
+                      {otpForm.formState.isSubmitting ? "Verificando..." : "Verificar Código"}
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleSolicitarCodigo}
+                      className="w-full"
+                      disabled={otpForm.formState.isSubmitting || enviadoCodigo}
+                    >
+                      {enviadoCodigo ? "Reenviando código..." : "Reenviar Código"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Diálogo de confirmación controlado (sin Trigger para evitar doble acción) */}

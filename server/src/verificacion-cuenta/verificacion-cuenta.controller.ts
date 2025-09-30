@@ -24,10 +24,12 @@ import { validateImageOrThrow } from '@/pipes/ImageValiationPipe';
 import { ImagenesVerificacionCuenta } from './types/imagenes-verificacion';
 import { Response } from 'express';
 import { AuthenticatedRequest } from '@/auth/types/AuthenticatedRequest';
-import { SolicitudCuentaDto } from './dto/solicitud-cuenta.dto';
+import { SolicitudCuentaDto, ValidarCodigoSolicitudDto } from './dto/solicitud-cuenta.dto';
 import { IsPublic } from '@/auth/decorators/public.decorator';
 import { PrismaService } from '@/prisma/prisma.service';
 import { RequireGroupIdsAll, RequireGroupIdsAny } from '@/auth/decorators/groups.decorator';
+import { plainToInstance } from 'class-transformer';
+import { SoliitudVerificacionCuentaResponseDto } from './dto/response-solicitud-cuenta.dto';
 
 @Controller('verificacion-cuenta')
 export class VerificacionCuentaController {
@@ -45,11 +47,21 @@ export class VerificacionCuentaController {
     return this.verificacionCuentaService.listadoUsuariosSolicitudesByVerificador(id_verificador);
   }
 
-
   @Get('listado-solitudes')
   @RequireGroupIdsAll(1)
   listadoUsuariosSolicitudes() {
     return this.verificacionCuentaService.listadoUsuariosSolicitudes();
+  }
+
+  @Get('generar-token-solicitud/:id')
+  @RequireGroupIdsAll(1)
+  async generarToken(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    try {
+      const {token,documento,id_usuario_solicitud} = await this.verificacionCuentaService.generarTokenSolicitudById(id);
+      return res.status(200).json({token,documento,id_usuario_solicitud});
+    } catch (error) {
+      throw error;
+    }
   }
 
   @IsPublic()
@@ -61,53 +73,41 @@ export class VerificacionCuentaController {
     try {
       const userSolicitud =
         await this.verificacionCuentaService.registrarSolicitudCuenta(dto);
+      const userResponse = plainToInstance(SoliitudVerificacionCuentaResponseDto, userSolicitud, { excludeExtraneousValues: true });
       return res
         .status(200)
-        .json({ message: 'Solicitud Recibida Correctamente' });
+        .json({ message: 'Solicitud Recibida Correctamente', data: userResponse });
     } catch (error) {
       throw error;
     }
   }
 
-  @Put(':id')
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'cedula_frontal', maxCount: 1 },
-        { name: 'cedula_reverso', maxCount: 1 },
-        { name: 'selfie_user', maxCount: 1 },
-        
-      ],
-    ),
-  )
-  async actualizarUsuarioVerificacion(
-    @Req() req: AuthenticatedRequest,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateVerificacionCuentaDto: UpdateVerificacionCuentaDto,
-    @UploadedFiles()
-    files: ImagenesVerificacionCuenta,
+  @IsPublic()
+  @Post('validar-codigo-solicitud')
+  async validarCodigoSolicitud(
+    @Body() dto: ValidarCodigoSolicitudDto,
     @Res() res: Response,
   ) {
-
-    console.log("file",files)
-    const frontal = files.cedula_frontal?.[0];
-    const reverso = files.cedula_reverso?.[0];
-    const selfie_user = files.selfie_user?.[0];
-
-    console.log("file",files)
-
     try {
-      
+      const solicitud = await this.verificacionCuentaService.validarSolicitudCuenta(dto);
+      const solicitudResponse  = plainToInstance(SoliitudVerificacionCuentaResponseDto, solicitud, { excludeExtraneousValues: true });
+      return res
+        .status(200)
+        .json({ message: 'Código verificación correcto', data: solicitudResponse });
+    } catch (error) {
+      throw error;
+    }
+  }
 
-    updateVerificacionCuentaDto.id_usuario_actualizacion = req.user.userId;
-
-    await this.verificacionCuentaService.actualizarUsuarioVerificacion(
-      id,
-      updateVerificacionCuentaDto,
-      files
-    );
-
-    return res.status(200).json({ message: 'Solicitud actualizada correctamente' });
+  @IsPublic()
+  @Post('enviar-codigo-verificacion')
+  async obtenerNuevoCodigoVerificacion(
+    @Body() body: { id_usuario: number },
+    @Res() res: Response
+  ) {
+    try {
+      await this.verificacionCuentaService.obtenerCodigoVerificacion(body.id_usuario);
+      return res.status(200).json({ message: 'Código de verificación regenerado correctamente' });
     } catch (error) {
       throw error;
     }
@@ -184,21 +184,55 @@ export class VerificacionCuentaController {
     }
   }
 
+  @Put(':id')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'cedula_frontal', maxCount: 1 },
+        { name: 'cedula_reverso', maxCount: 1 },
+        { name: 'selfie_user', maxCount: 1 },
+        
+      ],
+    ),
+  )
+  async actualizarUsuarioVerificacion(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateVerificacionCuentaDto: UpdateVerificacionCuentaDto,
+    @UploadedFiles()
+    files: ImagenesVerificacionCuenta,
+    @Res() res: Response,
+  ) {
+
+    console.log("file",files)
+    const frontal = files.cedula_frontal?.[0];
+    const reverso = files.cedula_reverso?.[0];
+    const selfie_user = files.selfie_user?.[0];
+
+    console.log("file",files)
+
+    try {
+      
+
+    updateVerificacionCuentaDto.id_usuario_actualizacion = req.user.userId;
+
+    await this.verificacionCuentaService.actualizarUsuarioVerificacion(
+      id,
+      updateVerificacionCuentaDto,
+      files
+    );
+
+    return res.status(200).json({ message: 'Solicitud actualizada correctamente' });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // ⚠️ IMPORTANTE: Esta ruta dinámica debe ir AL FINAL
   @Get(':id')
   @RequireGroupIdsAny(1,2)
   async getSolicitudById(@Param('id', ParseIntPipe) id: number) {
     return this.verificacionCuentaService.getSolicitudById(id);
-  }
-
-  @Get('generar-token-solicitud/:id')
-  @RequireGroupIdsAll(1)
-  async generarToken(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
-    try {
-      const {token,documento,id_usuario_solicitud} = await this.verificacionCuentaService.generarTokenSolicitudById(id);
-      return res.status(200).json({token,documento,id_usuario_solicitud});
-    } catch (error) {
-      throw error;
-    }
   }
 
 }

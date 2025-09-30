@@ -34,7 +34,7 @@ import { UsuariosService } from '@/usuarios/usuarios.service';
 import { VerificacionCuentaService } from '@/verificacion-cuenta/verificacion-cuenta.service';
 import { TokenSolicitud } from '@/verificacion-cuenta/types/token-solicitudes';
 import { EmailService } from '@/email/email.service';
-import { RecoveryPinEmail } from '@/email/types/recovery';
+import { RecoveryPinEmail } from '@/email/dto/email.dto';
 interface UsuariosArchivosRegister {
   cedulaFrente?: Express.Multer.File;
 }
@@ -428,11 +428,12 @@ export class AuthService {
           'Usuario no tiene correo electrónico asociado',
         );
 
+      const alias = `${userEncontrado.nombre} ${userEncontrado.apellido ? userEncontrado.apellido : ''}`
       const dataCorreo: RecoveryPinEmail = {
-        nombreDestinatario: `${userEncontrado.nombre} ${userEncontrado.apellido ? userEncontrado.apellido : ''}`,
-        destinatario: userEncontrado.email,
+        to: `${alias} <${userEncontrado.email}>`,
         url: `${dto.url_origen}/reset-pin?token=${token}&cedula=${userEncontrado.documento}`,
-      };
+      };  
+
 
       console.log(dataCorreo);
 

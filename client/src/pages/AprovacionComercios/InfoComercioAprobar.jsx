@@ -130,10 +130,7 @@ const [urls, setUrls] = useState([]); // [{ key, label, url }]
 
       <Separator className="my-3" />
 
-      <PhotoProvider onVisibleChange={(open) => {
-        document.body.style.pointerEvents = open ? "auto" : "none";
-      }}
-      >
+      <PhotoProvider>
         <div className="max-h-[400px] overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-2">
             {loading && <p className="text-muted-foreground">Cargando imágenes…</p>}
