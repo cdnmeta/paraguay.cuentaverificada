@@ -13,23 +13,35 @@ export const comercioSchema = z.object({
     .regex(/^0[0-9]{6,11}$/, "Formato de teléfono inválido. Ej: 0983123456")
     .trim(),
   comprobantePago: z
-    .any()
-    .refine((f) => f?.length, "Archivo obligatorio")
-    .refine((f) => f[0]?.size <= 5 * 1024 * 1024, "Máx. 5MB")
+    .instanceof(File, { message: "El archivo es obligatorio" })
+    .refine((f) => f.size <= 5 * 1024 * 1024, "Máx. 5MB")
     .refine(
       (f) =>
         ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
-          f[0]?.type
+          f.type
         ),
       "Formato inválido"
     ),
   codigoVendedor: z.string().trim().optional(),
-  dialCode: z.string().min(1, "Debe seleccionar un país"),
   codigoPais: z.string().min(2, "Debe seleccionar un país"),
   aceptaTerminos: z.literal(true, {
     errorMap: () => ({ message: "Debe aceptar los términos" }),
   }),
 });
+
+
+export const comercioPagoRechazadoSchema = z.object({
+  comprobantePago: z
+    .instanceof(File, { message: "El archivo es obligatorio" })
+    .refine((f) => f.size <= 5 * 1024 * 1024, "Tamaño excede a 5MB")
+    .refine(
+      (f) =>
+        ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(
+          f.type
+        ),
+      "Formato inválido"
+    ),
+})
 
 export const comercioUpdateSchema = comercioSchema.omit({
   aceptaTerminos: true,

@@ -31,6 +31,8 @@ import {
 } from './sql/consultas';
 import * as path from 'path';
 import { DatabasePromiseService } from '@/database/database-promise.service';
+import { FIREBASE_STORAGE_FOLDERS } from '@/firebase/constantsFirebase';
+import { FilesVerificacionComercio } from './types/archivos-comercios';
 
 interface FileSolicitudVerificacion {
   comprobantePago: Express.Multer.File;
@@ -45,6 +47,105 @@ export class ComerciosService {
     private readonly dbService: DatabaseService, // Assuming DatabaseService is injected for database transactions
     private readonly databasePromiseService: DatabasePromiseService,
   ) {}
+
+
+
+  async updateComercio(
+    id: number,
+    data: UpdateComercioDto,
+    files?: FilesVerificacionComercio,
+  ) {
+    try {
+      const comercio = await this.prismaService.comercio.findFirst({
+        where: {
+          AND: [{ id: id }, { activo: true }],
+        },
+      });
+
+      if (!comercio) throw new NotFoundException('Comercio no encontrado');
+
+      if (comercio.estado !== 5)
+        throw new BadRequestException(
+          'El comercio no está en estado de Comercio Rechazado',
+        );
+
+      const pathImagenes: Record<string, string> = {};
+      if (files) {
+        // subir imagenes a firebase
+        const nombreFotoInterior = path.basename(comercio.foto_interior || '');
+        const nombreFotoExterior = path.basename(comercio.foto_exterior || '');
+        const nombrefacturaServicio = path.basename(
+          comercio.imagen_factura_servicio || '',
+        );
+        const nombreCedulaFrontal = path.basename(
+          comercio.cedula_frontal || '',
+        );
+        const nombreCedulaReverso = path.basename(
+          comercio.cedula_reverso || '',
+        );
+        await Promise.all(
+          Object.entries(files).map(async ([key, file]) => {
+            let nombreArchivoComprobante = '';
+
+            // obtener nombre del archivo o generar uno nuevo
+            switch (key) {
+              case 'foto_interior':
+                nombreArchivoComprobante =
+                  nombreFotoInterior || crearNombreArchivoDesdeMulterFile(file);
+                break;
+              case 'foto_exterior':
+                nombreArchivoComprobante =
+                  nombreFotoExterior || crearNombreArchivoDesdeMulterFile(file);
+                break;
+              case 'imagen_factura_servicio':
+                nombreArchivoComprobante =
+                  nombrefacturaServicio ||
+                  crearNombreArchivoDesdeMulterFile(file);
+                break;
+            }
+
+            if (file) {
+              const rutaArchivo = `${FIREBASE_STORAGE_FOLDERS.comprobantes}/${nombreArchivoComprobante}`;
+              const urlPathComprobante =
+                await this.firebaseService.subirArchivoPrivado(
+                  file.buffer,
+                  rutaArchivo,
+                  file.mimetype,
+                );
+              pathImagenes[key] = rutaArchivo;
+            }
+          }),
+        );
+      }
+
+      const fecha = new Date();
+
+      const updatedComercio = await this.prismaService.$transaction(
+        async (prisma) => {
+          const comercioActualizado = await prisma.comercio.update({
+            where: { id },
+            data: {
+              estado: data.id_estado || 1,
+              foto_interior: pathImagenes.foto_interior,
+              foto_exterior: pathImagenes.foto_exterior,
+              imagen_factura_servicio: pathImagenes.imagen_factura_servicio,
+              id_usuario_actualizacion: data.id_usuario_modificacion,
+              fecha_actualizacion: fecha,
+              urlmaps: data.url_maps,
+              correo_empresa: data.email,
+            },
+          });
+
+          return comercioActualizado;
+        },
+      );
+
+      return updatedComercio;
+    } catch (error) {
+      console.error('Error al actualizar información de comercio:', error);
+      throw error;
+    }
+  }
 
   async getOpcionesFiltroComercios() {
     try {
@@ -84,6 +185,7 @@ export class ComerciosService {
             estado: true,
             id: true,
             eslogan: true,
+            direccion: true,
             ruc: true,
             slug: true,
             motivo_rechazo: true,

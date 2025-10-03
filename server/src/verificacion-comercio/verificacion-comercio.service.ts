@@ -512,7 +512,6 @@ export class VerificacionComercioService {
       const nombrefacturaServicio = path.basename(comercio.imagen_factura_servicio || '');
       const nombreCedulaFrontal = path.basename(comercio.cedula_frontal || '');
       const nombreCedulaReverso = path.basename(comercio.cedula_reverso || '');
-
       await Promise.all(
         Object.entries(files).map(async ([key, file]) => {
           let nombreArchivoComprobante = '';
@@ -531,14 +530,6 @@ export class VerificacionComercioService {
               nombreArchivoComprobante =
                 nombrefacturaServicio ||
                 crearNombreArchivoDesdeMulterFile(file);
-              break;
-            case 'cedula_frontal':
-              nombreArchivoComprobante =
-                nombreCedulaFrontal || crearNombreArchivoDesdeMulterFile(file);
-              break;
-            case 'cedula_reverso':
-              nombreArchivoComprobante =
-                nombreCedulaReverso || crearNombreArchivoDesdeMulterFile(file);
               break;
           }
 

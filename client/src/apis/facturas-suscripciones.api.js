@@ -18,3 +18,11 @@ export const getInfoFacturaPago = async (id) => {
   });
   return response;
 };
+
+export const getGananciasFacturas = async () => {
+return await api.get(`/ganancias-facturas`, {
+    headers: {
+      Authorization: `Bearer ${await getIdToken()}`,
+    },
+  });
+}

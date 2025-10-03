@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card'
 import React from 'react'
-import FormFacturaPlanes from './FormFacturaPlanes'
+import FormFacturaPlanes from '../components/FormFacturaPlanes'
 
 export default function FacturaPlanesPage() {
   return (

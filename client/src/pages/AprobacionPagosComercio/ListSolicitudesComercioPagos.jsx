@@ -119,7 +119,10 @@ export default function ListSolicitudesComercioPagos() {
         );
       },
     },
-
+    {
+      accessorKey: "nombre_propietario",
+      header: "Nombre del Propietario",
+    },
     {
       header: "Opciones",
       cell: ({ row }) => (

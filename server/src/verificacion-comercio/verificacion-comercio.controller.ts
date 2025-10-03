@@ -41,6 +41,7 @@ import {
 } from '@/pipes/ImageValiationPipe';
 import { Response } from 'express';
 import { QueryComercios } from './types/query-comercios';
+import { AuthenticatedRequest } from '@/auth/types/AuthenticatedRequest';
 @Controller('verificacion-comercio')
 export class VerificacionComercioController {
   constructor(
@@ -121,15 +122,15 @@ export class VerificacionComercioController {
   @UseInterceptors(FileInterceptor('comprobantePago'))
   async updateSolicitudVerificacion(
     @Param('id') id: string,
-    @Req() request,
+    @Req() request: AuthenticatedRequest,
     @Body() updateSolicitudComercioDto: UpdateSolicitudComercioDto,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({
-            maxSize: 2 * 1024 * 1024,
-            message: 'El archivo es demasiado grande. Máximo 2MB.',
-          }), // 2MB
+            maxSize: 5 * 1024 * 1024,
+            message: 'El archivo es demasiado grande. Máximo 5MB.',
+          }), // 5MB
           new FileTypeValidator({ fileType: 'image/(jpeg|png|jpg)' }), // acepta JPG, PNG, JPG
         ],
         fileIsRequired: false, // opcional, true por defecto
@@ -264,8 +265,6 @@ export class VerificacionComercioController {
       [
         { name: 'foto_interior', maxCount: 1 },
         { name: 'foto_exterior', maxCount: 1 },
-        { name: 'cedula_frontal', maxCount: 1 },
-        { name: 'cedula_reverso', maxCount: 1 },
         { name: 'imagen_factura_servicio', maxCount: 1 },
       ],
       {
@@ -282,23 +281,17 @@ export class VerificacionComercioController {
     files: {
       foto_interior?: Express.Multer.File[] | undefined;
       foto_exterior?: Express.Multer.File[] | undefined;
-      cedula_frontal?: Express.Multer.File[] | undefined;
-      cedula_reverso?: Express.Multer.File[] | undefined;
       imagen_factura_servicio?: Express.Multer.File[] | undefined;
     },
   ) {
     try {
       const interior = files.foto_interior?.[0];
       const exterior = files.foto_exterior?.[0];
-      const frontal = files.cedula_frontal?.[0];
-      const reverso = files.cedula_reverso?.[0];
       const factura = files.imagen_factura_servicio?.[0];
       // All files are validated as present, so we can safely assert their types
       const archivosinfo = {
         foto_interior: interior as Express.Multer.File,
         foto_exterior: exterior as Express.Multer.File,
-        cedula_frontal: frontal as Express.Multer.File,
-        cedula_reverso: reverso as Express.Multer.File,
         imagen_factura_servicio: factura as Express.Multer.File,
       };
       const id_usuario = req.user.userId;

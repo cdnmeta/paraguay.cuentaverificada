@@ -38,20 +38,19 @@ export default function VerificacionComercioPage() {
   {/*🔔 Escuchar eventos del navegador para refrescar el listado*/}
   useEffect(() => {
     // Cuando se actualiza/crea una solicitud desde el form
-    const offA = on(EVENTS.SOLICITUD_COMERCIO_ACTUALIZADA, ({ idComercio } = {}) => {
+    const offA = on(EVENTS.SOLICITUD_COMERCIO_ACTUALIZADA, () => {
       loadComercios();
-      // si vino un id desde el form, seleccionamos o forzamos refresh del form
-      if (idComercio) {
-        setIdComercioSeleccionado((prev) => (prev === idComercio ? (recargarFormulario(), prev) : idComercio));
-      }
+      // Resetear el formulario a estado inicial (null) y forzar recarga
+      setIdComercioSeleccionado(null);
+      recargarFormulario();
     });
 
     // Cuando se actualiza/crea la verificación desde el form
-    const offB = on(EVENTS.VERIFICACION_COMERCIO_ACTUALIZADA, ({ idComercio } = {}) => {
+    const offB = on(EVENTS.VERIFICACION_COMERCIO_ACTUALIZADA, () => {
       loadComercios();
-      if (idComercio) {
-        setIdComercioSeleccionado((prev) => (prev === idComercio ? (recargarFormulario(), prev) : idComercio));
-      }
+      // Resetear el formulario a estado inicial (null) y forzar recarga
+      setIdComercioSeleccionado(null);
+      recargarFormulario();
     });
 
     return () => {

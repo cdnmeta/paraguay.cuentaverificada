@@ -35,4 +35,7 @@ export class ResponseComercioDto {
 
   @Expose()
   correo_empresa: string;
+
+  @Expose()
+  direccion: string;
 }

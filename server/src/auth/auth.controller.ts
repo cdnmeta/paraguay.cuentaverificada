@@ -31,7 +31,7 @@ import { UsuarioRegisterResponseDto } from './dto/usuarioResponse.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { cert } from 'firebase-admin/app';
 import { PrismaService } from '@/prisma/prisma.service';
-import { CambiarContrasenaDto, InicializarPasswordPinByToken, RecoveryPinDto, SolicitudRecoveryPinDto, SolicitudRecoveryPinPayloadDto, ValidacionTokenDto } from './dto/password-recovery.dto';
+import { CambiarContrasenaDto, InicializarPasswordPinByToken, InicializarPasswordPinPayloadByToken, RecoveryPinDto, SolicitudRecoveryPinDto, SolicitudRecoveryPinPayloadDto, ValidacionTokenDto } from './dto/password-recovery.dto';
 import { RefreshTokenDto, RefreshTokenResponseDto } from './dto/refresh-token.dto';
 import { IsOnlyAdmin } from './decorators/onlyAdmin.decorator';
 import { RequireUserPinGuard } from './guards/requireUserPin.guard';
@@ -158,9 +158,14 @@ export class AuthController {
 
   @IsPublic()
   @Post('inicializar-credenciales-token')
-  async inicializarPasswordPin(@Body() dto: InicializarPasswordPinByToken, @Res() res: Response) {
+  async inicializarPasswordPin(@Req() req: AuthenticatedRequest, @Body() dto: InicializarPasswordPinPayloadByToken, @Res() res: Response) {
     try {
-      await this.authService.inicializarPasswordPinByToken(dto);
+      const dataInsertar:InicializarPasswordPinByToken = {
+        ...dto,
+        ip_origen: req.ip,
+        dispositivo_origen: req.headers['user-agent'] || 'desconocido',
+      }
+      await this.authService.inicializarPasswordPinByToken(dataInsertar);
       return res.status(200).json({ message: 'PIN y contraseña inicializados correctamente' });
     } catch (error) {
       throw error

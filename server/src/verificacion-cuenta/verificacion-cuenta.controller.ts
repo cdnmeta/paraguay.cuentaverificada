@@ -24,7 +24,7 @@ import { validateImageOrThrow } from '@/pipes/ImageValiationPipe';
 import { ImagenesVerificacionCuenta } from './types/imagenes-verificacion';
 import { Response } from 'express';
 import { AuthenticatedRequest } from '@/auth/types/AuthenticatedRequest';
-import { SolicitudCuentaDto, ValidarCodigoSolicitudDto } from './dto/solicitud-cuenta.dto';
+import { SolicitudCuentaDto, SolicitudCuentaPayloadDto, ValidarCodigoSolicitudDto } from './dto/solicitud-cuenta.dto';
 import { IsPublic } from '@/auth/decorators/public.decorator';
 import { PrismaService } from '@/prisma/prisma.service';
 import { RequireGroupIdsAll, RequireGroupIdsAny } from '@/auth/decorators/groups.decorator';
@@ -67,12 +67,17 @@ export class VerificacionCuentaController {
   @IsPublic()
   @Post('solicitud-cuenta')
   async registrarSolicitudCuenta(
-    @Body() dto: SolicitudCuentaDto,
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: SolicitudCuentaPayloadDto,
     @Res() res: Response,
   ) {
     try {
-      const userSolicitud =
-        await this.verificacionCuentaService.registrarSolicitudCuenta(dto);
+      const dataGuardar: SolicitudCuentaDto = {
+        ...dto,
+        ip_origen: req.ip,
+        dispositivo: req.headers['user-agent'] || 'desconocido',
+      }
+      const userSolicitud = await this.verificacionCuentaService.registrarSolicitudCuenta(dataGuardar);
       const userResponse = plainToInstance(SoliitudVerificacionCuentaResponseDto, userSolicitud, { excludeExtraneousValues: true });
       return res
         .status(200)

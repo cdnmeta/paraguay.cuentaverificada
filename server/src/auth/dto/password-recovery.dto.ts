@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
 
-export class InicializarPasswordPinByToken {
+export class InicializarPasswordPinPayloadByToken {
     @IsNotEmpty({ message: 'El token no puede estar vacío.' })
     @IsString({ message: 'El token debe ser una cadena de texto.' })
     token: string;
@@ -16,6 +16,12 @@ export class InicializarPasswordPinByToken {
     @IsNotEmpty({ message: 'La cédula no puede estar vacía.' })
     @IsString({ message: 'La cédula debe ser una cadena de texto.' })
     cedula: string;
+}
+
+
+export class InicializarPasswordPinByToken extends InicializarPasswordPinPayloadByToken {
+    ip_origen?: string;
+    dispositivo_origen?: string;
 }
 
 export class CambiarContrasenaDto {

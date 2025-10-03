@@ -1,6 +1,6 @@
 import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
 
-export class SolicitudCuentaDto {
+export class SolicitudCuentaPayloadDto  {
     @IsString({ message: 'Nombre debe ser una cadena' })
     @IsNotEmpty({ message: 'Nombre es requerido' })
     nombre: string;
@@ -26,6 +26,14 @@ export class SolicitudCuentaDto {
     @IsNotEmpty({ message: 'Código de marcación es requerido' })
     dial_code: string;
 }
+
+
+export class SolicitudCuentaDto extends SolicitudCuentaPayloadDto {
+    ip_origen?: string;
+    dispositivo?: string;
+}
+
+
 
 
 

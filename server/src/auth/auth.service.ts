@@ -358,6 +358,8 @@ export class AuthService {
             cedula_frente: user.cedula_frontal,
             cedula_reverso: user.cedula_reverso,
             uid_firebase: firebaseUser.uid,
+            ip_origen: dto.ip_origen,
+            dispositivo_origen: dto.dispositivo_origen,
           },
         });
 

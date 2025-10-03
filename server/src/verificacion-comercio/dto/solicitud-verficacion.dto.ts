@@ -45,12 +45,7 @@ export class SolicitudVerificacionRegistrarComercioDto extends SolicitarVerifica
   id_usuario_creacion: number;
 }
 
-export class UpdateSolicitudComercioDto extends OmitType(SolicitarVerificacionComercioDto, ['aceptaTerminos',"codigoVendedor"]) {
-  @Transform(({ value }) => Number(value))
-  @IsNumber({}, { message: 'El ID de usuario debe ser un número' })
-  @IsOptional()
-  id_estado: number;
-
+export class UpdateSolicitudComercioDto extends PartialType(SolicitarVerificacionComercioDto) {
   @Transform(({ value }) => Number(value))
   @IsNumber({}, { message: 'El ID de usuario debe ser un número' })
   @IsOptional()

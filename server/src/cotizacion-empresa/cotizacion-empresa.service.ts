@@ -2,6 +2,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '@/database/database.service';
 import { CotizacionDto } from './dto/regitrar-cotizacion.dto';
+import { TasaAplicada } from './types';
 
 @Injectable()
 export class CotizacionEmpresaService {

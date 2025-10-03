@@ -1,36 +1,52 @@
 import { useAuthStore } from '@/hooks/useAuthStorge';
 import React from 'react'
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import { Toaster } from '@components/ui/sonner';
 import AlertCambioDeRolEmpresa from '@components/customs/AlertCambioDeRolEmpresa';
-import { ROUTE_BASE } from './config/routes';
-import NavBarCustom1 from '@/components/navbars/NavBarCustom1';
 import { AlertDialogGlobal } from '@/components/customs/AlertDialogGlobal';
+import { AppSidebarSuperAdmin } from './components/sidebar/app-sidebar';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Breadcrumb, 
+  BreadcrumbItem, 
+  BreadcrumbLink, 
+  BreadcrumbList, 
+  BreadcrumbPage, 
+  BreadcrumbSeparator 
+} from '@/components/ui/breadcrumb';
+import LogoCuentaVerificada from '@/components/customs/LogoCuentaVerifaca';
 export default function LayoutSuperAdmin({children}) {
   const user = useAuthStore((state) => state.user);
+  
   return (
-    <div className="grid min-h-screen grid-rows-[auto_1fr_auto] relative">
-      {/* Fondo galáctico (fondo absoluto detrás del layout) */}
-      <div
-        className="absolute inset-0 -z-10 bg-cover bg-center"
-        style={{ backgroundImage: "url('/img/fondo-planeta.jpg')" }}
-        aria-hidden="true"
-      />
+    <SidebarProvider>
+      <AppSidebarSuperAdmin />
+      <SidebarInset>
+        {/* Header con breadcrumb */}
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Link to="/admin">
+              <LogoCuentaVerificada />
+            </Link>
+          </div>
+        </header>
 
-      {/* Header sticky */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <NavBarCustom1 urlPanel={`${ROUTE_BASE}`}/>
-      </header>
-
-      {/* Contenido principal */}
-      <main className="relative w-full px-4 py-6">
-        {children ? children : <Outlet />}
-      </main>
-
+        {/* Contenido principal */}
+        <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          {children ? children : <Outlet />}
+        </main>
+        <footer className="w-full text-sm text-center py-4">
+            <p className="text-muted-foreground">
+              © {new Date().getFullYear()} Cuenta Verificada
+            </p>
+          </footer>
+      </SidebarInset>
 
       <Toaster position="top-right" />
       <AlertCambioDeRolEmpresa user={user} />
       <AlertDialogGlobal />
-    </div>
+    </SidebarProvider>
   )
 }

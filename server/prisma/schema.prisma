@@ -134,7 +134,7 @@ model grupos {
 model monedas {
   id                                                               Int                           @id @default(autoincrement())
   nombre                                                           String
-  simbolo                                                          String?
+  simbolo                                                          String? 
   sigla_iso                                                        String?
   fecha_creacion                                                   DateTime?                     @default(now()) @db.Timestamptz(6)
   fecha_actualizacion                                              DateTime?                     @db.Timestamptz(6)
@@ -169,6 +169,8 @@ model usuarios_solicitudes_cuenta {
   id_verificador  Int?
   id_usuario_actualizacion Int?
   id_usuario_anulacion Int?
+  ip_origen     String?
+  dispositivo_origen   String?
 }
 
 model pagos_factura_suscripciones {
@@ -290,6 +292,8 @@ model usuarios {
   porcentaje_comision_primera_venta   Decimal?                      @db.Decimal(10, 2)
   porcentaje_comision_recurrente      Decimal?                      @db.Decimal(10, 2)
   saldo                       Decimal?                      @db.Decimal(10, 2) @default(0)
+  ip_origen                   String?
+  dispositivo_origen          String?
   comercio                    comercio[]
   factura_suscripciones       factura_suscripciones[]
   seguimiento_verificacion    seguimiento_verificacion[]
@@ -390,7 +394,7 @@ model ganancias_futuras {
   monto                     Float   
   id_estado                 Int      @default(1) // 1=pendiente, 2=pagado, 3=anulado
   activo                    Boolean?  @default(true)
-  tipo_participante         Int      // 1=participante, 2=vendedor, 3=empresa, 4= Ganancia Empresa
+  tipo_participante         Int      // 1=participante, 2=vendedor, 3=empresa
   fecha_creacion            DateTime? @default(now()) @db.Timestamptz(6)
   fecha_actualizacion       DateTime? @db.Timestamptz(6)
   id_usuario_creacion       Int?

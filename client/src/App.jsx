@@ -16,7 +16,7 @@ import { PROTECTED_ROUTES, PUBLIC_ROUTES } from "./utils/routes.routes";
 import DashboardApp from "./components/layouts/DashboardLayoutApp/DashboardLayoutApp";
 import LoadingSpinner from "./components/customs/loaders/LoadingSpinner";
 import DptoLegalRoutes, { dtoLegalRoutes } from "./pages/departamento-legal/dpto-legal.routes";
-import FacturaPlanesPage from "./pages/FacturaPlanes/FacturaPlanesPage";
+import FacturaPlanesPage from "./pages/FacturaPlanes/pages/FacturaPlanesPage";
 import CobroSuscripcionesPage from "./pages/CobroSuscripcionesPlanes/CobroSuscripcionesPage";
 import { verificarSesionYgrupoAdmitido } from "./utils/auth";
 import MisDatosPage from "./pages/MisDatos/MisDatosPage";
@@ -33,6 +33,8 @@ import RecordatoriosUsuariosRoutes from "./pages/recordatoriosUsuarios";
 import { RecoveryPinPage, ResetPinPage, ResetPasswordPage } from "./pages/recovery";
 import SemaforoFinancieroPage from "./pages/SemaforoFinanciero/pages/SemaforoFinancieroPage";
 import SemaforoFinancieroRoutes from "./pages/SemaforoFinanciero";
+import { PlanesPage } from "./pages/Planes";
+import { PlanesRoutes } from "./pages/Planes/config/routes";
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
@@ -58,6 +60,7 @@ export default function App() {
         <Route path="/verificacion-cuenta" element={<InicializarContrasenaPin />} />
         <Route path="/pacto" element={<Pacto />} />
         <Route path="*" element={<h1>404 Not Found</h1>} />
+
       </Route>
       <Route element={<DashboardApp />}>
         <Route element={<ProtectedRoute isAuthorized={!!user} />}>

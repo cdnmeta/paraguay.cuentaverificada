@@ -37,11 +37,19 @@ export const routes = [
   {
     key: "aprobacionComercios",
 
-    path: `${ROUTE_BASE}/aprovacion-comercios`,
+    path: `${ROUTE_BASE}/aprobacion-comercios`,
   },
   {
     key: "listadoSolicitudesCuentas",
 
     path: `${ROUTE_BASE}/solicitudes-cuentas`,
+  },
+  {
+    key: "facturarPlanes",
+    path: `${ROUTE_BASE}/facturas-planes/facturar`,
+  },
+  {
+    key: "gananciasFacturas",
+    path: `${ROUTE_BASE}/facturas-planes/ganancias`,
   },
 ];

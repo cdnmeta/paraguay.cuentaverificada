@@ -67,7 +67,8 @@ export function AlertDialogGlobal() {
             <Icon size={38} />
           </span>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl text-center">{title}</AlertDialogTitle>
+            {typeof title === "string" && (<AlertDialogTitle ><p className="text-xl text-center">{title}</p> </AlertDialogTitle>)}
+            {title && typeof title !== "string" && <AlertDialogTitle>{title}</AlertDialogTitle>}
             <AlertDialogDescription className="text-base">
               {description}
             </AlertDialogDescription>

@@ -26,6 +26,7 @@ export function crearSlug(texto: string, opciones: ICrearSlugOpciones = {}) {
 }
 
 export function crearNombreArchivoDesdeMulterFile(file: Express.Multer.File): string {
+  console.log(file)
   const nombreOriginal = file.originalname;
   const extension = nombreOriginal.split('.').pop();
   const idHashNombre = `${generarUUIDHASH()}`;

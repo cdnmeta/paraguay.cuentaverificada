@@ -54,7 +54,7 @@ const ListSolicitudesComercios = ({ comercios,id_usuario,onSeleccionarComercio =
                 
                 <DetalleSolicitudComercio comercio={comercio} />
                 {
-                  [2,3,5,6].includes(comercio?.estados_comercios.id) && (
+                  [2,5,6].includes(comercio?.estados_comercios.id) && (
                     <Button
                       variant="outline"
                       size="icon"

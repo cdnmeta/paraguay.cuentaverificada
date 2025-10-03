@@ -336,13 +336,10 @@ export class VerificacionCuentaService {
             documento: dto.documento,
             id_verificador: usuarioAsignar.rows[0].id,
             codigo_verificacion: codigo_verificacion,
+            ip_origen: dto.ip_origen,
+            dispositivo_origen: dto.dispositivo,
           },
         });
-
-        
-        
-
-      
       return userSolicitud;
     } catch (error) {
       throw error;

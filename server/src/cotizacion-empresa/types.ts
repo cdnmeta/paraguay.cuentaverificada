@@ -1,4 +1,4 @@
-type TasaAplicada = {
+export type TasaAplicada = {
     idCotizacion: number;
     idMonedaOrigen: number;
     idMonedaDestino: number;

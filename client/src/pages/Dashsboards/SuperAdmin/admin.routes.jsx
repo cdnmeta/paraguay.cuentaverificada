@@ -1,6 +1,6 @@
 // src/pages/SuperAdmin/admin.routes.jsx
 import React, { lazy, Suspense } from "react";
-import { Form, Route, useParams } from "react-router-dom";
+import { Form, Route } from "react-router-dom";
 import AdminLayout from "./LayoutSuperAdmin";
 import { ROUTE_BASE } from "./config/routes";
 import Spinner from "@/components/customs/loaders/LoadingSpinner"; // cualquier loader visual
@@ -14,6 +14,7 @@ import ListadoParticipantesPage from "@/pages/Participantes/ListadoParticipantes
 import { UsuariosRoutes } from "@/pages/Usuarios/usuarios.routes";
 import FormCotizacion from "@/pages/cotizacionesEmpresa/components/FormCotizacion";
 import CotizacionEmpresaPage from "@/pages/cotizacionesEmpresa/page/CotizacionEmpresaPage";
+import { FacturasPlanesRoutes } from "@/pages/FacturaPlanes/facturasPlanes.routes";
 const DashBoardSuperAdmin = lazy(() => import("./DashBoardSuperAdmin"));
 
 export function SuperAdminRoutes({ user }) {
@@ -65,7 +66,7 @@ export function SuperAdminRoutes({ user }) {
       <Route path="comercios/listado" element={<ListadoComercioPages />} />
       <Route path="solicitudes-pago" element={<AprobacionPagosComercio />} />
       <Route
-        path="aprovacion-comercios"
+        path="aprobacion-comercios"
         element={<AprobarcionComerciosPage />}
       />
       <Route
@@ -77,6 +78,9 @@ export function SuperAdminRoutes({ user }) {
         }
       />
       <Route path="cotizacion-empresa" element={<CotizacionEmpresaPage />} />
+
+      {/* Rutas de Facturas Planes */}
+      {FacturasPlanesRoutes()}
 
       {/*usuarios rutas*/}
       {UsuariosRoutes({ user })}

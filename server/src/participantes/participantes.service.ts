@@ -298,19 +298,19 @@ export class ParticipantesService {
         // ------------------------------------------------------------
         let montoParticipantes = 0;
         let montoRepartirse = 0;
-        let montoDistribuidoParticipantes = 0;
-        let gananciaEmpresa = 0;
+        let montoDistribuidoEntreParticipantes = 0;
+        // Determinar el monto total a repartirse entre todos los participantes
+        if (primera_venta) {
+          const pct = Number(infoMeta.porcentaje_participantes_primera_venta);
+          montoRepartirse = (pct / 100) * monto_factura_sin_iva;
+        } else {
+          const pct = Number(infoMeta.porcentaje_participantes_recurrente);
+          montoRepartirse = (pct / 100) * monto_factura_sin_iva;
+        }
+        montoRepartirse = toTwo(montoRepartirse);
+        montoParticipantes = montoRepartirse;
+
         if (participantes.length > 0) {
-          // Determinar el monto total a repartirse entre todos los participantes
-          if (primera_venta) {
-            const pct = Number(infoMeta.porcentaje_participantes_primera_venta);
-            montoRepartirse = (pct / 100) * monto_factura_sin_iva;
-          } else {
-            const pct = Number(infoMeta.porcentaje_participantes_recurrente);
-            montoRepartirse = (pct / 100) * monto_factura_sin_iva;
-          }
-          montoRepartirse = toTwo(montoRepartirse);
-          montoParticipantes = montoRepartirse;
           // Distribución proporcional según "porcentaje_participacion" por usuario
           await Promise.all(
             participantes.map(async (participante) => {
@@ -321,7 +321,7 @@ export class ParticipantesService {
               from compras_participantes com
               left join usuarios us on com.id_usuario = us.id and us.activo = true
               where com.id_usuario = $1
-            `,
+              `,
                 [participante.id_usuario],
               );
 
@@ -333,8 +333,7 @@ export class ParticipantesService {
               const porcentajeParticipante = Number(
                 dataParticipante.porcentaje_participacion,
               );
-              let gananciaParticipante =
-                (montoRepartirse * porcentajeParticipante) / 100;
+              let gananciaParticipante = (montoRepartirse * porcentajeParticipante) / 100;
 
               gananciaParticipante = toTwo(gananciaParticipante);
 
@@ -358,39 +357,37 @@ export class ParticipantesService {
               }
 
               // Sumar al monto ya distribuido entre participantes
-              montoDistribuidoParticipantes += gananciaParticipante;
+              montoDistribuidoEntreParticipantes += gananciaParticipante;
 
               // TODO: Persistir el registro de ganancia del participante si corresponde.
             }),
           );
 
-          // Ajuste por redondeo: si hay diferencia, se asigna a la ganancia de la empresa
-          const diferencia = toTwo(
-            montoRepartirse - montoDistribuidoParticipantes,
-          );
-          if (diferencia > 0) {
-            gananciaEmpresa += diferencia;
-            ganancias.push({
-              id_moneda: idMonedaAsignarComisiones,
-              tipo_ganancia: tipoGanacia, // 1=venta plan
-              id_factura: factura.id,
-              id_usuario: null, // 0 o null para representar a la empresa
-              monto: gananciaEmpresa,
-              tipo_participante: 4, // 4 = Ganancia Empresa
-            });
-          }
         }
+        
 
         // ------------------------------------------------------------
-        // Ganancia de la EMPRESA (administrativo)
+        // Ganancias de EMPRESA
         // ------------------------------------------------------------
-        
+
         // asignar la ganancia a la empresa de lo que sobro al no se repartir entre participantes y vendedor
 
         let montoEmpresa = 0;
-        const montoSobranteReparticion = monto_factura_sin_iva - montoParticipantes - montoVendedor;
+
+        // Diferencia de los designado a la bolsa y lo repartido entre participantes
+        const diferenciaEntreAsigandoParticipantes = toTwo(
+          montoRepartirse - montoDistribuidoEntreParticipantes,
+        );
+
+        if (diferenciaEntreAsigandoParticipantes > 0) {
+          montoEmpresa += diferenciaEntreAsigandoParticipantes;
+        }
+        
+        // monto que sobra de la factura despues de asignar a vendedor y participantes
+        const montoSobranteReparticion = monto_factura_sin_iva  - montoVendedor - montoRepartirse; 
 
         montoEmpresa += toTwo(montoSobranteReparticion);
+
 
         // Agregar a la lista de ganancias a registrar
         ganancias.push({
@@ -402,6 +399,9 @@ export class ParticipantesService {
           tipo_participante: 3, // 3 = empresa
         });
 
+
+
+        
         //1 - TODO: Persistir el registro de ganancia de los participantes si corresponde.
         let participaciones_actual =
           Number(infoMeta.total_participacion_global) +
@@ -422,7 +422,7 @@ export class ParticipantesService {
 
         console.log(
           'Total a repartido entre participantes:',
-          redondearDecimales(montoDistribuidoParticipantes),
+          redondearDecimales(montoDistribuidoEntreParticipantes),
         );
         
         console.log(
@@ -432,13 +432,12 @@ export class ParticipantesService {
 
         console.log(
           'Total Ganancia empresa (Bolsa):',
-          redondearDecimales(gananciaEmpresa),
+          redondearDecimales(montoEmpresa),
         );
 
 
         console.log("Total asignado a Vendedor",redondearDecimales(montoVendedor))
 
-        console.log("Total Sobrante empresa (administrativo) :", redondearDecimales(montoEmpresa));
 
 
         // 1- registrar las ganacias por la venta de un plan
@@ -480,12 +479,12 @@ export class ParticipantesService {
         });
 
         // 5- Actualizar ganancia acumulada de la empresa
-        if (gananciaEmpresa > 0) {
+        if (montoEmpresa > 0) {
           const acumularGananciaEmpresa =
-            Number(infoMeta.ganancia_acumulada || 0) + gananciaEmpresa;
+            Number(infoMeta.ganancia_acumulada || 0) + montoEmpresa;
           console.log(
             'sumar a lo acumulado de la empresa:',
-            redondearDecimales(gananciaEmpresa),
+            redondearDecimales(montoEmpresa),
           );
           await prisma.participacion_empresa.update({
             where: { id: 1 },
