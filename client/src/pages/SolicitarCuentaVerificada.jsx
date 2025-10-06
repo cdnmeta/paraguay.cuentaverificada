@@ -228,10 +228,9 @@ export default function SolicitarCuentaVerificada() {
           setIdUsuario(null);
           setDatosUsuario(null);
 
-          const timeout = setTimeout(() => {
-            navigate("/login");
-          }, 1500);
-          clearTimeout(timeout)
+          
+          navigate("/login");
+          
         },
       });
     } catch (err) {
