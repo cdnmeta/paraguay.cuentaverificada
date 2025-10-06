@@ -1,26 +1,24 @@
-import { useAuthStore } from '@/hooks/useAuthStorge';
-import React from 'react'
-import { BASE_URL } from './config/routes';
-import NavBarCustom1 from '@/components/navbars/NavBarCustom1';
-import { Link, Outlet } from 'react-router-dom';
-import { Toaster } from '@/components/ui/sonner';
-import AlertCambioDeRolEmpresa from '@/components/customs/AlertCambioDeRolEmpresa';
-import LogoCuentaVerificada from '@/components/customs/LogoCuentaVerifaca';
+import React, { use } from "react";
+import { Link, Outlet } from "react-router-dom";
+import { Toaster } from "sonner";
+import { AlertDialogGlobal } from "@/components/customs/AlertDialogGlobal";
+import { useAuthStore } from "@/hooks/useAuthStorge";
+import AlertCambioDeRolEmpresa from "@/components/customs/AlertCambioDeRolEmpresa";
+import { BASE_URL } from "./config/routes";
+import { AppSidebarDepartamentoLegal } from "./components/sidebar/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { AppSidebarParticipantes } from './components/sidebar/app-sidebar';
-import { AlertDialogGlobal } from '@/components/customs/AlertDialogGlobal';
-
-export default function LayoutParticipante({children}) {
+import LogoCuentaVerificada from "@/components/customs/LogoCuentaVerifaca";
+export default function LayoutDepartamentoLegal({ children }) {
   const user = useAuthStore((state) => state.user);
    return (
     <SidebarProvider>
-      <AppSidebarParticipantes />
+      <AppSidebarDepartamentoLegal />
       <SidebarInset>
         {/* Header con breadcrumb */}
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
-            <Link to={`/${BASE_URL}`}>
+            <Link to={BASE_URL}>
               <LogoCuentaVerificada />
             </Link>
           </div>

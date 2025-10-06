@@ -1,6 +1,5 @@
 import { obtenerParticipaciones } from "@/apis/participantes.api";
-import MetricCardTW from "@/components/customs/MetricCard";
-import MetricCard from "@/components/customs/MetricCard";
+import ElegantMetricCard from "@/components/customs/ElegantMetricCard";
 import { useAuthStore } from "@/hooks/useAuthStorge";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -42,7 +41,6 @@ export default function DashBoardParticipante() {
         cantidad_suscripciones_suspendidas,
         ganancias_totales,
         ganancias_por_cobrar,
-        ganancias_cobradas,
 
       } = response.data;
       setDataInfoNegocio({
@@ -56,16 +54,42 @@ export default function DashBoardParticipante() {
           value: precio_actual,
           digitosNum: 6,
           titulo: "Precio META",
+          subtitle: "Precio actual",
           unit: "USD",
+          variant: "sapphire",
+          trend: precio_actual > 0 ? "up" : "neutral",
+          badge: "Live"
         },
         {
           key: "porcentajeParticipacion",
           value: total_meta,
           titulo: "Participación",
-          unit: `Valor: ${porcentaje_participacion}%`,
+          subtitle: `${porcentaje_participacion}% del total`,
+          unit: "Meta",
+          variant: "violet",
+          trend: "up",
+          badge: `${porcentaje_participacion}%`
         },
-        { key: "ganancias", value: ganancias_totales, titulo: "Ganancias", unit: "USD" },
-        { key: "cobrar", value: ganancias_por_cobrar, titulo: "Por Cobrar", unit: "USD" },
+        { 
+          key: "ganancias", 
+          value: ganancias_totales, 
+          titulo: "Ganancias Totales",
+          subtitle: "Acumuladas", 
+          unit: "USD",
+          variant: "emerald",
+          trend: ganancias_totales > 0 ? "up" : "neutral",
+          badge: "Total"
+        },
+        { 
+          key: "cobrar", 
+          value: ganancias_por_cobrar, 
+          titulo: "Por Cobrar",
+          subtitle: "Disponible", 
+          unit: "USD",
+          variant: "amber",
+          trend: ganancias_por_cobrar > 0 ? "up" : "neutral",
+          badge: "Pendiente"
+        },
       ]);
     } catch (error) {
       toast.error("Error al cargar las participaciones: " + error.message);
@@ -80,37 +104,51 @@ export default function DashBoardParticipante() {
         Bienvenido, {user?.nombre} {user?.apellido}
       </h1>
 
-      <div className="mx-auto max-w-6xl px-4">
+      <div className="mx-auto max-w-6xl p-4">
         {/* auto-fit + minmax para columnas fluidas; controla el espacio con gap */}
-        <div className="grid gap-4 sm:gap-5 lg:gap-6 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
+        <div className="grid gap-6 sm:gap-7 lg:gap-8 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
           {dataParticipaciones.map((data) => (
-            <MetricCardTW
+            <ElegantMetricCard
               key={data.key}
               title={data.titulo}
+              subtitle={data.subtitle}
               value={data.value}
               unit={data.unit}
               iconSrc={getIconoByKey(data.key)}
-              accent="emerald"
+              variant={data.variant}
+              trend={data.trend}
+              badge={data.badge}
               digitosNum={data.digitosNum}
-              className="!max-w-full !min-h-[200px]" // llena la celda y fija altura mínima
+              showGlow={true}
+              showAccent={true}
+              size="default"
+              className="min-h-[180px] hover:scale-105 transition-transform duration-300"
             />
           ))}
 
-          <MetricCardTW
+          <ElegantMetricCard
             title="Historial"
+            subtitle="Transacciones realizadas"
             value={0}
             unit="Transacciones"
             iconSrc={getIconoByKey("historial")}
-            accent="emerald"
-            className="!max-w-full !min-h-[150px]"
+            variant="slate"
+            trend="neutral"
+            badge="Histórico"
+            showGlow={true}
+            className="min-h-[180px] hover:scale-105 transition-transform duration-300"
           />
-          <MetricCardTW
+          <ElegantMetricCard
             title="Auditoría"
-            value={(dataInfoNegocio?.cantidad_suscripciones_activas ?? 0) + (dataInfoNegocio?.cantidad_suscripciones_pendientes ?? 0) + (dataInfoNegocio?.cantidad_suscripciones_suspendidas ?? 0)}
+            subtitle="Total de suscriptores"
+            value={(dataInfoNegocio?.cantidad_suscripciones_activas ?? 0)}
             unit="Suscriptores"
             iconSrc={getIconoByKey("auditoria")}
-            accent="emerald"
-            className="!max-w-full !min-h-[200px]"
+            variant="rose"
+            trend={dataInfoNegocio?.cantidad_suscripciones_activas > 0 ? "up" : "neutral"}
+            badge="Total"
+            showGlow={true}
+            className="min-h-[180px] hover:scale-105 transition-transform duration-300"
           />
         </div>
       </div>

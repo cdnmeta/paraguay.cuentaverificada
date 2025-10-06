@@ -4,46 +4,50 @@ import { Route } from "react-router-dom";
 import AprobacionPagosComercio from "../AprobacionPagosComercio";
 import AprobarcionComerciosPage from "../AprobarcionComerciosPage";
 import ListadoSolicitudesCuentasPage from "../SolicitudesCuentas/ListadoSolicitudesCuentasPage";
+import LayoutDepartamentoLegal from "@/pages/departamento-legal/LayoutDepartamentoLegal";
+import ProtectedRoute from "@/utils/ProtectedRoute";
+import { verificarSesionYgrupoAdmitido } from "@/utils/auth";
+import { BASE_URL, routes } from "./config/routes";
 
-export const dtoLegalRoutes = {
-  index: "departamento-legal",
-  aprobacionPagoComercio: "aprobacion-pago-comercio",
-  aprobacionComercio: "aprobacion-comercio",
-  aprobacionCuenta: "aprobacion-cuenta",
-};
 
-export default function DptoLegalRoutes() {
-
+export default function DptoLegalRoutes({ user }) {
   const opcionesHabilitar = {
     aprobarSolicitudes: true,
     rechazarSolicitudes: true,
-    generarTokenUsuario: true
+    generarTokenUsuario: true,
   };
   const columnasHabilitar = {
-    ver_columna_verificador: true
-  }
+    ver_columna_verificador: true,
+  };
 
   const opcionesPage = {
     opcionesHabilitar,
     columnasHabilitar,
-    tipoLista: 'todas' // 'mis-solicitudes', 'todas'
-  }
+    tipoLista: "todas", // 'mis-solicitudes', 'todas'
+  };
 
   return (
-    <>
-      <Route index element={<DashboardDptoLegal />} />
+    <Route
+      element={
+        <ProtectedRoute isAuthorized={verificarSesionYgrupoAdmitido(user, [1])}>
+          {" "}
+          <LayoutDepartamentoLegal />
+        </ProtectedRoute>
+      }
+    >
+      <Route path={BASE_URL} element={<DashboardDptoLegal />} />
       <Route
-        path={dtoLegalRoutes.aprobacionPagoComercio}
+        path={routes.aprobacionPagoComercio}
         element={<AprobacionPagosComercio />}
       />
       <Route
-        path={dtoLegalRoutes.aprobacionComercio}
+        path={routes.aprobacionComercio}
         element={<AprobarcionComerciosPage />}
       />
       <Route
-        path={dtoLegalRoutes.aprobacionCuenta}
+        path={routes.aprobacionCuenta}
         element={<ListadoSolicitudesCuentasPage opcionesPage={opcionesPage} />}
       />
-    </>
+    </Route>
   );
 }

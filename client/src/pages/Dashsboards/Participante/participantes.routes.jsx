@@ -23,7 +23,6 @@ export function ParticipantesRoutes({ user }) {
 
   return (
     <Route
-      path={ROUTE_BASE}
       element={
         <ProtectedRoute isAuthorized={isAuthorized(user)} redirectPath="/" >
           <Layout />
@@ -32,26 +31,13 @@ export function ParticipantesRoutes({ user }) {
     >
       {/* index/dashboard */}
       <Route
-        index
+        path={ROUTE_BASE}
         element={
           <Suspense fallback={<Spinner />}>
             <DashBoardParticipante />
           </Suspense>
         }
       />
-
-      {/* genera child routes desde la misma config */}
-      {seccionesFeatures.map((f) => (
-        <Route
-          key={f.key}
-          path={f.path.replace(`${ROUTE_BASE}/`, "")}
-          element={
-            <Suspense fallback={<Spinner />}>
-              {matchByFeatureKey(f.key)}
-            </Suspense>
-          }
-        />
-      ))}
     </Route>
   );
 }

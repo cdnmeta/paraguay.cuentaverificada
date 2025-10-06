@@ -1,4 +1,4 @@
-import { dtoLegalRoutes } from "@/pages/departamento-legal/dpto-legal.routes";
+import { routes as dtoLegalRoutes } from "@/pages/departamento-legal/config/routes";
 import { routes as verficadorRoutes } from "@/pages/Verificador/verficador.routes";
 import { ROUTE_BASE as DashBoardParticipante } from "@/pages/Dashsboards/Participante/config/features";
 

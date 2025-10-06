@@ -15,7 +15,7 @@ import VerificacionComercioPage from "./pages/VerificacionComercioPage";
 import { PROTECTED_ROUTES, PUBLIC_ROUTES } from "./utils/routes.routes";
 import DashboardApp from "./components/layouts/DashboardLayoutApp/DashboardLayoutApp";
 import LoadingSpinner from "./components/customs/loaders/LoadingSpinner";
-import DptoLegalRoutes, { dtoLegalRoutes } from "./pages/departamento-legal/dpto-legal.routes";
+import DptoLegalRoutes from "./pages/departamento-legal/dpto-legal.routes";
 import FacturaPlanesPage from "./pages/FacturaPlanes/pages/FacturaPlanesPage";
 import CobroSuscripcionesPage from "./pages/CobroSuscripcionesPlanes/CobroSuscripcionesPage";
 import { verificarSesionYgrupoAdmitido } from "./utils/auth";
@@ -24,7 +24,7 @@ import LoginToken from "./pages/Login/LoginToken";
 import InicializarContrasenaPin from "./pages/recovery/InicializarContrasenaPin";
 
 import VerificadorRoutes from "./pages/Verificador/verficador.routes";
-import LayoutDepartamentoLegal from "./components/layouts/LayoutDepartamentoLegal";
+import LayoutDepartamentoLegal from "./pages/departamento-legal/LayoutDepartamentoLegal";
 import LayoutVerificador from "./components/layouts/LayoutVerificador";
 import { routes as verificadorRoutes } from "./pages/Verificador/verficador.routes";
 import { SuperAdminRoutes } from "./pages/Dashsboards/SuperAdmin/admin.routes";
@@ -82,11 +82,7 @@ export default function App() {
           
         </Route>
       </Route>
-      <Route path={dtoLegalRoutes.index} element={<LayoutDepartamentoLegal />}>
-        <Route element={<ProtectedRoute isAuthorized={verificarSesionYgrupoAdmitido(user, [1])} redirectPath={PROTECTED_ROUTES.dashboard} />}>
-          {DptoLegalRoutes()}
-        </Route>
-      </Route>
+      {DptoLegalRoutes({ user })}
       <Route path={verificadorRoutes.index} element={<LayoutVerificador />}>
         <Route element={<ProtectedRoute isAuthorized={verificarSesionYgrupoAdmitido(user, [2])} redirectPath={PROTECTED_ROUTES.dashboard} />}>
           {VerificadorRoutes()}
