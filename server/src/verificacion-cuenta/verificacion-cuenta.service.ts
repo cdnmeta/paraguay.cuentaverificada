@@ -412,7 +412,7 @@ export class VerificacionCuentaService {
           where: {
             id: dto.id_usuario,
             activo: true,
-            id_estado: 1, // solo si esta en estado 1 (creado)
+            id_estado: 5, // solo si esta en estado 5 (pendiente verificar codigo)
           },
         });
 
