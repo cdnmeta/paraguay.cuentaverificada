@@ -11,7 +11,7 @@ export default function BadgeEstadosSolicitudesCuentas({ estado }) {
             className = "bg-yellow-500"
             break;
         case 2:
-            estado = "Pendiente"
+            estado = "Pendiente Aprobación"
             className = "bg-blue-500"
             break;
         case 3:
@@ -21,6 +21,10 @@ export default function BadgeEstadosSolicitudesCuentas({ estado }) {
         case 4:
             estado = "Rechazado"
             className = "bg-red-500"
+            break;
+        case 5:
+            estado = "Código Verificado"
+            className = "bg-purple-500"
             break;
         default:
             estado = "Desconocido"

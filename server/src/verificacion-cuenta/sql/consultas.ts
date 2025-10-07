@@ -35,4 +35,4 @@ so.documento,
 (us.nombre || ' ' || us.apellido) as nombre_verificador
 from usuarios_solicitudes_cuenta so
 left join usuarios us on us.id = so.id_verificador
-where id_estado = any($1) and so.activo = true`
+where so.activo = true`

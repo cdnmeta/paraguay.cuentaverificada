@@ -28,20 +28,22 @@ export const crearSolicitudCuenta = async (data) => {
   return await api.post(`/solicitud-cuenta`, data);
 };
 
-export const getSolicitudesCuenta = async () => {
+export const getSolicitudesCuenta = async (params) => {
         const response = await api.get(`/listado-solicitudes-verificador`,{
             headers:{
                 "Authorization": `Bearer ${await getIdToken()}`
-            }
+            },
+            params
         });
         return response;
 }
 
-export const getSolicitudesCuentaAll = async () => {
+export const getSolicitudesCuentaAll = async (params) => {
     const response = await api.get(`/listado-solitudes`, {
         headers: {
             "Authorization": `Bearer ${await getIdToken()}`
         }
+        , params
     });
     return response;
 }
@@ -99,5 +101,15 @@ export const validarCodigoSolicitud = async (data) => {
 
 export const enviarCodigoVerificacion = async (data) => {
     const response = await api.post(`/enviar-codigo-verificacion`, data);
+    return response;
+};
+
+export const getResumenSolicitudesCuenta = async (query) => {
+    const response = await api.get(`/resumen-solicitudes-cuenta`, {
+        headers: {
+            "Authorization": `Bearer ${await getIdToken()}`
+        },
+        params: query
+    });
     return response;
 };

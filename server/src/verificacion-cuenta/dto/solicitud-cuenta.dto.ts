@@ -29,6 +29,7 @@ export class SolicitudCuentaPayloadDto  {
 
 
 export class SolicitudCuentaDto extends SolicitudCuentaPayloadDto {
+    id_estado?: number; // Opcional para que el cliente no lo envíe
     ip_origen?: string;
     dispositivo?: string;
 }

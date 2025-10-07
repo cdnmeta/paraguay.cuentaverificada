@@ -469,19 +469,25 @@ export default function FormEditarDatosSolicitud({
           }
         </div>
 
-        <div className="flex items-center gap-3">
-          <Checkbox
-            id="terms"
-            checked={datosVerificados}
-            onCheckedChange={(value) => setDatosVerificados(value)}
-          />
-          <Label htmlFor="terms">He verificado los datos</Label>
-        </div>
-        <div className="flex items-center justify-end gap-2 pt-2">
-          <Button disabled={disableBotonGuardar()} type="submit">
-            {form.formState.isSubmitting ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
+        {
+          solicitudData?.id_estado != 3 && (
+            <>
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="terms"
+                  checked={datosVerificados}
+                  onCheckedChange={(value) => setDatosVerificados(value)}
+                />
+                <Label htmlFor="terms">He verificado los datos</Label>
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <Button disabled={disableBotonGuardar()} type="submit">
+                  {form.formState.isSubmitting ? "Guardando..." : "Guardar"}
+                </Button>
+              </div>
+            </>
+          )
+        }
       </form>
     </Form>
   );

@@ -30,6 +30,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { RequireGroupIdsAll, RequireGroupIdsAny } from '@/auth/decorators/groups.decorator';
 import { plainToInstance } from 'class-transformer';
 import { SoliitudVerificacionCuentaResponseDto } from './dto/response-solicitud-cuenta.dto';
+import { QueryListadoSolicitudes, QueryResumenSolicitudes } from './types/query';
 
 @Controller('verificacion-cuenta')
 export class VerificacionCuentaController {
@@ -38,19 +39,27 @@ export class VerificacionCuentaController {
     private readonly prisma: PrismaService
   ) {}
 
+  @Get('resumen-solicitudes-cuenta')
+  resumenSolicitudesCuenta(@Query() query: QueryResumenSolicitudes) {
+    return this.verificacionCuentaService.resumenSolicitudesCuenta(query);
+  }
+
   @Get('listado-solicitudes-verificador')
   @RequireGroupIdsAll(2)
   listadoUsuariosVerificacionByVerificador(
     @Req() req: AuthenticatedRequest,
+    @Query() query: QueryListadoSolicitudes
   ) {
     const id_verificador = req.user.userId;
-    return this.verificacionCuentaService.listadoUsuariosSolicitudesByVerificador(id_verificador);
+    return this.verificacionCuentaService.listadoUsuariosSolicitudesByVerificador(id_verificador, query);
   }
 
   @Get('listado-solitudes')
   @RequireGroupIdsAll(1)
-  listadoUsuariosSolicitudes() {
-    return this.verificacionCuentaService.listadoUsuariosSolicitudes();
+  listadoUsuariosSolicitudes(
+    @Query() query: QueryListadoSolicitudes,
+  ) {
+    return this.verificacionCuentaService.listadoUsuariosSolicitudes(query);
   }
 
   @Get('generar-token-solicitud/:id')
@@ -76,6 +85,7 @@ export class VerificacionCuentaController {
         ...dto,
         ip_origen: req.ip,
         dispositivo: req.headers['user-agent'] || 'desconocido',
+        id_estado: 5, // estado 5 es "pendiente verificar solicitud"
       }
       const userSolicitud = await this.verificacionCuentaService.registrarSolicitudCuenta(dataGuardar);
       const userResponse = plainToInstance(SoliitudVerificacionCuentaResponseDto, userSolicitud, { excludeExtraneousValues: true });
