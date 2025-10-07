@@ -9,7 +9,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { compras_participantes, Prisma } from '@prisma/client';
 import { DatabaseService } from '@/database/database.service';
 import { OpcionesRepartirParticipantesDto } from './dto/repartir-participantes';
-import { redondearDecimales } from '@/utils/funciones';
+import { redondearDecimales, truncateNumber } from '@/utils/funciones';
 import { DatabasePromiseService } from '@/database/database-promise.service';
 import { consultaParticipacionByUsuario, consultaparticipantes } from './sql/consultas';
 interface Ganancia {
@@ -189,6 +189,8 @@ export class ParticipantesService {
     // Helper local para redondeo consistente a 2 decimales
     const toTwo = (n: number) => Number(n.toFixed(2));
 
+    const cant_numeros_truncar = 4;
+
     try {
       const { primera_venta = false } = options;
 
@@ -275,7 +277,7 @@ export class ParticipantesService {
             montoVendedor = (pct / 100) * monto_factura_sin_iva;
           }
 
-          montoVendedor = toTwo(montoVendedor);
+          montoVendedor = truncateNumber(montoVendedor,cant_numeros_truncar);
 
           // Agregar a la lista de ganancias a registrar
           ganancias.push({
@@ -335,7 +337,7 @@ export class ParticipantesService {
               );
               let gananciaParticipante = (montoRepartirse * porcentajeParticipante) / 100;
 
-              gananciaParticipante = toTwo(gananciaParticipante);
+              gananciaParticipante = truncateNumber(gananciaParticipante,cant_numeros_truncar);
 
               // Agregar a la lista de ganancias a registrar
               ganancias.push({
@@ -375,8 +377,8 @@ export class ParticipantesService {
         let montoEmpresa = 0;
 
         // Diferencia de los designado a la bolsa y lo repartido entre participantes
-        const diferenciaEntreAsigandoParticipantes = toTwo(
-          montoRepartirse - montoDistribuidoEntreParticipantes,
+        const diferenciaEntreAsigandoParticipantes = truncateNumber(
+          montoRepartirse - montoDistribuidoEntreParticipantes,cant_numeros_truncar
         );
 
         if (diferenciaEntreAsigandoParticipantes > 0) {
@@ -386,7 +388,7 @@ export class ParticipantesService {
         // monto que sobra de la factura despues de asignar a vendedor y participantes
         const montoSobranteReparticion = monto_factura_sin_iva  - montoVendedor - montoRepartirse; 
 
-        montoEmpresa += toTwo(montoSobranteReparticion);
+        montoEmpresa += truncateNumber(montoSobranteReparticion,cant_numeros_truncar);
 
 
         // Agregar a la lista de ganancias a registrar
@@ -415,28 +417,28 @@ export class ParticipantesService {
 
         console.log(
           'Total wallet master',
-          redondearDecimales(participaciones_actual),
+          participaciones_actual,
         );
 
         console.log('Precio Meta:', redondearDecimales(precio_meta, 6));
 
         console.log(
           'Total a repartido entre participantes:',
-          redondearDecimales(montoDistribuidoEntreParticipantes),
+          montoDistribuidoEntreParticipantes,
         );
         
         console.log(
           'Cantidad repartir entre participantes:',
-          redondearDecimales(montoParticipantes),
+          montoParticipantes,
         );
 
         console.log(
           'Total Ganancia empresa (Bolsa):',
-          redondearDecimales(montoEmpresa),
+          montoEmpresa,
         );
 
 
-        console.log("Total asignado a Vendedor",redondearDecimales(montoVendedor))
+        console.log("Total asignado a Vendedor",(montoVendedor))
 
 
 

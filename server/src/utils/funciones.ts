@@ -102,6 +102,10 @@ export const calcularFechaVencimiento = (data: IFechaVencimiento): Date | null =
 
 export const redondearDecimales = (n: number,decimales:number = 2) => Number(n.toFixed(decimales));
 
+export const truncateNumber = (num:number, places:number=2) => {
+  return Math.trunc(num * Math.pow(10, places)) / Math.pow(10, places);
+}
+
 export const generarCodigoNumericoAleatorio = (
   opts: { longitud?: number; desde?: number; hasta?: number } = {}
 ): string => {
@@ -112,4 +116,6 @@ export const generarCodigoNumericoAleatorio = (
   }
   return resultado;
 }
+
+
 
