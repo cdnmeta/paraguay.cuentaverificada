@@ -16,6 +16,7 @@ import {
   Put,
   UploadedFiles,
   Res,
+  NotFoundException,
 } from '@nestjs/common';
 import { ComerciosService } from './comercios.service';
 import {
@@ -34,7 +35,7 @@ import {
 } from '@nestjs/platform-express';
 import { IsPublic } from '@/auth/decorators/public.decorator';
 import { plainToInstance } from 'class-transformer';
-import { ResponseComercioDto } from './dto/response-comercio.dto';
+import { ResponseComercioDto, ResponseComercioInfoPublic } from './dto/response-comercio.dto';
 import {
   QueryForUsers,
   QueryManyComercios,
@@ -43,10 +44,11 @@ import { AuthenticatedRequest } from '@/auth/types/AuthenticatedRequest';
 import { validateImageOrThrow } from '@/pipes/ImageValiationPipe';
 import { FilesVerificacionComercio } from './types/archivos-comercios';
 import { Response } from 'express';
+import { FirebaseService } from '@/firebase/firebase.service';
 
 @Controller('comercios')
 export class ComerciosController {
-  constructor(private readonly comerciosService: ComerciosService) {}
+  constructor(private readonly comerciosService: ComerciosService, private readonly firebaseService: FirebaseService) {}
 
   
 
@@ -87,6 +89,33 @@ export class ComerciosController {
       excludeExtraneousValues: true,
     });
     console.log(comercioResponse);
+    return comercioResponse;
+  }
+
+  @IsPublic()
+  @Get('info/:slug')
+  async findInfoBySlug(@Param('slug') slug: string,@Req() req:AuthenticatedRequest) {
+    const authHeader = req.headers.authorization || '';
+    let id_usuario = null;
+    if(authHeader){
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        try {
+          const decodedToken = await this.firebaseService.verifyIdToken(token);
+          console.log(decodedToken)
+          id_usuario = decodedToken.userId;
+        } catch (error) {
+          // Token inválido, no hacemos nada y seguimos sin id_usuario
+        }
+      }
+    }
+    console.log("ip peticion",req.headers['x-forwarded-for']);
+    const comercio = await this.comerciosService.findInfoBySlug(slug,id_usuario);
+    console.log(comercio);
+    if(comercio.estado !== 4) throw new NotFoundException('Comercio no encontrado');
+    const comercioResponse = plainToInstance(ResponseComercioInfoPublic, comercio, {
+      excludeExtraneousValues: true,
+    });
     return comercioResponse;
   }
 

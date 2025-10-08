@@ -35,6 +35,7 @@ import SemaforoFinancieroPage from "./pages/SemaforoFinanciero/pages/SemaforoFin
 import SemaforoFinancieroRoutes from "./pages/SemaforoFinanciero";
 import { PlanesPage } from "./pages/Planes";
 import { PlanesRoutes } from "./pages/Planes/config/routes";
+import { ComercioRoutes } from "./pages/Comercio/comercio.routes";
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
@@ -93,6 +94,9 @@ export default function App() {
       {SuperAdminRoutes({ user })}
       {/*Participante*/}
       {ParticipantesRoutes({ user })}
+
+      {/*Comercio*/}
+      {ComercioRoutes()}
     </Routes>
   );
 }

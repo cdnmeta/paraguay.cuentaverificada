@@ -27,7 +27,6 @@ export const logout = async () => {
 };
 
 export const checkAuthOnStart = async () => {
-  console.log("checkAuthOnStart invoked");
   return new Promise((resolve) => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       
@@ -182,3 +181,34 @@ export const executeWithErrorHandler = async (peticionFunc, opciones = {}) => {
     };
   }
 };
+
+/**
+ * Rellena un número con un carácter específico hasta alcanzar una cantidad máxima de dígitos
+ * @param {number} cantidadDigitosMax - Cantidad máxima de dígitos que debe tener el string resultante
+ * @param {number|string} numero - Número a rellenar
+ * @param {string} relleno - Carácter usado para el relleno (por defecto "0")
+ * @returns {string} - String con el número rellenado
+ * 
+ * @example
+ * rellenarNumero(5, 2, "0") // "00002"
+ * rellenarNumero(3, 42) // "042"
+ * rellenarNumero(4, 7, "#") // "###7"
+ */
+export  const rellenarNumero = (cantidadDigitosMax, numero,relleno = "0") => {
+  // Convertir el número a string
+  const numeroStr = String(numero);
+  
+  // Si el número ya tiene la cantidad de dígitos requerida o más, devolverlo tal como está
+  if (numeroStr.length >= cantidadDigitosMax) {
+    return numeroStr;
+  }
+  
+  // Calcular cuántos caracteres de relleno necesitamos
+  const cantidadRelleno = cantidadDigitosMax - numeroStr.length;
+  
+  // Crear el relleno y concatenar con el número
+  return relleno.repeat(cantidadRelleno) + numeroStr;
+};
+
+
+

@@ -7,7 +7,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Checkbox } from "../ui/checkbox";
 import { useGruposEmpresaStore } from "@/store/useGrupoEmpresaStore";
@@ -15,83 +14,112 @@ import { useGruposEmpresa } from "@/hooks/useGrupoEmpresa";
 import { useNavigate } from "react-router-dom";
 import { getUrlDashboardGrupos } from "@/utils/routes.routes";
 import { useDialogCleanup } from "@/hooks/useBodyPointerEvents";
-const AlertCambioDeRolEmpresa = ({user}) => {
-    useGruposEmpresa(user?.id); // carga automática al montar
-    const navigate = useNavigate();
-    const { cleanupPointerEvents } = useDialogCleanup();
+import { useCallback, useMemo } from "react";
 
-  const gruposEmpresa = useGruposEmpresaStore((state) => state.gruposEmpresa);
-  const grupoSeleccionado = useGruposEmpresaStore(
-    (state) => state.grupoSeleccionado
+const AlertCambioDeRolEmpresa = ({ user }) => {
+  useGruposEmpresa(user?.id); // carga automática al montar
+  const navigate = useNavigate();
+  const { cleanupPointerEvents } = useDialogCleanup();
+
+  const {
+    gruposEmpresa,
+    grupoSeleccionado,
+    openDialogGruposEmpresa,
+    isLoading,
+    error,
+    setGrupoSeleccionado,
+    setOpenDialogGruposEmpresa
+  } = useGruposEmpresaStore();
+
+  const grupoActual = useMemo(() => 
+    gruposEmpresa.find(grupo => String(grupo.id) === String(grupoSeleccionado)), 
+    [grupoSeleccionado, gruposEmpresa]
   );
-  const setGrupoSeleccionado = useGruposEmpresaStore(
-    (state) => state.setGrupoSeleccionado
-  );
-  const openDialogGruposEmpresa = useGruposEmpresaStore(
-    (state) => state.openDialogGruposEmpresa
-  );
-  const setOpenDialogGruposEmpresa = useGruposEmpresaStore(
-    (state) => state.setOpenDialogGruposEmpresa
-  );
-  const getGrupoSeleccionado = useGruposEmpresaStore(
-    (state) => state.getGrupoSeleccionado
-  );
-  const handleCambioGrupo = async (id) => {
-    console.log("cambio de rol", id);
-    setGrupoSeleccionado(id);
-    //closeRef.current.click(); // Cierra el diálogo
-    setOpenDialogGruposEmpresa(false);
+
+  const handleCambioGrupo = useCallback(async (id) => {
+    console.log("Cambio de rol solicitado:", id);
     
-    // Limpiar pointer-events del body después de cerrar el diálogo
+    const success = setGrupoSeleccionado(id);
+    if (!success) {
+      console.error("No se pudo seleccionar el grupo:", id);
+      return;
+    }
+
+    setOpenDialogGruposEmpresa(false);
     cleanupPointerEvents();
     
-    // Aquí puedes navegar al grupo seleccionado
-    navigate(getUrlDashboardGrupos(id));
-  };
+    // Navegar al dashboard del grupo seleccionado
+    try {
+      navigate(getUrlDashboardGrupos(id));
+    } catch (error) {
+      console.error("Error al navegar:", error);
+    }
+  }, [setGrupoSeleccionado, setOpenDialogGruposEmpresa, cleanupPointerEvents, navigate]);
 
-  const ItemGrupo = (grupo) => {
+  const ItemGrupo = useCallback(({ id, descripcion }) => {
+    const isSelected = String(grupoSeleccionado) === String(id);
+    
     return (
       <li
-        key={grupo.id}
-        className={`flex items-center gap-3 p-2 rounded-md border cursor-pointer ${
-          grupoSeleccionado === grupo.id
+        key={id}
+        className={`flex items-center gap-3 p-2 rounded-md border cursor-pointer transition-colors ${
+          isSelected
             ? "bg-muted border-primary"
             : "hover:bg-accent"
         }`}
-        onClick={() => handleCambioGrupo(grupo.id)}
+        onClick={() => handleCambioGrupo(id)}
       >
-        <Checkbox checked={grupoSeleccionado == grupo.id} />
-        <span>{grupo.descripcion}</span>
+        <Checkbox checked={isSelected} readOnly />
+        <span>{descripcion}</span>
       </li>
     );
-  };
-  const handleOpenChange = (open) => {
+  }, [grupoSeleccionado, handleCambioGrupo]);
+
+  const handleOpenChange = useCallback((open) => {
     setOpenDialogGruposEmpresa(open);
     
     // Si se está cerrando el diálogo, limpiar pointer-events
     if (!open) {
       cleanupPointerEvents();
     }
-  };
+  }, [setOpenDialogGruposEmpresa, cleanupPointerEvents]);
+
+  // No mostrar el diálogo si no hay grupos disponibles
+  if (!gruposEmpresa.length && !isLoading) {
+    return null;
+  }
 
   return (
     <Dialog open={openDialogGruposEmpresa} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Cambiar Rol de Empresa ({getGrupoSeleccionado()?.descripcion})
+            Cambiar Rol de Empresa {grupoActual ? `(${grupoActual.descripcion})` : ''}
           </DialogTitle>
           <DialogDescription>
-            <ul className="space-y-2 mt-4">
-              {gruposEmpresa.map((grupo) => (
-                <ItemGrupo key={grupo.id} {...grupo} />
-              ))}
-            </ul>
+            {error && (
+              <div className="text-red-500 text-sm mb-2">
+                Error: {error}
+              </div>
+            )}
+            {isLoading ? (
+              <div className="text-center py-4">
+                <span>Cargando grupos...</span>
+              </div>
+            ) : (
+              <ul className="space-y-2 mt-4">
+                {gruposEmpresa.map((grupo) => (
+                  <ItemGrupo key={grupo.id} {...grupo} />
+                ))}
+              </ul>
+            )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cerrar</Button>
+            <Button variant="outline" disabled={isLoading}>
+              Cerrar
+            </Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

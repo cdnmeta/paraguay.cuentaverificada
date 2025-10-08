@@ -49,6 +49,31 @@ export class ComerciosService {
   ) {}
 
 
+  async findInfoBySlug(slug: string,id_usuario?:number | null) {
+    try {
+      const comercio = await this.prismaService.comercio.findFirst({
+        where: { slug, activo: true },
+      });
+
+      if (id_usuario) {
+        const favorito = await this.prismaService.usuarios_comercios_fav.findFirst({
+          where: {
+            id_usuario,
+            id_comercio: comercio?.id,
+          },
+        });
+        (comercio as any).es_favorito = !!favorito;
+      }
+
+
+      if (!comercio) throw new NotFoundException('Comercio no encontrado');
+      return comercio;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+
 
   async updateComercio(
     id: number,

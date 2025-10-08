@@ -60,3 +60,11 @@ export const opcionesFiltroComercios = async () => {
     },
   });
 }
+
+export const getComercioInfoBySlug = async (slug) => {
+  return api.get(`/info/${slug}`,{
+    headers: {
+      Authorization: `Bearer ${await getIdToken()}`, // Autenticación
+    },
+  });
+}

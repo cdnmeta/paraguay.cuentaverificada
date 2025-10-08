@@ -46,10 +46,12 @@ import {
   CrearDireccionUsuarioDTO,
   CrearDireccionUsuarioPayloadDTO,
 } from './dto/direciones-usuario.dto';
+import { FavoritosService } from './favoritos/favoritos.service';
+import { UsuarioAgregarFavoritoDto } from './dto/favorito.dto';
 
 @Controller('usuarios')
 export class UsuariosController {
-  constructor(private readonly usuariosService: UsuariosService) {}
+  constructor(private readonly usuariosService: UsuariosService, private readonly favoritosService: FavoritosService) {}
 
   // NOTA: Las rutas específicas van ANTES que las dinámicas
 
@@ -415,4 +417,35 @@ export class UsuariosController {
         throw error;
       }
     }
+
+  @Post('mis-comercios-favoritos')
+    async agregarFavorito(
+      @Req() req: AuthenticatedRequest,
+      @Body() body: UsuarioAgregarFavoritoDto,
+      @Res() res: Response,
+    ) {
+      try {
+          const usuarioId = req.user.userId;
+          await this.favoritosService.agregarFavorito(usuarioId, body.id_comercio);
+          return res.status(200).json({ message: 'Comercio agregado a favoritos.' });
+      } catch (error) {
+          throw error;
+      }
+    }
+  
+    @Delete('mis-comercios-favoritos/:id')
+      async eliminarFavorito(
+          @Req() req: AuthenticatedRequest,
+          @Param('id', ParseIntPipe) comercioId: number,
+          @Res() res: Response,
+      ) {
+          try {
+              const usuarioId = req.user.userId;
+              await this.favoritosService.eliminarFavorito(usuarioId, comercioId);
+              return res.status(200).json({ message: 'Comercio eliminado de favoritos.' });
+          } catch (error) {
+              throw error;
+          }
+      }
+    
 }

@@ -169,3 +169,22 @@ export const eliminarDireccion = async (id) => {
     },
   });
 }
+
+
+// ===== ENDPOINTS PARA FAVORITOS DE USUARIOS =====
+
+export const agregarFavoritos = async (data) => {
+  return await api.post("/mis-comercios-favoritos", data, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}
+
+export const eliminarFavoritos = async (id) => {
+  return await api.delete(`/mis-comercios-favoritos/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}

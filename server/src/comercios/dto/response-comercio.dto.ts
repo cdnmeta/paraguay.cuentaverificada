@@ -39,3 +39,39 @@ export class ResponseComercioDto {
   @Expose()
   direccion: string;
 }
+
+export class ResponseComercioInfoPublic{
+  @Expose()
+  id: string;
+  
+  @Expose()
+  razon_social: string;
+
+  @Expose()
+  codigo_pais: string;
+
+  @Expose()
+  ruc: string;
+
+  @Expose()
+  telefono: string;
+
+  @Expose()
+  dial_code: string;
+
+  @Expose()
+  codigo_nuv: string;
+
+  @Expose()
+  urlmaps: string;
+
+  @Expose()
+  correo_empresa: string;
+
+  @Expose()
+  direccion: string;
+
+  @Expose()
+  es_favorito: boolean;
+
+}

@@ -47,7 +47,8 @@ const schema = z.object({
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
 });
 
-const Login = () => {
+
+export const FormLogin = ({redirect=true, afterSubmit = ()=>{}}) => {
   const [mensaje, setMensaje] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -89,7 +90,8 @@ const Login = () => {
       await useAuthStore.getState().fetchUser();
 
       toast.success("Bienvenido a Cuenta Verificada.");
-      navigate(PUBLIC_ROUTES.panel);
+      if(redirect) navigate(PUBLIC_ROUTES.panel);
+      afterSubmit?.();
     } catch (err) {
       console.error("Error al iniciar sesión:", err);
       if ([400].includes(err?.response?.status)) {
@@ -105,24 +107,8 @@ const Login = () => {
       setIsSubmitting(false);
     }
   };
-
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-white relative p-4">
-      <div className="z-10 mb-4">
-        <SuperHeroeAnimado />
-      </div>
-
-      <Card className="w-full max-w-md">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-2xl text-center">Iniciar Sesión</CardTitle>
-          <CardDescription className="text-center">
-            Accedé con tu documento y contraseña
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <Form {...form}>
+     <Form {...form}>
             <form
               onSubmit={form.handleSubmit(iniciarSesion)}
               className="space-y-4"
@@ -205,6 +191,29 @@ const Login = () => {
               </div>
             </form>
           </Form>
+  )
+}
+
+const Login = () => {
+  
+
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center text-white relative p-4">
+      <div className="z-10 mb-4">
+        <SuperHeroeAnimado />
+      </div>
+
+      <Card className="w-full max-w-md">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-2xl text-center">Iniciar Sesión</CardTitle>
+          <CardDescription className="text-center">
+            Accedé con tu documento y contraseña
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+         <FormLogin />
         </CardContent>
       </Card>
     </div>

@@ -11,6 +11,8 @@ if(PRODUCCION){
   url_backend_api = "https://py.cuentaverificada.com/api";
 }
 
+export const NOMBRE_APP = "Cuenta Verificada";
+
 export const TIPO_IMAGENES_PERMITIDAS = ['image/jpeg', 'image/png', 'image/jpg'];
 const MB = 1024 * 1024;
 const NUMERO_MB = 5;

@@ -119,7 +119,7 @@ export default function Navbar() {
       {/* Logo */}
       <div className="flex items-center space-x-2">
         <Link to={PROTECTED_ROUTES.dashboard} className="flex items-center space-x-2">
-          <LogoCuentaVerificada className="h-8 w-auto" />
+          <LogoCuentaVerificada />
         </Link>
       </div>
     </div>
