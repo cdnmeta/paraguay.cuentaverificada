@@ -23,9 +23,9 @@ import MisDatosPage from "./pages/MisDatos/MisDatosPage";
 import LoginToken from "./pages/Login/LoginToken";
 import InicializarContrasenaPin from "./pages/recovery/InicializarContrasenaPin";
 
-import VerificadorRoutes from "./pages/Verificador/verficador.routes";
+import VerificadorRoutes from "./pages/Dashsboards/Verificador/verficador.routes";
 import LayoutDepartamentoLegal from "./pages/departamento-legal/LayoutDepartamentoLegal";
-import LayoutVerificador from "./components/layouts/LayoutVerificador";
+import LayoutVerificador from "./pages/Dashsboards/Verificador/LayoutVerificador";
 import { routes as verificadorRoutes } from "./pages/Verificador/verficador.routes";
 import { SuperAdminRoutes } from "./pages/Dashsboards/SuperAdmin/admin.routes";
 import { ParticipantesRoutes } from "./pages/Dashsboards/Participante/participantes.routes";
@@ -84,13 +84,11 @@ export default function App() {
         </Route>
       </Route>
       {DptoLegalRoutes({ user })}
-      <Route path={verificadorRoutes.index} element={<LayoutVerificador />}>
-        <Route element={<ProtectedRoute isAuthorized={verificarSesionYgrupoAdmitido(user, [2])} redirectPath={PROTECTED_ROUTES.dashboard} />}>
-          {VerificadorRoutes()}
-        </Route>
-      </Route>
-      {/*Admin*/}
 
+      {/*Verificador*/}
+      {VerificadorRoutes()}
+      
+      {/*Admin*/}
       {SuperAdminRoutes({ user })}
       {/*Participante*/}
       {ParticipantesRoutes({ user })}

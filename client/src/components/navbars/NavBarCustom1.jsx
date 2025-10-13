@@ -13,7 +13,7 @@ export default function NavBarCustom1({urlPanel='/panel'}) {
       {/* Logo */}
       <div className="flex items-center space-x-2">
         <Link to={urlPanel} className="flex items-center space-x-2">
-          <LogoCuentaVerificada className="h-8 w-auto" />
+          <LogoCuentaVerificada />
         </Link>
       </div>
 

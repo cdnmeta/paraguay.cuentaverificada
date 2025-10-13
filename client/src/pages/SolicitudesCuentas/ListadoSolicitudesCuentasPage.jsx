@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import React, { useEffect } from "react";
 import ListadoSolicitudes from "./ListadoSolicitudes";
-import { getResumenSolicitudesCuenta, getSolicitudesCuenta, getSolicitudesCuentaAll } from "@/apis/verificacionCuenta.api";
+import { getResumenSolicitudesCuenta, getResumenSolicitudesCuentaVerificador, getSolicitudesCuenta, getSolicitudesCuentaAll } from "@/apis/verificacionCuenta.api";
 import { toast } from "sonner";
 import { EVENTS, on } from "@/utils/events";
 import { useAuthStore } from "@/hooks/useAuthStorge";
@@ -34,7 +34,7 @@ export default function ListadoSolicitudesCuentasPage({
           break;
         default:
           response = await getSolicitudesCuenta();
-          responseResumen = await getResumenSolicitudesCuenta({id_verificador:user.id});
+          responseResumen = await getResumenSolicitudesCuentaVerificador();
           setSolicitudes(response.data);
           setResumenSolicitudes(responseResumen.data);
           break;
@@ -83,11 +83,11 @@ export default function ListadoSolicitudesCuentasPage({
   }, [loadSolicitudes]); // Ahora sí incluimos la dependencia
 
   // Componente para mostrar tarjetas de resumen
-  const ResumenCard = ({ icon: Icon, titulo, valor, color = "text-gray-600", id_estado = 1 }) => (
-    <Card className={`h-full ${id_estado === estadoSeleccionado ? "ring-2 ring-blue-500" : ""}`} onClick={() => {
-      setEstadoSeleccionado(id_estado === estadoSeleccionado ? null : id_estado);
+  const ResumenCard = ({ icon: Icon, titulo, valor, color = "text-gray-600", idRef, query={} }) => (
+    <Card className={`h-full ${idRef === estadoSeleccionado ? "ring-2 ring-blue-500" : ""}`} onClick={() => {
+      setEstadoSeleccionado(idRef === estadoSeleccionado ? null : idRef);
       setTimeout(() => {
-        loadSolicitudesCuentaFiltradas({id_estado: id_estado === estadoSeleccionado ? null : id_estado});
+        loadSolicitudesCuentaFiltradas(idRef === estadoSeleccionado ? {} : query);
       }, 100);
     }}>
       <CardContent className="p-4 sm:p-6">
@@ -130,36 +130,27 @@ export default function ListadoSolicitudesCuentasPage({
                     titulo="Pendientes Verificación"
                     valor={resumenSolicitudes.cant_pend_verificacion}
                     color="text-yellow-600"
-                    id_estado={1}
-                  />
-                  <ResumenCard
-                    icon={AlertCircle}
-                    titulo="Pendientes Aprobación"
-                    valor={resumenSolicitudes.cant_pend_aprobacion}
-                    color="text-orange-600"
-                    id_estado={2}
+                    idRef={3}
+                    query={{id_estado:3}}
                   />
                   <ResumenCard
                     icon={CheckCircle}
-                    titulo="Aprobadas"
-                    valor={resumenSolicitudes.cant_aprobado}
+                    titulo="Cantidad Activos"
+                    valor={resumenSolicitudes.cant_activos}
+                    color="text-orange-600"
+                    idRef={2}
+                    query={{id_estado:2}}
+                  />
+                  <ResumenCard
+                    icon={CheckCircle}
+                    titulo="Verificados"
+                    valor={resumenSolicitudes.cant_verificados}
                     color="text-green-600"
-                    id_estado={3}
+                    idRef={1}
+                    query={{verificado:true}}
+                  
                   />
-                  <ResumenCard
-                    icon={XCircle}
-                    titulo="Rechazadas"
-                    valor={resumenSolicitudes.cant_rechazados}
-                    color="text-red-600"
-                    id_estado={4}
-                  />
-                  <ResumenCard
-                    icon={UserCheck}
-                    titulo="Pendiente Verificar Código"
-                    valor={resumenSolicitudes.cant_pend_verificar_codigo}
-                    color="text-blue-600"
-                    id_estado={5}
-                  />
+                  
                 </div>
               </div>
             )}

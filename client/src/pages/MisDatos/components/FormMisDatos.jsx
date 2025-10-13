@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,6 +50,18 @@ export default function FormMisDatos({ user, onSuccess }) {
     },
     mode: "onChange",
   });
+
+  useEffect(() => {
+    console.log("Mis datos:", user);
+    if (user) {
+      form.reset({
+        direccion: user.direccion || "",
+        email: user.email || "",
+        dial_code: user.dial_code || defaultDialCode,
+        telefono: user.telefono || "",
+      });
+    }
+  }, [user]);
 
   async function onSubmit(values) {
     setSubmitting(true);
@@ -136,7 +148,7 @@ export default function FormMisDatos({ user, onSuccess }) {
                       <FormControl>
                         <ComboBox
                           items={paisesCode.map(pais => ({
-                            value: `+${pais.countryCode}`,
+                            value: `${pais.countryCode}`,
                             label: `${pais.country} (+${pais.countryCode})`,
                             country: pais.country
                           }))}

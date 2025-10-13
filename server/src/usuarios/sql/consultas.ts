@@ -1,20 +1,39 @@
-export const userInfoSql =  `with grupos_usuarios as (
-
-select g.id, g.descripcion,usg.id_usuario from grupos g
-left join usuarios_grupos usg on usg.id_grupo = g.id
-
-)
-
-select us.id, us.nombre, us.apellido , is_super_admin,
-coalesce(
-    jsonb_agg(
-      jsonb_build_object('id', gus.id,'descripcion', gus.descripcion)
-      ORDER BY gus.id
-    ) FILTER (WHERE gus.id IS NOT NULL),
-    '[]'::jsonb
-  ) AS grupos 
-from usuarios us
-left join grupos_usuarios gus on gus.id_usuario = us.id
-where us.activo = true and us.id  = $1
-group by us.id, us.nombre, us.apellido , is_super_admin
+export const userInfoSql =  `WITH
+	GRUPOS_USUARIOS AS (
+		SELECT
+			G.ID,
+			G.DESCRIPCION,
+			USG.ID_USUARIO
+		FROM
+			GRUPOS G
+			LEFT JOIN USUARIOS_GRUPOS USG ON USG.ID_GRUPO = G.ID
+	)
+SELECT
+	US.ID,
+	US.NOMBRE,
+	US.APELLIDO,
+	IS_SUPER_ADMIN AS ISA,
+	VERIFICADO AS VFD,
+	COALESCE(
+		JSONB_AGG(
+			JSONB_BUILD_OBJECT('id', GUS.ID, 'descripcion', GUS.DESCRIPCION)
+			ORDER BY
+				GUS.ID
+		) FILTER (
+			WHERE
+				GUS.ID IS NOT NULL
+		),
+		'[]'::JSONB
+	) AS GRUPOS
+FROM
+	USUARIOS US
+	LEFT JOIN GRUPOS_USUARIOS GUS ON GUS.ID_USUARIO = US.ID
+WHERE
+	US.ACTIVO = TRUE
+	AND US.ID = $1
+GROUP BY
+	US.ID,
+	US.NOMBRE,
+	US.APELLIDO,
+	IS_SUPER_ADMIN
 `

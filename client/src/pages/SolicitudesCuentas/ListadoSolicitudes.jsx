@@ -38,6 +38,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { se } from "date-fns/locale";
 import { generarUrlInicializacionDeCredenciales } from "@/utils/auth";
+import { Badge } from "@/components/ui/badge";
+import { useAuthStore } from "@/hooks/useAuthStorge";
 export function DialogSolicitudes({ open, setOpen, contenido = {} }) {
   const className = contenido?.className || "sm:max-w-[425px] !z-[2000]";
   const classNameContenido = contenido?.classNameContenido || "p-6";
@@ -70,11 +72,11 @@ export default function ListadoSolicitudes({
   const [contenido, setContenido] = React.useState({});
   const [generating, setGenerating] = React.useState(false);
   const [tokenGenerado, setTokenGenerado] = React.useState(null);
+  const user = useAuthStore((state) => state.user);
 
   const {
     aprobarSolicitudes = false,
     rechazarSolicitudes = false,
-    generarTokenUsuario = false,
   } = opcionesLista;
   const { ver_columna_verificador = false } = columnasHabilitadas;
   const columnas = [
@@ -95,14 +97,21 @@ export default function ListadoSolicitudes({
       header: "Teléfono",
     },
     {
-      accessorKey: "correo",
+      accessorKey: "email",
       header: "Correo",
     },
     {
       header: "Estado",
       cell: ({ row }) => {
-        const estado = row.original.id_estado;
+        const estado = row.original.estado;
         return <BadgeEstadosSolicitudesCuentas estado={estado} />;
+      },
+    },
+    {
+      header: "Verificado",
+      cell: ({ row }) => {
+        const verificado = row.original.verificado;
+        return <Badge className={verificado ? "bg-green-500" : "bg-red-500"}>{verificado ? "Verificado" : "No Verificado"}</Badge>;
       },
     },
   ];
@@ -221,8 +230,8 @@ export default function ListadoSolicitudes({
       const estadosVerSolicitud = [1, 2, 3, 4, 5]; // Estados
 
       const isVerEditable = estadosVerSolicitud.includes(solicitud.id_estado);
-      const isAprobable = solicitud.id_estado === 2;
-      const isTokenGenerable = solicitud.id_estado === 3;
+      const isAprobable =  user.isa || solicitud.estado === 3;
+      const isRechazable = user.isa || solicitud.estado === 2;
       return (
         <div className="flex gap-1">
 
@@ -258,7 +267,7 @@ export default function ListadoSolicitudes({
             </Tooltip>
           )}
 
-          {rechazarSolicitudes && (
+          {rechazarSolicitudes && isRechazable && (
             <Tooltip>
               <TooltipTrigger>
                 <Button
@@ -271,22 +280,6 @@ export default function ListadoSolicitudes({
               </TooltipTrigger>
               <TooltipContent>
                 <p>Rechazar Solicitudes</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-          {generarTokenUsuario && isTokenGenerable && (
-            <Tooltip>
-              <TooltipTrigger>
-                <Button
-                  size={"sm"}
-                  variant={"outline"}
-                  onClick={() => handleGenerarToken(row.original)}
-                >
-                  <Key />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Generar Token</p>
               </TooltipContent>
             </Tooltip>
           )}
@@ -308,7 +301,7 @@ export default function ListadoSolicitudes({
     const handleAprobarSolicitud = async () => {
       try {
         await aprobarCuenta({ id_usuario_aprobacion: solicitud.id });
-        toast.success("Solicitud aprobada");
+        toast.success("Esta cuenta ha sido aprobada", { richColors: true });
         emit(EVENTS.SOLICITUDES_CUENTA_ACTUALIZADA, {
           when: Date.now(),
         });

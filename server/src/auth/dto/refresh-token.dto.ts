@@ -15,3 +15,9 @@ export class RefreshTokenResponseDto {
     readonly cedula: string;
     readonly usuario?: any; // Información adicional del usuario si necesitas
 }
+
+export class RefreshCodigoVerificacion {
+    @IsString()
+    @IsNotEmpty({ message: 'La cédula es obligatoria' })
+    readonly cedula: string;
+}

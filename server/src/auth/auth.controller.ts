@@ -12,11 +12,12 @@ import {
   Req,
   Res,
   UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { IsPublic } from './decorators/public.decorator';
-import { RegisterUsuariosDto } from 'src/usuarios/dto/register-usuarios';
+import { RegisterUsuariosDto, RegisterUsuariosPayloadDto } from 'src/usuarios/dto/register-usuarios';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Request, Response } from 'express';
@@ -28,15 +29,18 @@ import {
   plainToInstance,
 } from 'class-transformer';
 import { UsuarioRegisterResponseDto } from './dto/usuarioResponse.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { cert } from 'firebase-admin/app';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CambiarContrasenaDto, InicializarPasswordPinByToken, InicializarPasswordPinPayloadByToken, RecoveryPinDto, SolicitudRecoveryPinDto, SolicitudRecoveryPinPayloadDto, ValidacionTokenDto } from './dto/password-recovery.dto';
-import { RefreshTokenDto, RefreshTokenResponseDto } from './dto/refresh-token.dto';
+import { RefreshCodigoVerificacion, RefreshTokenDto, RefreshTokenResponseDto } from './dto/refresh-token.dto';
 import { IsOnlyAdmin } from './decorators/onlyAdmin.decorator';
 import { RequireUserPinGuard } from './guards/requireUserPin.guard';
 import { AuthenticatedRequest } from './types/AuthenticatedRequest';
 import { URL_ORIGINS } from '@/utils/constants';
+import { errors } from 'pg-promise';
+import { validateImageOrThrow } from '@/pipes/ImageValiationPipe';
+import { UsuariosArchivos } from '@/usuarios/types/archivos-solicitud';
 
 @Controller('auth')
 export class AuthController {
@@ -48,28 +52,59 @@ export class AuthController {
   ) {}
 
   @IsPublic()
-  @UseInterceptors(FileInterceptor('cedulaFrente'))
+  @UseInterceptors(FileFieldsInterceptor([
+        { name: 'cedula_frontal', maxCount: 1 },
+        { name: 'cedula_reverso', maxCount: 1 },
+        { name: 'selfie', maxCount: 1 },
+        
+      ],))
   @Post('register')
   async register(
-    @Body() registerDto: RegisterUsuariosDto,
+    @Req() req: Request,
+    @Body() registerDto: RegisterUsuariosPayloadDto,
     @Res() res: Response,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 2 * 1024 * 1024, message: 'El archivo es demasiado grande. Máximo 2MB.' }), // 2MB
-          new FileTypeValidator({ fileType: 'image/(jpeg|png|jpg)',}), // acepta JPG, PNG, JPG
-        ],
-        fileIsRequired: true, // opcional, true por defecto
-      }),
-    )
-    cedulaFrente: Express.Multer.File,
+    @UploadedFiles(
+    ) files: { cedula_frontal: Express.Multer.File[], cedula_reverso: Express.Multer.File[], selfie: Express.Multer.File[] },
   ) {
 
-    const files = {
-      cedulaFrente: cedulaFrente,
+    validateImageOrThrow(files.cedula_frontal?.[0], {
+      required: true,
+      requiredErrorMessage: 'La imagen de la cédula frontal es obligatoria',
+      maxSizeMB: 5,
+      fileType: 'image/jpeg|image/png|image/jpg',
+    });
+    validateImageOrThrow(files.cedula_reverso?.[0],{
+      required: true,
+      requiredErrorMessage: 'La imagen de la cédula frontal es obligatoria',
+      maxSizeMB: 5,
+      fileType: 'image/jpeg|image/png|image/jpg',
+    });
+    validateImageOrThrow(files.selfie?.[0], {
+      required: true,
+      requiredErrorMessage: 'La imagen del selfie es obligatoria',
+      maxSizeMB: 5,
+      fileType: 'image/jpeg|image/png|image/jpg',
+    });
+
+
+    const archivosRegistrar:UsuariosArchivos ={
+      cedulaFrente: files.cedula_frontal[0],
+      cedulaReverso: files.cedula_reverso[0],
+      selfie: files.selfie[0],
     }
 
-    const user = await this.authService.register(registerDto, files);
+
+    const ip_origen = req.ip;
+    const dispositivo_origen = req.headers['user-agent'] || 'desconocido';
+
+    const dataEnviar: RegisterUsuariosDto = {
+      ...registerDto,
+      ip_origen,
+      dispositivo_origen,
+    }
+   
+
+    const user = await this.authService.register(dataEnviar, archivosRegistrar);
     // serializar la respuesta
     const userResponse = plainToInstance(UsuarioRegisterResponseDto, user, {
       excludeExtraneousValues: true,
@@ -77,7 +112,7 @@ export class AuthController {
 
     return res.status(200).json({
       message: 'Usuario registrado exitosamente',
-      //user: userResponse,
+      user: userResponse,
     });
   }
 
@@ -131,6 +166,21 @@ export class AuthController {
       });
     } catch (error) {
      throw error
+    }
+  }
+
+  @IsPublic()
+  @Post('refresh-codigo-verificacion')
+  async refreshCodigoVerificacion(@Body() body: RefreshCodigoVerificacion, @Res() res: Response) {
+    try {
+      const result = await this.authService.refreshCodigoVerificacion(body);
+      return res.status(200).json({
+        message: 'Código de verificación refrescado correctamente',
+        token: result.token,
+        cedula: result.cedula
+      });
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -231,6 +281,17 @@ export class AuthController {
     try {
       await this.authService.resetContrasenaWithCedula(body);
       return res.status(200).json({ message: 'Contraseña restablecida exitosamente' });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @IsPublic()
+  @Post('confirmar-usuario')
+  async confirmarUsuario(@Body() body: ValidacionTokenDto, @Res() res: Response) {
+    try {
+      await this.authService.confirmarUsuarioVerificacionWithCedula(body);
+      return res.status(200).json({ message: 'Usuario verificado exitosamente' });
     } catch (error) {
       throw error;
     }

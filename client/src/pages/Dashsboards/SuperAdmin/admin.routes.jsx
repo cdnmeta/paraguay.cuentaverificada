@@ -18,7 +18,7 @@ import { FacturasPlanesRoutes } from "@/pages/FacturaPlanes/facturasPlanes.route
 const DashBoardSuperAdmin = lazy(() => import("./DashBoardSuperAdmin"));
 
 export function SuperAdminRoutes({ user }) {
-  const isAuthorized = (u) => u?.is_super_admin === true;
+  const isAuthorized = (u) => u?.isa === true;
 
   const opcionesPageListaSolicitudes = {
     opcionesHabilitar: {

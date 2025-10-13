@@ -81,4 +81,10 @@ export class MisDatosResponseDto {
   @Expose()
   direccion: string;
 
+  @Expose()
+  estado: string;
+
+  @Expose({name: "verificado"})
+  vfd: boolean;
+
 }

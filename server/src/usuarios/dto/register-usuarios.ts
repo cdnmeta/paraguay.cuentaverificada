@@ -13,8 +13,9 @@ import {
   Max,
 } from 'class-validator';
 
-export class RegisterUsuariosDto {
-  @IsString({ message: 'Nombre debe ser una cadena' })
+
+export class RegisterUsuariosPayloadDto {
+@IsString({ message: 'Nombre debe ser una cadena' })
   @IsNotEmpty({ message: 'El nombre es obligatorio' })
   nombre: string;
 
@@ -34,21 +35,18 @@ export class RegisterUsuariosDto {
   @IsNotEmpty({ message: 'El correo es obligatorio' })
   correo: string;
 
-  @IsString({ message: 'Sexo debe ser una cadena' })
-  @IsEnum(['1', '2'], { message: 'Opcion de sexo admitida' })
-  @IsOptional()
-  sexo?: string | null;
+  @IsString({ message: 'Dial code debe ser una cadena' })
+  @IsNotEmpty({ message: 'El dial code es obligatorio' })
+  dial_code: string;
 
-  @IsDateString(
-    {},
-    { message: 'Fecha de nacimiento debe ser una fecha válida' },
-  )
-  @IsOptional()
-  fechaNacimiento?: Date | null;
+  @IsString({ message: 'Telefono debe ser una cadena' })
+  @IsNotEmpty({ message: 'El telefono es obligatorio' })
+  telefono: string;
+}
 
-  @IsString({ message: 'Metodo de registro debe ser una cadena' })
-  @IsOptional()
-  metodoRegistro?: string | null;
+export class RegisterUsuariosDto extends RegisterUsuariosPayloadDto {
+  dispositivo_origen?: string | null;
+  ip_origen?: string | null;
 }
 
 export class CrearUsuarioDTO {
@@ -115,6 +113,11 @@ export class CrearUsuarioDTO {
   @IsNumber({}, { message: 'El ID del usuario de registro debe ser un número' })
   @IsOptional()
   id_usuario_registro?: number | null;
+
+  id_estado?: number | null;
+
+  dispositivo_origen?: string | null;
+  ip_origen?: string | null;
 }
 
 export class AgregarGrupoUsuario {

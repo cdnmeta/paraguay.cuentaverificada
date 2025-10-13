@@ -42,35 +42,73 @@ import {
   enviarCodigoVerificacion,
   validarCodigoSolicitud,
 } from "@/apis/verificacionCuenta.api";
-import { REGEX_CEDULA_IDENTIDAD } from "@/utils/constants";
+import {
+  CANT_MIN_CARACTERES_CONTRASENA,
+  REGEX_CEDULA_IDENTIDAD,
+} from "@/utils/constants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload, X, Eye, EyeOff } from "lucide-react";
 import { useAlertDialogStore } from "@/store/useAlertDialogStore";
+import { PUBLIC_ROUTES } from "@/utils/routes.routes";
+import { confirmarUsuario, refreshCodigoVerificacion, registrarUsuario } from "@/apis/auth.api";
 
 const MB = 1024 * 1024;
 const CANTIDAD_DIGITOS_OTP = 6;
 
-const schema = z.object({
-  email: z.string().trim().email("Correo inválido"),
-  nombre: z.string().trim().min(1, "Nombre es requerido"),
-  apellido: z.string().trim().min(1, "Apellido es requerido"),
-  terminos: z.boolean().refine((val) => val === true, {
-    message: "Debes aceptar los términos y condiciones",
-  }),
-  documento: z
-    .string()
-    .regex(REGEX_CEDULA_IDENTIDAD, "Cédula de identidad inválida"),
-  codigo_pais: z
-    .string({
-      required_error: "Código de país es requerido",
-      invalid_type_error: "Cogido debe ser string",
-    })
-    .trim()
-    .min(1, "Selecciona un código"),
-  telefono: z.string().trim().min(6, "Teléfono inválido"),
-});
+const schema = z
+  .object({
+    email: z.string().trim().email("Correo inválido"),
+    nombre: z.string().trim().min(1, "Nombre es requerido"),
+    apellido: z.string().trim().min(1, "Apellido es requerido"),
+    password: z
+      .string({ required_error: "Contraseña es requerida" })
+      .min(
+        CANT_MIN_CARACTERES_CONTRASENA,
+        `${`La contraseña debe tener al menos ${CANT_MIN_CARACTERES_CONTRASENA} caracteres`}`
+      ),
+    confirmPassword: z.string(),
+    terminos: z.boolean().refine((val) => val === true, {
+      message: "Debes aceptar los términos y condiciones",
+    }),
+    documento: z
+      .string()
+      .regex(REGEX_CEDULA_IDENTIDAD, "Cédula de identidad inválida"),
+    codigo_pais: z
+      .string({
+        required_error: "Código de país es requerido",
+        invalid_type_error: "Cogido debe ser string",
+      })
+      .trim()
+      .min(1, "Selecciona un código"),
+    telefono: z.string().trim().min(6, "Teléfono inválido"),
+    cedula_frente: z
+      .instanceof(File, { message: "Imagen de cédula frontal es requerida" })
+      .refine((file) => file.size <= 5 * MB, "El archivo debe ser menor a 5MB")
+      .refine(
+        (file) => ["image/jpeg", "image/jpg", "image/png"].includes(file.type),
+        "Solo se permiten archivos JPG, JPEG o PNG"
+      ),
+    cedula_trasera: z
+      .instanceof(File, { message: "Imagen de cédula trasera es requerida" })
+      .refine((file) => file.size <= 5 * MB, "El archivo debe ser menor a 5MB")
+      .refine(
+        (file) => ["image/jpeg", "image/jpg", "image/png"].includes(file.type),
+        "Solo se permiten archivos JPG, JPEG o PNG"
+      ),
+    selfie: z
+      .instanceof(File, { message: "Selfie es requerido" })
+      .refine((file) => file.size <= 5 * MB, "El archivo debe ser menor a 5MB")
+      .refine(
+        (file) => ["image/jpeg", "image/jpg", "image/png"].includes(file.type),
+        "Solo se permiten archivos JPG, JPEG o PNG"
+      ),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
 
 const otpSchema = z.object({
   codigo_verificacion: z
@@ -79,12 +117,105 @@ const otpSchema = z.object({
     .max(6, "El código debe tener 6 dígitos"),
 });
 
+// Componente para subir imágenes con preview
+const ImageUpload = ({ value, onChange, error, label, placeholder }) => {
+  const [preview, setPreview] = useState(null);
+
+  useEffect(() => {
+    if (value instanceof File) {
+      const url = URL.createObjectURL(value);
+      setPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreview(null);
+    }
+  }, [value]);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onChange(file);
+    }
+  };
+
+  const handleRemove = () => {
+    onChange(null);
+    setPreview(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      <FormLabel className={error ? "text-red-500" : ""}>{label}</FormLabel>
+
+      {!preview ? (
+        <div className="flex items-center justify-center w-full">
+          <label
+            className={`flex flex-col items-center justify-center w-full h-24 md:h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 ${
+              error ? "border-red-500" : "border-gray-300"
+            }`}
+          >
+            <div className="flex flex-col items-center justify-center pt-3 pb-3 md:pt-5 md:pb-6">
+              <Upload className="w-6 h-6 md:w-8 md:h-8 mb-1 md:mb-2 text-gray-400" />
+              <p className="mb-1 md:mb-2 text-xs md:text-sm text-gray-500">
+                <span className="font-semibold">Click para subir</span>
+              </p>
+              <p className="text-xs text-gray-500 hidden md:block">
+                {placeholder}
+              </p>
+            </div>
+            <input
+              type="file"
+              className="hidden"
+              accept="image/jpeg,image/jpg,image/png"
+              onChange={handleFileChange}
+            />
+          </label>
+        </div>
+      ) : (
+        <div className="relative">
+          <div className="w-full h-24 md:h-32 border rounded-lg overflow-hidden">
+            <img
+              src={preview}
+              alt="Preview"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="absolute top-2 right-2 flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => window.open(preview, "_blank")}
+              className="h-6 w-6 p-0"
+            >
+              <Eye className="h-3 w-3" />
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              onClick={handleRemove}
+              className="h-6 w-6 p-0"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {error && <p className="text-sm text-red-500">{error}</p>}
+    </div>
+  );
+};
+
 export default function SolicitarCuentaVerificada() {
   const [paises, setPaises] = useState([]);
   const [openConfirm, setOpenConfirm] = useState(false);
   const [mostrarVerificacion, setMostrarVerificacion] = useState(false);
   const [idUsuario, setIdUsuario] = useState(null);
-  const [datosUsuario, setDatosUsuario] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarConfirmPassword, setMostrarConfirmPassword] = useState(false);
 
   const navigate = useNavigate();
   const [enviadoCodigo, setEnviadoCodigo] = useState(false);
@@ -98,9 +229,14 @@ export default function SolicitarCuentaVerificada() {
       apellido: "",
       documento: "",
       email: "",
+      password: "",
+      confirmPassword: "",
       codigo_pais: "",
       telefono: "",
       terminos: false,
+      cedula_frente: null,
+      cedula_trasera: null,
+      selfie: null,
     },
     mode: "onChange",
   });
@@ -141,17 +277,66 @@ export default function SolicitarCuentaVerificada() {
   const onSubmit = async (data) => {
     try {
       const pais = getDataPais(data.codigo_pais);
-      const payload = {
-        nombre: data.nombre,
-        apellido: data.apellido,
-        documento: data.documento,
-        correo: data.email,
-        dial_code: String(pais.countryCode),
-        telefono: data.telefono,
-      };
+
+      // Crear FormData para enviar archivos
+      const formData = new FormData();
+      formData.append("nombre", data.nombre);
+      formData.append("apellido", data.apellido);
+      formData.append("documento", data.documento);
+      formData.append("correo", data.email);
+      formData.append("contrasena", data.password);
+      formData.append("dial_code", String(pais.countryCode));
+      formData.append("telefono", data.telefono);
+
+      // Agregar archivos
+      if (data.cedula_frente) {
+        formData.append("cedula_frontal", data.cedula_frente);
+      }
+      if (data.cedula_trasera) {
+        formData.append("cedula_reverso", data.cedula_trasera);
+      }
+      if (data.selfie) {
+        formData.append("selfie", data.selfie);
+      }
 
       // Llamada real - capturar respuesta con el ID del usuario
-      const response = await crearSolicitudCuenta(payload);
+      const response = await registrarUsuario(formData);
+      const { user } = response.data;
+      if (user.activo) {
+        toast.error("El usuario ya está activo. Por favor, inicia sesión.");
+        showAlert({
+          title: (
+            <p className="text-xl text-center">
+              Solicitud de{" "}
+              <span className="text-green-400">Cuenta Verificada</span>{" "}
+            </p>
+          ),
+          showCancel: false,
+          closeOnOutsideClick: false,
+          description: (
+            <div>
+              <p>
+                Tu Usuario ya está activo, seras redireccionado a la página de de <span className="text-green-400 text-xl">Iniciar Sesión</span>
+              </p>
+            </div>
+          ),
+          onConfirm: () => {
+            form.reset();
+            otpForm.reset();
+            setIdUsuario(null);
+            navigate(PUBLIC_ROUTES.login);
+            setOpenConfirm(false);
+          },
+        });
+        return;
+      }
+      
+      setUserData(user);
+      setOpenConfirm(false);
+      setTimeout(() => {
+        setMostrarVerificacion(true);
+      }, 6000);
+
       showAlert({
         title: (
           <p className="text-xl text-center">
@@ -175,16 +360,7 @@ export default function SolicitarCuentaVerificada() {
           </div>
         ),
         onConfirm: () => {
-          const { data: dataResponse } = response.data;
-
           setOpenConfirm(false);
-
-          setTimeout(() => {
-            form.reset();
-            // mandar la la misma pagina con el id del usuario
-            const newURL = `${window.location.origin}${window.location.pathname}?us=${dataResponse.id}`;
-            window.open(newURL, "_self");
-          }, 1500);
         },
       });
 
@@ -195,19 +371,19 @@ export default function SolicitarCuentaVerificada() {
         toast.error(err?.response?.data?.message);
         return;
       }
-      toast.error("No se pudo enviar la solicitud.");
+      toast.error("No se pudo procesar la solicitud.");
     }
   };
 
   const onSubmitOTP = async (data) => {
     try {
       const payload = {
-        id_usuario: idUsuario,
-        codigo_verificacion: data.codigo_verificacion,
+        cedula: userData.documento,
+        token: data.codigo_verificacion,
       };
 
       // Llamada a la API de verificación usando la función del archivo apis
-      await validarCodigoSolicitud(payload);
+      await confirmarUsuario(payload);
 
       showAlert({
         title:
@@ -226,11 +402,8 @@ export default function SolicitarCuentaVerificada() {
           form.reset();
           otpForm.reset();
           setIdUsuario(null);
-          setDatosUsuario(null);
 
-          
           navigate("/login");
-          
         },
       });
     } catch (err) {
@@ -248,12 +421,16 @@ export default function SolicitarCuentaVerificada() {
   const handleSolicitarCodigo = async () => {
     try {
       setEnviadoCodigo(true);
-      if (!idUsuario) {
+      if (!userData) {
         toast.error("No hay una solicitud activa para reenviar el código.");
         return;
       }
 
-      await enviarCodigoVerificacion({ id_usuario: idUsuario });
+      const dataEnviar = {
+        cedula: userData.documento,
+      }
+
+      await refreshCodigoVerificacion(dataEnviar);
       toast.success("Código de verificación reenviado.");
       otpForm.reset();
     } catch (error) {
@@ -269,7 +446,7 @@ export default function SolicitarCuentaVerificada() {
       {/* reCAPTCHA container (invisible) */}
       <div id="recaptcha-container" />
 
-      <div className="flex flex-col gap-3 mt-6 z-10 w-full max-w-sm">
+      <div className="flex flex-col gap-3 mt-6 z-10 w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl">
         {!mostrarVerificacion ? (
           // Formulario principal de solicitud
           <>
@@ -281,7 +458,7 @@ export default function SolicitarCuentaVerificada() {
               bloqueo inmediato de la cuenta.
             </div>
 
-            <Card className="max-w-sm">
+            <Card className="w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-4xl">
               <CardHeader>
                 <CardTitle className="text-2xl text-center font-bold">
                   Crear Cuenta
@@ -296,7 +473,7 @@ export default function SolicitarCuentaVerificada() {
                 <Form {...form}>
                   <form
                     onSubmit={(e) => e.preventDefault()}
-                    className="flex flex-col gap-3"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 lg:gap-6"
                   >
                     {/* Datos */}
                     <FormField
@@ -359,8 +536,84 @@ export default function SolicitarCuentaVerificada() {
                       )}
                     />
 
+                    <FormField
+                      name="password"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contraseña</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                type={mostrarPassword ? "text" : "password"}
+                                placeholder="••••••••"
+                                {...field}
+                                className="pr-10"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() =>
+                                  setMostrarPassword(!mostrarPassword)
+                                }
+                              >
+                                {mostrarPassword ? (
+                                  <EyeOff className="h-4 w-4 text-gray-500" />
+                                ) : (
+                                  <Eye className="h-4 w-4 text-gray-500" />
+                                )}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      name="confirmPassword"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Repetir Contraseña</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                type={
+                                  mostrarConfirmPassword ? "text" : "password"
+                                }
+                                placeholder="••••••••"
+                                {...field}
+                                className="pr-10"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() =>
+                                  setMostrarConfirmPassword(
+                                    !mostrarConfirmPassword
+                                  )
+                                }
+                              >
+                                {mostrarConfirmPassword ? (
+                                  <EyeOff className="h-4 w-4 text-gray-500" />
+                                ) : (
+                                  <Eye className="h-4 w-4 text-gray-500" />
+                                )}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     {/* País + teléfono */}
-                    <div className="flex flex-col w-full gap-1">
+                    <div className="flex flex-col w-full gap-1 md:col-span-2">
                       <FormLabel
                         className={
                           form.formState.errors.telefono ? "text-red-500" : ""
@@ -411,7 +664,69 @@ export default function SolicitarCuentaVerificada() {
                           />
                         </div>
                       </div>
-                      <div className="flex-1 mt-1">
+
+                      {/* Campos de imágenes */}
+                      <div className="md:col-span-2 space-y-4">
+                        <h3 className="text-lg font-semibold text-center md:text-left">
+                          Documentos Requeridos
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <FormField
+                            name="cedula_frente"
+                            control={form.control}
+                            render={({ field: { onChange, value } }) => (
+                              <FormItem>
+                                <ImageUpload
+                                  value={value}
+                                  onChange={onChange}
+                                  error={
+                                    form.formState.errors.cedula_frente?.message
+                                  }
+                                  label="Cédula - Parte Frontal"
+                                  placeholder="PNG, JPG, JPEG (Max. 5MB)"
+                                />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            name="cedula_trasera"
+                            control={form.control}
+                            render={({ field: { onChange, value } }) => (
+                              <FormItem>
+                                <ImageUpload
+                                  value={value}
+                                  onChange={onChange}
+                                  error={
+                                    form.formState.errors.cedula_trasera
+                                      ?.message
+                                  }
+                                  label="Cédula - Parte Trasera"
+                                  placeholder="PNG, JPG, JPEG (Max. 5MB)"
+                                />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            name="selfie"
+                            control={form.control}
+                            render={({ field: { onChange, value } }) => (
+                              <FormItem>
+                                <ImageUpload
+                                  value={value}
+                                  onChange={onChange}
+                                  error={form.formState.errors.selfie?.message}
+                                  label="Selfie"
+                                  placeholder="PNG, JPG, JPEG (Max. 5MB)"
+                                />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex-1 mt-1 md:col-span-2">
                         <FormField
                           name="terminos"
                           control={form.control}
@@ -447,7 +762,7 @@ export default function SolicitarCuentaVerificada() {
                     </div>
 
                     {/* Botón que abre el diálogo de confirmación */}
-                    <div className="pt-2">
+                    <div className="pt-2 md:col-span-2">
                       <Button
                         type="button"
                         className={"w-full"}
@@ -482,7 +797,7 @@ export default function SolicitarCuentaVerificada() {
           </>
         ) : (
           // Formulario de verificación OTP
-          <Card className="max-w-sm">
+          <Card className="max-w-md mx-auto w-full">
             <CardHeader>
               <CardTitle className="text-2xl text-center font-bold">
                 Verificar Código

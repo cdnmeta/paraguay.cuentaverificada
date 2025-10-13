@@ -69,7 +69,7 @@ const formSchema = z.object({
     .min(6, "Ingrese un teléfono válido")
     .max(20, "Muy largo"),
   documento: z.string().regex(REGEX_CEDULA_IDENTIDAD, "Documento inválido"),
-  cedula_frontal: IMAGE_SCHEMA_NO_REQUERIDO,
+  cedula_frente: IMAGE_SCHEMA_NO_REQUERIDO,
   cedula_reverso: IMAGE_SCHEMA_NO_REQUERIDO,
   selfie_user: IMAGE_SCHEMA_NO_REQUERIDO,
 });
@@ -82,7 +82,7 @@ const defaultValues = {
   telefono: "",
   documento: "",
   ciudad: "",
-  cedula_frontal: undefined,
+  cedula_frente: undefined,
   cedula_reverso: undefined,
   selfie_user: undefined,
 };
@@ -128,15 +128,16 @@ export default function FormEditarDatosSolicitud({
       if (response.status === 200) {
         const data = response.data;
         setSolicitudData(data);
-        setCedulaFrontalPath(data.cedula_frontal);
+        setCedulaFrontalPath(data.cedula_frente);
         setCedulaReversoPath(data.cedula_reverso);
         setSelfieUserPath(data.selfie);
         const dialCode = paises.find(
           (p) => p.countryCode === Number(data.dial_code)
         );
-        const { cedula_frontal, cedula_reverso, selfie, ...dataRest } = data;
+        const { cedula_frente, cedula_reverso, selfie, ...dataRest } = data;
         form.reset({
           ...dataRest,
+          correo: data.email,
           codigo_pais: dialCode ? String(dialCode.value) : "",
         });
       }
@@ -187,8 +188,8 @@ export default function FormEditarDatosSolicitud({
       fd.append("telefono", values.telefono);
       fd.append("documento", values.documento);
 
-      if (values.cedula_frontal ) {
-        fd.append("cedula_frontal", values.cedula_frontal);
+      if (values.cedula_frente ) {
+        fd.append("cedula_frontal", values.cedula_frente);
       }
       if (values.cedula_reverso ) {
         fd.append("cedula_reverso", values.cedula_reverso);
@@ -246,7 +247,7 @@ export default function FormEditarDatosSolicitud({
         className="space-y-6 max-w-full max-h-full"
       >
         {
-          solicitudData?.id_estado == 4 && <AlertMotivoRechazo motivo={solicitudData.observacion} />
+          solicitudData?.estado == 5 && <AlertMotivoRechazo motivo={solicitudData?.motivo_rechazo} />
         }
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -365,7 +366,7 @@ export default function FormEditarDatosSolicitud({
           {/* Cédula Frontal */}
           <FormField
             control={form.control}
-            name="cedula_frontal"
+            name="cedula_frente"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Cédula (frontal)</FormLabel>

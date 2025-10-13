@@ -1,8 +1,6 @@
 import { Expose } from 'class-transformer';
 
 export class UsuarioRegisterResponseDto {
-  @Expose({ name: 'id' })
-  id: number;
   @Expose({ name: 'nombre' })
   nombre: string;
   @Expose({ name: 'apellido' })
@@ -11,4 +9,7 @@ export class UsuarioRegisterResponseDto {
   email: string;
   @Expose({ name: 'documento' })
   documento: string;
+
+  @Expose({ name: 'activo' })
+  activo: boolean;
 }

@@ -47,7 +47,7 @@ export function useGruposEmpresa(userId) {
         }
 
         const gruposBase = userData.grupos || [];
-        const isSuperAdmin = userData.is_super_admin === true;
+        const isSuperAdmin = userData.isa === true;
         
         const gruposProcesados = processUserGroups(gruposBase, isSuperAdmin);
         setGruposEmpresa(gruposProcesados);

@@ -1,7 +1,7 @@
 /**
  * Comprueba acceso:
  *  - Debe existir user
- *  - Si allowSuperAdmin es true y user.is_super_admin es true => acceso
+ *  - Si allowSuperAdmin es true y user.isa es true => acceso
  *  - Si se exigen grupos (por id o slug), pasa si pertenece a cualquiera
  *  - Si no se exigen grupos, alcanza con que exista sesión
  */
@@ -14,7 +14,7 @@ export function hasAccess(user, opts = {}) {
     requiredGroupSlugs = null,   // p.ej. ["dpto-legal"]
   } = opts;
 
-  if (allowSuperAdmin && user.is_super_admin) return true;
+  if (allowSuperAdmin && user.isa) return true;
 
   const grupos = Array.isArray(user && user.grupos) ? user.grupos : [];
 

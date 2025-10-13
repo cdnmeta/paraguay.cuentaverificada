@@ -113,3 +113,22 @@ export const getResumenSolicitudesCuenta = async (query) => {
     });
     return response;
 };
+
+export const getResumenSolicitudesCuentaVerificador = async (query) => {
+    const response = await api.get(`/resumen-solicitudes-verificador`, {
+        headers: {
+            "Authorization": `Bearer ${await getIdToken()}`
+        },
+        params: query
+    });
+    return response;
+}
+
+export const solicitarVerificacionCuentausuario = async () => {
+    const response = await api.post(`/usuario/solicitud`, {}, {
+        headers: {
+            "Authorization": `Bearer ${await getIdToken()}`
+        }
+    });
+    return response;
+}

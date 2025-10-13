@@ -254,6 +254,7 @@ model usuario_tokens {
   token_hash      String
   fecha_creacion DateTime @default(now()) @db.Timestamptz()
   fecha_vencimiento DateTime? @db.Timestamptz() 
+  tipo_token Int? @default(1) // 1= token validacion, 2=codigo verificacion 
   activo Boolean? @default(true)
 }
 
@@ -274,7 +275,7 @@ model usuarios {
   documento                   String?
   email                       String?
   password                    String?
-  estado                      Int                           @default(1)
+  estado                      Int                           @default(1) // 1= pend. activacion, 2= activo, 3= aguardando verificacion,  4= Pendiente Aprovacion, 5= Verificacion Rechazada,
   activo                      Boolean?                      @default(true)
   fecha_creacion              DateTime?                     @default(now()) @db.Timestamptz(6)
   fecha_actualizacion         DateTime?                     @db.Timestamptz(6)
@@ -293,8 +294,13 @@ model usuarios {
   porcentaje_comision_primera_venta   Decimal?                      @db.Decimal(10, 2)
   porcentaje_comision_recurrente      Decimal?                      @db.Decimal(10, 2)
   saldo                       Decimal?                      @db.Decimal(10, 2) @default(0)
+  id_verificador_asignado     Int?
   ip_origen                   String?
   dispositivo_origen          String?
+  verificado                 Boolean?                      @default(false)
+  motivo_rechazo             String?
+  id_usuario_actualizacion     Int?
+  id_usuario_verificacion      Int?
   comercio                    comercio[]
   factura_suscripciones       factura_suscripciones[]
   seguimiento_verificacion    seguimiento_verificacion[]

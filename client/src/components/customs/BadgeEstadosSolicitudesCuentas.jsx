@@ -7,28 +7,25 @@ export default function BadgeEstadosSolicitudesCuentas({ estado }) {
 
     switch (estado) {
         case 1:
-            estado = "Recibido"
-            className = "bg-yellow-500"
-            break;
-        case 2:
-            estado = "Pendiente Aprobación"
-            className = "bg-blue-500"
-            break;
-        case 3:
-            estado = "Aprobado"
-            className = "bg-green-500"
-            break;
-        case 4:
-            estado = "Rechazado"
+            estado = "Pend. Activacion"
             className = "bg-red-500"
             break;
-        case 5:
-            estado = "Código Verificado"
-            className = "bg-purple-500"
+        case 2:
+            estado = "Activo"
+            className = "bg-green-500"
             break;
-        default:
-            estado = "Desconocido"
+        case 3:
+            estado = "Aguardando Verificación"
+            className = "bg-yellow-500"
+            break;
+        case 4:
+            estado = "Pend. Aprobación"
+            className = "bg-blue-500"
+            break;
+        case 5:
+            estado = "Verificación Rechazada"
             className = "bg-gray-500"
+            break;
     }
 
   return (

@@ -193,7 +193,7 @@ export class UsuariosService {
       }
 
       // verificar que el usuario no exista
-      await this.prismaService.$transaction(async (tx) => {
+      const userNew = await this.prismaService.$transaction(async (tx) => {
         // encriptar contraseña
         const contrasenaEncryptada = await encrypt(dto.contrasena);
         const pinHash = dto.pin ? await encrypt(dto.pin) : null;
@@ -212,8 +212,12 @@ export class UsuariosService {
             dial_code: dto.dial_code,
             telefono: dto.telefono,
             selfie: rutaArchivoSelfie,
+            estado: dto.id_estado || 1,
+            ip_origen: dto.ip_origen || null,
+            dispositivo_origen: dto.dispositivo_origen || null,
           },
         });
+         
         // si viene el id del usuario que registra, actualizar el campo
         if (dto.grupos && dto.grupos.length > 0) {
           const dataGruposAsiganar: AsignarGruposDto = {
@@ -236,7 +240,7 @@ export class UsuariosService {
 
         return newUser;
       });
-      return { message: 'Usuario creado exitosamente' };
+      return userNew;
     } catch (error) {
       if (uidUserFirebase) {
         // eliminar usuario en firebase

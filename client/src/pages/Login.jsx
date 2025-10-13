@@ -180,7 +180,7 @@ export const FormLogin = ({redirect=true, afterSubmit = ()=>{}}) => {
                   to={PUBLIC_ROUTES.solicitarCuentaVerificada}
                   className="text-blue-600 underline block mt-2"
                 >
-                  ¿No tenés cuenta? Solicitar una cuenta ahora
+                  ¿No tenés cuenta? Registrarte
                 </Link>
                 <Link
                   to={PUBLIC_ROUTES.resetPassword}

@@ -104,4 +104,12 @@ export const resetPassword = async (data) => {
   return response.data;
 };
 
+export const confirmarUsuario = async (data) => {
+  return await api.post("/confirmar-usuario", data)
+};
+
+export const refreshCodigoVerificacion = async (data) => {
+  return await api.post("/refresh-codigo-verificacion", data)
+}
+
 export default api;
