@@ -181,8 +181,16 @@ export const agregarFavoritos = async (data) => {
   });
 }
 
-export const eliminarFavoritos = async (id) => {
+export const eliminarComercioFavoritos = async (id) => {
   return await api.delete(`/mis-comercios-favoritos/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+}
+
+export const getMisFavoritos = async () => {
+  return await api.get(`/mis-favoritos`, {
     headers: {
       'Authorization': `Bearer ${await getIdToken()}`
     },

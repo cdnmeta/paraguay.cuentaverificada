@@ -344,6 +344,33 @@ export class UsuariosController {
     }
   }
 
+
+  @Get('mis-favoritos')
+  async obtenerFavoritos(@Req() req: AuthenticatedRequest, @Res() res: Response) {
+    try {
+        const usuarioId = req.user.userId;
+      const comerciosFavoritos = await this.favoritosService.obtenerFavoritosPorUsuario(usuarioId);
+      return res.status(200).json(comerciosFavoritos);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Post('mis-comercios-favoritos')
+  async agregarFavorito(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: UsuarioAgregarFavoritoDto,
+    @Res() res: Response,
+  ) {
+    try {
+        const usuarioId = req.user.userId;
+        await this.favoritosService.agregarFavorito(usuarioId, body.id_comercio);
+        return res.status(200).json({ message: 'Comercio agregado a favoritos.' });
+    } catch (error) {
+        throw error;
+    }
+  }
+
   // fin rutas específicas
 
   // ⚠️ IMPORTANTE: Esta ruta dinámica debe ir AL FINAL
@@ -418,20 +445,7 @@ export class UsuariosController {
       }
     }
 
-  @Post('mis-comercios-favoritos')
-    async agregarFavorito(
-      @Req() req: AuthenticatedRequest,
-      @Body() body: UsuarioAgregarFavoritoDto,
-      @Res() res: Response,
-    ) {
-      try {
-          const usuarioId = req.user.userId;
-          await this.favoritosService.agregarFavorito(usuarioId, body.id_comercio);
-          return res.status(200).json({ message: 'Comercio agregado a favoritos.' });
-      } catch (error) {
-          throw error;
-      }
-    }
+  
   
     @Delete('mis-comercios-favoritos/:id')
       async eliminarFavorito(

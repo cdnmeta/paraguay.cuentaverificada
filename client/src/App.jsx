@@ -36,6 +36,7 @@ import SemaforoFinancieroRoutes from "./pages/SemaforoFinanciero";
 import { PlanesPage } from "./pages/Planes";
 import { PlanesRoutes } from "./pages/Planes/config/routes";
 import { ComercioRoutes } from "./pages/Comercio/comercio.routes";
+import FavoritosRoutes from "./pages/Favoritos/favoritos.routes";
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
@@ -79,6 +80,8 @@ export default function App() {
             element={<MisDatosPage />}
           />
           {RecordatoriosUsuariosRoutes()}
+
+          {FavoritosRoutes()}
 
           
         </Route>

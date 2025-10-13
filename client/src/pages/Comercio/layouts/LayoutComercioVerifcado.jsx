@@ -22,7 +22,7 @@ import { FormLogin } from "@/pages/Login";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import { agregarFavoritos, eliminarFavoritos } from "@/apis/usuarios.api";
+import { agregarFavoritos, eliminarComercioFavoritos } from "@/apis/usuarios.api";
 import useComercioStore from "@/store/useComercioStore";
 import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
 const IMAGES = {
@@ -70,7 +70,7 @@ export default function LayoutComercioVerifcado({ children }) {
       setSiguiendo(true);
 
       if (comercioSeguido) {
-        await eliminarFavoritos(data.id_comercio);
+        await eliminarComercioFavoritos(data.id_comercio);
         setComercioSeguido((prev) => !prev);
         return;
       }
