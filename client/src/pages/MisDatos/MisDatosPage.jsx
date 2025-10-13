@@ -51,6 +51,9 @@ export default function MisDatosPage() {
       } else if (user.estado === 3) {
         setSolicitudVerificacion(2);
       }
+      if(user.vfd == true){
+        setSolicitudVerificacion(3);
+      }
       setUser(res.data);
     } catch (error) {
       toast.error("Error al cargar mis datos" + error.message);
@@ -155,6 +158,13 @@ export default function MisDatosPage() {
             </p>
           </div>
         )}
+
+        {solicitudVerificacion === 3 && (
+          <div id="verificacion" className="mt-6 mb-2 text-center border border-green-400/50 bg-green-400/10 rounded-lg p-4">
+            <p className="text-md  text-green-400 mb-2">Tu cuenta está verificada. desde {new Date(user?.f_vfd).toLocaleDateString()}</p>
+          </div>
+        )}
+
         <h1 className="text-3xl font-bold tracking-tight">Mis Datos</h1>
         {/* Datos solo lectura */}
         <Card className="mt-6">

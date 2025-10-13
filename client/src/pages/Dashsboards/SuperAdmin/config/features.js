@@ -7,7 +7,8 @@ import {
   AlertTriangle, 
   TrendingUp,
   UserCheck,
-  Store
+  Store,
+  BadgeCheck
 } from "lucide-react";
 
 export const seccionesFeatures = [
@@ -47,11 +48,11 @@ export const seccionesFeatures = [
     variant: "warning"
   },
   {
-    title: "Solicitudes de Cuentas",
-    desc: "Aprobar solicitudes de cuentas de usuario",
-    icon: CheckCircle,
+    title: "Solicitudes de Verificación de Cuentas",
+    desc: "Revisar Solicitudes de Verificación de Cuentas",
+    icon: BadgeCheck,
     path: `${ROUTE_BASE}/solicitudes-cuentas`,
-    variant: "warning"
+    variant: "success"
   },
   {
     title: "Cotizaciones de Empresa",

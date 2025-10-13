@@ -323,6 +323,7 @@ export class VerificacionCuentaService {
             estado: id_estado_asignar, // estado 2 es "activo"
             id_usuario_actualizacion: dto.id_usuario_actualizacion,
             fecha_actualizacion: new Date(),
+            fecha_verificacion: new Date(),
             verificado: true,
           },
         });

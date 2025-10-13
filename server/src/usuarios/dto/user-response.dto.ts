@@ -87,4 +87,7 @@ export class MisDatosResponseDto {
   @Expose({name: "verificado"})
   vfd: boolean;
 
+  @Expose({name: "fecha_verificacion"})
+  f_vfd: Date;
+
 }

@@ -74,20 +74,24 @@ export default function DashBoardUsarioProtegido() {
   return (
     <div className="min-h-screen text-white">
       <div className="w-full flex flex-col md:flex-row lg:flex-row gap-2 mb-6 px-2">
-        <Alert className="">
-          <CheckCircle2Icon />
-          <AlertTitle>¡Bienvenido!</AlertTitle>
-          <AlertDescription>
-            <p>Tu cuenta aun no ha sido verificada</p>
-            <Button
-              variant="outline"
-              className="mt-2"
-              onClick={() => navigate(`${PROTECTED_ROUTES.misDatos}#verificacion`)}
-            >
-              Deseas Verificarla?
-            </Button>
-          </AlertDescription>
-        </Alert>
+        {user?.vfd == false && (
+          <Alert className="">
+            <CheckCircle2Icon />
+            <AlertTitle>¡Bienvenido!</AlertTitle>
+            <AlertDescription>
+              <p>Tu cuenta aun no ha sido verificada</p>
+              <Button
+                variant="outline"
+                className="mt-2"
+                onClick={() =>
+                  navigate(`${PROTECTED_ROUTES.misDatos}#verificacion`)
+                }
+              >
+                Deseas Verificarla?
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         <Alert className="">
           <CheckCircle2Icon />
           <AlertTitle>Hola, {`${user?.nombre} ${user?.apellido}`}</AlertTitle>
