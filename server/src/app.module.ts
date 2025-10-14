@@ -25,6 +25,7 @@ import { winstonOptions } from './logger/logger.config';
 import { RecordatoriosModule } from './recordatorios/recordatorios.module';
 import { EmailModule } from './email/email.module';
 import { SemaforoFinancieroModule } from './semaforo_financiero/semaforo_financiero.module';
+import { EstadosAnimosModule } from './estados-animos/estados-animos.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { SemaforoFinancieroModule } from './semaforo_financiero/semaforo_financi
     RecordatoriosModule,
     EmailModule,
     SemaforoFinancieroModule,
+    EstadosAnimosModule,
   ],
   providers: [
     {

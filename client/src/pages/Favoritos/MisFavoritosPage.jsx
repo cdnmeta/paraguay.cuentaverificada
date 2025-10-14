@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import { getMisFavoritos, eliminarComercioFavoritos } from '@/apis/usuarios.api'
+import { getMensajeDelDia } from '@/apis/estados-animos.api'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { 
   Heart, 
   Store, 
@@ -16,7 +25,9 @@ import {
   StarIcon,
   Search,
   RefreshCw,
-  Filter
+  Filter,
+  Smile,
+  X
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format, parseISO } from 'date-fns'
@@ -261,10 +272,6 @@ export default function MisFavoritosPage() {
             <p className="text-muted-foreground mb-4 max-w-sm mx-auto">
               Comienza a agregar comercios, productos y servicios a tus favoritos para verlos aquí.
             </p>
-            <Button variant="outline">
-              <Store className="h-4 w-4 mr-2" />
-              Explorar comercios
-            </Button>
           </CardContent>
         </Card>
       ) : Object.keys(favoritosAgrupados).length === 0 ? (
@@ -360,8 +367,6 @@ export default function MisFavoritosPage() {
 
                           {/* Acciones */}
                           <div className="flex items-center justify-end pt-2">
-
-
                             <Button
                               variant="outline"
                               size="sm"

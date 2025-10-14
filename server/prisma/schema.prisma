@@ -478,3 +478,23 @@ model usuarios_comercios_fav {
 
   @@unique([id_usuario, id_comercio], name: "idx_usuario_comercio_fav")
 }
+
+
+model estados_animos {
+  id          Int       @id @default(autoincrement())
+  mensaje     String
+  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  id_tipo_animo    Int // 1= Entusiasmado 2=Contento 3=Pensativo 4=Decepcionado 5=Triste 6=Sorprendeme
+  activo      Boolean   @default(true)
+  tipo_estado_animo tipo_estado_animo @relation(fields: [id_tipo_animo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tipo_estado_animo_id_estados_animos")
+}
+
+model tipo_estado_animo {
+  id          Int       @id @default(autoincrement())
+  descripcion String
+  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @updatedAt() @db.Timestamptz(6) 
+  activo      Boolean   @default(true)
+  estados_animos estados_animos[]
+}
