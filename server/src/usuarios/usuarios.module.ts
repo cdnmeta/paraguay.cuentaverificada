@@ -7,11 +7,12 @@ import { DatabaseModule } from '@/database/database.module';
 import { VendedoresController } from './vendedores-empresa/vendedores-empresa.controller';
 import { VendedoresEmpresaService } from './vendedores-empresa/vendedores-empresa.service';
 import { FavoritosService } from './favoritos/favoritos.service';
+import { SoporteService } from './soporte/soporte.service';
 
 
 @Module({
   controllers: [UsuariosController, VendedoresController],
-  providers: [UsuariosService, VendedoresEmpresaService, FavoritosService],
+  providers: [UsuariosService, VendedoresEmpresaService, FavoritosService, SoporteService],
   imports: [PrismaModule, FirebaseModule, DatabaseModule],
   exports: [UsuariosService],
 })

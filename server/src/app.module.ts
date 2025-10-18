@@ -26,6 +26,7 @@ import { RecordatoriosModule } from './recordatorios/recordatorios.module';
 import { EmailModule } from './email/email.module';
 import { SemaforoFinancieroModule } from './semaforo_financiero/semaforo_financiero.module';
 import { EstadosAnimosModule } from './estados-animos/estados-animos.module';
+import { TicketsModule } from './tickets/tickets.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { EstadosAnimosModule } from './estados-animos/estados-animos.module';
     EmailModule,
     SemaforoFinancieroModule,
     EstadosAnimosModule,
+    TicketsModule,
   ],
   providers: [
     {

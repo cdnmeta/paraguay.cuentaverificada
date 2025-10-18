@@ -1,6 +1,8 @@
 import { routes as dtoLegalRoutes } from "@/pages/departamento-legal/config/routes";
 import { routes as verficadorRoutes } from "@/pages/Verificador/verficador.routes";
 import { ROUTE_BASE as DashBoardParticipante } from "@/pages/Dashsboards/Participante/config/features";
+import { routes as SorporteRoutes } from "@/pages/Dashsboards/Soporte/config/route";
+
 
 export const PUBLIC_ROUTES = {
   inicio: "/",
@@ -30,6 +32,8 @@ export const getUrlDashboardGrupos = (idGrupo) => {
     case 3:
     case 4:
       return DashBoardParticipante;
+    case 5:
+      return `/${SorporteRoutes.index}`;
     case "admin":
       return `${PROTECTED_ROUTES.admin}`;
     case "protegido":

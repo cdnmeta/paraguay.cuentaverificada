@@ -498,3 +498,58 @@ model tipo_estado_animo {
   activo      Boolean   @default(true)
   estados_animos estados_animos[]
 }
+
+
+// Tablas de Tickets
+model tipo_ticket {
+  id             Int       @id @default(autoincrement())
+  descripcion    String
+  fecha_creacion DateTime  @default(now()) @db.Timestamptz(6)
+
+  tickets        ticket[]
+
+  @@map("tipo_ticket")
+}
+
+model ticket {
+  id                  Int       @id @default(autoincrement())
+  asunto              String
+  id_reportante       Int?
+  id_asignado         Int?
+  id_tipo_ticket      Int?
+  prioridad           Int?      @default(3) // 1=Alta, 2=Media, 3=Baja
+  id_estado           Int       @default(1) // 1=nuevo, 2=abierto, 3=pendiente cliente, 4=pendiente soporte, 5=en espera, 6=resuelto, 7=cerrado
+  fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime  @updatedAt @db.Timestamptz(6)
+  ultimo_mensaje_at   DateTime? @db.Timestamptz(6)
+  activo              Boolean   @default(true)
+  id_usuario_cierre    Int?
+  motivo_cierre       String?
+  id_usuario_completado Int?
+
+  // Relaciones
+  tipo_ticket         tipo_ticket? @relation(fields: [id_tipo_ticket], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  mensajes            ticket_mensaje[]
+
+  @@index([id_estado])
+  @@index([id_asignado])
+  @@map("ticket")
+}
+
+model ticket_mensaje {
+  id             Int       @id @default(autoincrement())
+  id_ticket      Int
+  url_archivo    String[]  @db.Text            // Postgres text[]
+  id_autor       Int
+  rol_autor      Int                              // 1=cliente, 2=soporte, 3=sistema
+  mensaje        String
+  es_interno     Boolean   @default(false)
+  fecha_creacion DateTime  @default(now()) @db.Timestamptz(6)
+  activo         Boolean   @default(true)
+
+  // Relaciones
+  ticket         ticket    @relation(fields: [id_ticket], references: [id], onDelete: Cascade)
+
+  @@index([id_ticket, fecha_creacion])
+  @@map("ticket_mensaje")
+}

@@ -37,6 +37,8 @@ import { PlanesPage } from "./pages/Planes";
 import { PlanesRoutes } from "./pages/Planes/config/routes";
 import { ComercioRoutes } from "./pages/Comercio/comercio.routes";
 import FavoritosRoutes from "./pages/Favoritos/favoritos.routes";
+import SoporteAyudaRoute from "./pages/SoporteAyuda/soporteAyuda.route";
+import SoporteRoutes from "./pages/Dashsboards/Soporte/soporte.routes";
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
@@ -50,7 +52,7 @@ export default function App() {
   return (
     <Routes>
       <Route element={<DefaultLayout />}>
-        <Route index element={<CrearCuenta />} />
+        <Route index element={<Navigate to="/login" />} />
         <Route path="/login" element={user ? <Navigate to="/panel" /> : <Login />} />
         <Route path="/login/:token" element={<LoginToken />} />
         <Route path="/recuperar" element={<RecuperarContrasena />} />
@@ -83,6 +85,8 @@ export default function App() {
 
           {FavoritosRoutes()}
 
+          {SoporteAyudaRoute()}
+
           
         </Route>
       </Route>
@@ -98,6 +102,9 @@ export default function App() {
 
       {/*Comercio*/}
       {ComercioRoutes()}
+
+      {/*Soporte*/}
+      {SoporteRoutes({user})}
     </Routes>
   );
 }

@@ -25,6 +25,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { routes as RecordatoriosUsuariosRoutes } from "@/pages/recordatoriosUsuarios/config/routes";
 import { routes as FavoritosRoutes } from "@/pages/Favoritos/config/routes";
+import { routes as SoporteAyudaRoutes } from "@/pages/SoporteAyuda/config/routes";
+
 
 // Constantes para el localStorage del mensaje del día
 const STORAGE_KEY_ULTIMO_MENSAJE = 'ultimo_mensaje_del_dia'
@@ -206,6 +208,7 @@ export default function DashBoardUsarioProtegido() {
       icon: "/icons/709049.png",
       title: "Soporte y Ayuda",
       desc: "Autoayuda + asistencia personalizada",
+      onClick: () => navigate(`/${SoporteAyudaRoutes.index}`),
     },
   ];
   return (
