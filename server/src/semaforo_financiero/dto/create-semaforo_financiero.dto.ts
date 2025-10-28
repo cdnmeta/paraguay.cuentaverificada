@@ -1,21 +1,23 @@
-import { IsNotEmpty, IsString, IsInt, IsNumber, IsOptional, Min, Max, IsEnum } from 'class-validator';
+import { sanitizeTexto } from '@/utils/sanitizeText';
+import { Transform } from 'class-transformer';
+import { IsNotEmpty, IsString, IsInt, IsNumber, IsOptional, Min, Max, IsEnum, IsDateString } from 'class-validator';
 
 export class SemaforoMovimientoDtoBase {
 
     @IsNotEmpty({ message: 'El campo título es obligatorio.' })
     @IsString({ message: 'El campo título debe ser una cadena de texto.' })
+    @Transform(({ value }) => sanitizeTexto(value))
     titulo: string;
+
+    @IsDateString({},{ message: 'El campo fecha_vencimiento debe ser una fecha válida en formato ISO 8601.' })
+    @IsOptional()
+    fecha_vencimiento?: Date;
 
     @IsNotEmpty({ message: 'El campo tipo_movimiento es obligatorio.' })
     @IsInt({ message: 'El campo tipo_movimiento debe ser un número entero.' })
     @Min(1, { message: 'El campo tipo_movimiento debe ser al menos 1.' })
     @Max(6, { message: 'El campo tipo_movimiento no puede ser mayor a 6.' })
-    tipo_movimiento: number; // 1 = Ingreso fijo 2= Ingreso Ocasional 3 = Egreso Fijo 4 = Egreso Ocasional 5= Por pagar 6= Por Cobrar
-
-    @IsOptional()
-    @IsInt({ message: 'El campo id_estado debe ser un número entero.' })
-    @IsEnum([1, 2, 3], { message: 'El campo id_estado debe ser 1 (Pendiente), 2 (Pagado) o 3 (Cobrado).' })
-    id_estado?: number; // 1= Pendiente 2= Pagado 3= Cobrado
+    tipo_movimiento: number; // 1 = Ingreso fijo 2= Ingreso Extra 3 = Gasto Fijo 4 = Gasto Extra 5= Cuentas Por pagar 6= Cuentas Por Cobrar
 
     @IsNotEmpty({ message: 'El campo monto es obligatorio.' })
     @IsNumber({}, { message: 'El campo monto debe ser un número.' })
@@ -33,5 +35,25 @@ export class SemaforoMovimientoDtoBase {
 }
 
 export class CreateSemaforoFinancieroDto extends SemaforoMovimientoDtoBase {
+    id_usuario: number;
+}
+
+
+export class RegistrarAbonoMovimientoPayloadDto {
+    @IsNotEmpty({ message: 'El campo monto es obligatorio.' })
+    @IsNumber({}, { message: 'El campo monto debe ser un número.' })
+    monto: number;
+
+    @IsDateString({},{ message: 'El campo fecha_abono debe ser una fecha válida en formato ISO 8601.' })
+    @IsOptional()
+    fecha_abono: Date;
+    
+    @IsNotEmpty({ message: 'El campo id_movimiento es obligatorio.' })
+    @IsInt({ message: 'El campo id_movimiento debe ser un número entero.' })
+    @Min(1, { message: 'El campo id_movimiento debe ser al menos 1.' })
+    id_movimiento: number;
+}
+
+export class RegistrarAbonoMovimientoDto extends RegistrarAbonoMovimientoPayloadDto {
     id_usuario: number;
 }

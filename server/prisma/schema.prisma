@@ -459,12 +459,33 @@ model semaforo_movimientos {
   observacion          String?
   fecha_creacion       DateTime @default(now()) @db.Timestamptz(6)
   fecha_actualizacion  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  visible            Boolean  @default(true)
+  fecha_vencimiento  DateTime? @db.Timestamptz(6)
   activo              Boolean  @default(true)
+  acumulado           Float?    @default(0)
+  saldo               Float?    @default(0)
   id_usuario           Int 
   usuarios            usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_semaforo_movimientos")
   monedas             monedas  @relation(fields: [id_moneda], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_monedas_id_semaforo_movimientos")
+  semaforo_abonos     semaforo_abonos[]
 
   @@map("semaforo_movimientos")
+}
+
+model semaforo_abonos {
+  id                   Int      @id @default(autoincrement())
+  id_semaforo_movimiento Int
+  monto_abono          Float
+  tipo_abono           Int      // 1= cobro 2= pago
+  id_moneda            Int?
+  observacion          String?
+  fecha_abono          DateTime @default(now()) @db.Timestamptz(6)
+  fecha_creacion       DateTime @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  activo              Boolean  @default(true)
+  semaforo_movimientos semaforo_movimientos @relation(fields: [id_semaforo_movimiento], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_semaforo_movimientos_id_semaforo_abonos")
+
+  @@map("semaforo_abonos")
 }
 
 

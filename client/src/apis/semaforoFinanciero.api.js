@@ -13,11 +13,12 @@ const api = axios.create({
  * Obtener el resumen del semáforo financiero del usuario
  * @returns {Promise} - Promesa con los datos del semáforo financiero agrupados por moneda
  */
-export const obtenerSemaforoFinanciero = async () => {
+export const obtenerSemaforoFinanciero = async (params) => {
   return await api.get(``, {
     headers: {
       'Authorization': `Bearer ${await getIdToken()}`
     },
+    params
   });
 };
 
@@ -103,6 +104,50 @@ export const eliminarMovimientoSemaforo = async (id) => {
 
 export const obtenerMovimientoSemaforo = async (id) => {
   return await api.get(`/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+};
+
+/**
+ * Registrar un nuevo abono para un movimiento
+ * @param {Object} abonoData - Datos del abono
+ * @param {number} abonoData.monto - Monto del abono
+ * @param {string} abonoData.fecha_abono - Fecha del abono (ISO string)
+ * @param {number} abonoData.id_moneda - ID de la moneda
+ * @param {number} abonoData.id_movimiento - ID del movimiento
+ * @returns {Promise} - Promesa con el abono creado
+ */
+export const registrarAbonoMovimiento = async (abonoData) => {
+  return await api.post(`/abonos`, abonoData, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`,
+      'Content-Type': 'application/json'
+    },
+  });
+};
+
+/**
+ * Obtener abonos de un movimiento específico
+ * @param {number} idMovimiento - ID del movimiento
+ * @returns {Promise} - Promesa con la lista de abonos
+ */
+export const obtenerAbonosMovimiento = async (idMovimiento) => {
+  return await api.get(`/abonos/${idMovimiento}`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+};
+
+/**
+ * Eliminar un abono específico
+ * @param {number} idAbono - ID del abono a eliminar
+ * @returns {Promise} - Promesa con la respuesta del servidor
+ */
+export const eliminarAbono = async (idAbono) => {
+  return await api.delete(`/abonos/${idAbono}`, {
     headers: {
       'Authorization': `Bearer ${await getIdToken()}`
     },

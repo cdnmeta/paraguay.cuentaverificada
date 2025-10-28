@@ -60,6 +60,13 @@ body[style*="pointer-events: none"] {
   pointer-events: auto !important;
 }
 
+header{
+  background-color: #008e40;
+  border-bottom: 1px solid var(--color-sidebar-border);
+}
+
+
+
 /* ==============================
    UTILITY CLASSES
 ============================== */
