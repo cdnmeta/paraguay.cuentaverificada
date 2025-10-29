@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -75,12 +75,60 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
     open: false,
     movimiento: null,
   });
+
+  const [porcentajeMostrar, setPorcentajeMostrar] = useState(0);
+
   const [deleteAbonoDialog, setDeleteAbonoDialog] = useState({
     open: false,
     abonoId: null,
     abonoMonto: "",
     movimientoId: null,
   });
+
+  const umbralGananciaSemaforo = 5 // Umbral de ganancia en porcentaje para el semáforo financiero
+
+  // useEffect para actualizar el porcentaje cuando cambien los datos
+  useEffect(() => {
+    if (data.saldos && data.saldos.length > 0) {
+      const saldos = data.saldos || [];
+      let totalIngresos = 0;
+      let totalGastos = 0;
+
+      saldos.forEach((saldo) => {
+        // Convertir ingresos a guaraníes
+        let ingresosEnGuaranies = 0;
+        if (saldo.id_moneda === 2) {
+          ingresosEnGuaranies = saldo.ingresos || 0;
+        } else if (saldo.id_moneda === 1 && cotizaciones.length > 0) {
+          try {
+            const conversion = convertirMoneda(cotizaciones, saldo.ingresos || 0, 1, 2);
+            ingresosEnGuaranies = conversion.venta;
+          } catch {
+            ingresosEnGuaranies = (saldo.ingresos || 0) * 7200;
+          }
+        }
+
+        // Convertir gastos a guaraníes
+        let gastosEnGuaranies = 0;
+        if (saldo.id_moneda === 2) {
+          gastosEnGuaranies = saldo.egresos || 0;
+        } else if (saldo.id_moneda === 1 && cotizaciones.length > 0) {
+          try {
+            const conversion = convertirMoneda(cotizaciones, saldo.egresos || 0, 1, 2);
+            gastosEnGuaranies = conversion.venta;
+          } catch {
+            gastosEnGuaranies = (saldo.egresos || 0) * 7200;
+          }
+        }
+
+        totalIngresos += ingresosEnGuaranies;
+        totalGastos += gastosEnGuaranies;
+      });
+
+      const porcentajeGanancia = totalIngresos > 0 ? ((totalIngresos - totalGastos) / totalIngresos) * 100 : 0;
+      setPorcentajeMostrar(porcentajeGanancia);
+    }
+  }, [data.saldos, cotizaciones]);
 
   const getTipoMovimientoConfig = (tipo) => {
     const configs = {
@@ -113,14 +161,14 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
         borderColor: "border-red-200",
       },
       5: {
-        label: "Egresos por Pagar",
+        label: "Cuentas por Pagar",
         icon: CreditCard,
         color: "text-orange-600",
         bgColor: "bg-orange-50",
         borderColor: "border-orange-200",
       },
       6: {
-        label: "Ingresos por Cobrar",
+        label: "Cuentas por Cobrar",
         icon: Banknote,
         color: "text-blue-600",
         bgColor: "bg-blue-50",
@@ -256,6 +304,9 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
       saldoTotal += saldoEnGuaranies;
     });
 
+    // Calcular porcentaje de ganancia fuera del bucle
+    const porcentajeGanancia = totalIngresos > 0 ? ((totalIngresos - totalGastos) / totalIngresos) * 100 : 0;
+
     // La ganancia total es el saldo total calculado
     const gananciaTotal = saldoTotal;
     
@@ -293,6 +344,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
       totales,
       saldoTotal,
       saldos, // Incluir los saldos originales para mostrar detalles por moneda si es necesario
+      porcentajeGanancia, // Agregar el porcentaje de ganancia
     };
   };
 
@@ -495,7 +547,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
           {/* Columna Izquierda - Semáforo */}
           <div className="flex items-center justify-center">
             <div className="bg-white rounded-lg p-6 shadow-sm border text-center">
-              <h4 className="font-semibold text-gray-700 mb-4">Estado Financiero</h4>
+              <h4 className="font-semibold text-gray-700 mb-4">Estado Financiero ({porcentajeMostrar.toFixed(2)}%)</h4>
                 <div className="flex justify-center">
                    <SemaforoImg />
                 </div>
@@ -588,49 +640,6 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                     {formatMoney(resumenes.promedioDiario.ganancia, "PYG")}
                   </span>
                 </div>
-              </div>
-            </div>
-
-            {/* Desglose por Moneda */}
-            <div className="bg-white rounded-lg p-4 shadow-sm border">
-              <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <Banknote className="h-4 w-4 text-indigo-600" />
-                Desglose por Moneda
-              </h4>
-              <div className="space-y-3">
-                {resumenes.saldos && resumenes.saldos.map((saldo, index) => (
-                  <div key={index} className="border rounded-lg p-3 bg-gray-50">
-                    <div className="font-medium text-gray-800 mb-2">
-                      {saldo.nombre} ({saldo.sigla_iso})
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Ingresos:</span>
-                        <span className="font-semibold text-green-600">
-                          {formatMoney(saldo.ingresos, saldo.sigla_iso)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Egresos:</span>
-                        <span className="font-semibold text-red-600">
-                          {formatMoney(saldo.egresos, saldo.sigla_iso)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-t pt-1">
-                        <span className="text-gray-600">Saldo:</span>
-                        <span className={`font-bold ${saldo.saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatMoney(saldo.saldo, saldo.sigla_iso)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Promedio Diario:</span>
-                        <span className={`font-medium ${saldo.diario >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatMoney(saldo.diario, saldo.sigla_iso)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
@@ -856,24 +865,31 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                                 )}
                               </p>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">
-                                Abonos realizados:
-                              </span>
-                              <p className="font-medium text-blue-600">
-                                {movimiento.abonos?.length || 0}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">
-                                Estado:
-                              </span>
-                              <p className="font-medium">
-                                {getEstadoDescripcion(movimiento.id_estado)}
-                              </p>
-                            </div>
+                            {/* Solo mostrar Abonos realizados para por_pagar y por_cobrar */}
+                            {(selectedTipo.tipo === 5 || selectedTipo.tipo === 6) && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Abonos realizados:
+                                </span>
+                                <p className="font-medium text-blue-600">
+                                  {movimiento.abonos?.length || 0}
+                                </p>
+                              </div>
+                            )}
+                            {/* Solo mostrar Estado para por_pagar y por_cobrar */}
+                            {(selectedTipo.tipo === 5 || selectedTipo.tipo === 6) && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Estado:
+                                </span>
+                                <p className="font-medium">
+                                  {getEstadoDescripcion(movimiento.id_estado)}
+                                </p>
+                              </div>
+                            )}
                           </div>
-                          {movimiento.id_estado && (
+                          {/* Solo mostrar badge de estado para por_pagar y por_cobrar */}
+                          {(selectedTipo.tipo === 5 || selectedTipo.tipo === 6) && movimiento.id_estado && (
                             <div className="mt-2">
                               <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
