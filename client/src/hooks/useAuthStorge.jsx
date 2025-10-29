@@ -34,6 +34,7 @@ export const useAuthStore = create((set, get) => ({
     clearTimeout(get().timeoutId);
     removeEncrypted("user");
     removeEncrypted("empresaActual");
+    localStorage.removeItem("grupoSeleccionado");
     set({ user: null, timeoutId: null, empresaActual: null });
     await signOut(auth);
   },

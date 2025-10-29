@@ -57,6 +57,7 @@ import SemaforoImg from "./SemaforoImg";
 const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {} }) => {
   const [selectedTipo, setSelectedTipo] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [tipoSemaforo, setTipoSemaforo] = useState('default');
   const [abonosDialog, setAbonosDialog] = useState({
     open: false,
     movimiento: null,
@@ -84,8 +85,6 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
     abonoMonto: "",
     movimientoId: null,
   });
-
-  const umbralGananciaSemaforo = 5 // Umbral de ganancia en porcentaje para el semáforo financiero
 
   // useEffect para actualizar el porcentaje cuando cambien los datos
   useEffect(() => {
@@ -126,6 +125,22 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
       });
 
       const porcentajeGanancia = totalIngresos > 0 ? ((totalIngresos - totalGastos) / totalIngresos) * 100 : 0;
+
+      // Lógica del semáforo financiero
+      if (totalGastos > totalIngresos) {
+        // ROJO: Perdida cuando gastos superiores a ingresos
+        setTipoSemaforo('rojo');
+      } else if (porcentajeGanancia >= -5 && porcentajeGanancia <= 5) {
+        // AMARILLO: Margen del 5% hacia arriba o hacia abajo
+        setTipoSemaforo('amarillo');
+      } else if (totalIngresos > totalGastos && porcentajeGanancia > 5) {
+        // VERDE: Ingresos superiores a gastos con margen mayor al 5%
+        setTipoSemaforo('verde');
+      } else {
+        // Caso por defecto
+        setTipoSemaforo('amarillo');
+      }
+
       setPorcentajeMostrar(porcentajeGanancia);
     }
   }, [data.saldos, cotizaciones]);
@@ -387,7 +402,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
   const calcularTotalGS = (abonos) => {
     if (!Array.isArray(abonos)) return 0;
     return abonos.reduce((total, abono) => {
-      const montoEnGS = convertirAGuaranies(abono.monto, abono.id_moneda);
+      const montoEnGS = convertirAGuaranies(abono.monto_abono, abono.id_moneda);
       return total + montoEnGS;
     }, 0);
   };
@@ -546,13 +561,15 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Columna Izquierda - Semáforo */}
           <div className="flex items-center justify-center">
-            <div className="bg-white rounded-lg p-6 shadow-sm border text-center">
+            <div className="bg-white rounded-lg p-6 shadow-sm border">
               <h4 className="font-semibold text-gray-700 mb-4">Estado Financiero ({porcentajeMostrar.toFixed(2)}%)</h4>
                 <div className="flex justify-center">
-                   <SemaforoImg />
+                   <SemaforoImg tipo={tipoSemaforo} />
                 </div>
               <p className="text-sm text-gray-600 mt-4">
-                Indicador visual del estado de tus finanzas
+                {tipoSemaforo == "rojo" &&  <p>🟥 <span className="text-red-500 font-bold">Zona Roja:</span> Tus gastos están dominando tu economía. Detente y analiza antes de seguir.</p>}
+                {tipoSemaforo == "amarillo" && <p>🟨 <span className="text-yellow-500 font-bold">Alerta Financiera:</span> Estás en un punto delicado. Ajusta tus gastos antes de que sea tarde.</p>}
+                {tipoSemaforo == "verde" &&  <p>🟩 <span className="text-green-500 font-bold">Estabilidad:</span> Manejas tus finanzas con sabiduría. Mantén el equilibrio y sigue ahorrando.</p>}
               </p>
             </div>
           </div>

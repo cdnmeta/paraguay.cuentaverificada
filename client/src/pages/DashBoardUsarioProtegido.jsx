@@ -196,7 +196,7 @@ export default function DashBoardUsarioProtegido() {
     },
     {
       icon: "/icons/709049.png",
-      title: "Saldos",
+      title: "Wallet",
       desc: "Depósitos - Pagos - Ganancias",
     },
     {
