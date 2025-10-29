@@ -63,11 +63,11 @@ export class AuthController {
     @Req() req: Request,
     @Body() registerDto: RegisterUsuariosPayloadDto,
     @Res() res: Response,
-    @UploadedFiles(
-    ) files: { cedula_frontal: Express.Multer.File[], cedula_reverso: Express.Multer.File[], selfie: Express.Multer.File[] },
+    /* @UploadedFiles(
+    ) files: { cedula_frontal: Express.Multer.File[], cedula_reverso: Express.Multer.File[], selfie: Express.Multer.File[] }, */
   ) {
 
-    validateImageOrThrow(files.cedula_frontal?.[0], {
+    /* validateImageOrThrow(files.cedula_frontal?.[0], {
       required: true,
       requiredErrorMessage: 'La imagen de la cédula frontal es obligatoria',
       maxSizeMB: 5,
@@ -84,14 +84,14 @@ export class AuthController {
       requiredErrorMessage: 'La imagen del selfie es obligatoria',
       maxSizeMB: 5,
       fileType: 'image/jpeg|image/png|image/jpg',
-    });
+    }); */
 
 
-    const archivosRegistrar:UsuariosArchivos ={
+    /* const archivosRegistrar:UsuariosArchivos ={
       cedulaFrente: files.cedula_frontal[0],
       cedulaReverso: files.cedula_reverso[0],
       selfie: files.selfie[0],
-    }
+    } */
 
 
     const ip_origen = req.ip;
@@ -104,7 +104,7 @@ export class AuthController {
     }
    
 
-    const user = await this.authService.register(dataEnviar, archivosRegistrar);
+    const user = await this.authService.register(dataEnviar/* , archivosRegistrar */);
     // serializar la respuesta
     const userResponse = plainToInstance(UsuarioRegisterResponseDto, user, {
       excludeExtraneousValues: true,

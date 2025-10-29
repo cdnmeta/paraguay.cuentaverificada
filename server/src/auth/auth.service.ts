@@ -135,8 +135,8 @@ export class AuthService {
     }
   }
 
-  async register(registerDto: RegisterUsuariosDto, files: UsuariosArchivos) {
-    const { cedulaFrente, cedulaReverso, selfie } = files;
+  async register(registerDto: RegisterUsuariosDto, files?: UsuariosArchivos) {
+    const { cedulaFrente, cedulaReverso, selfie } = files || {};
     try {
       const userExiste = await this.prismaService.usuarios.findFirst({
         where: {

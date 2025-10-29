@@ -83,27 +83,6 @@ const schema = z
       .trim()
       .min(1, "Selecciona un código"),
     telefono: z.string().trim().min(6, "Teléfono inválido"),
-    cedula_frente: z
-      .instanceof(File, { message: "Imagen de cédula frontal es requerida" })
-      .refine((file) => file.size <= 5 * MB, "El archivo debe ser menor a 5MB")
-      .refine(
-        (file) => ["image/jpeg", "image/jpg", "image/png"].includes(file.type),
-        "Solo se permiten archivos JPG, JPEG o PNG"
-      ),
-    cedula_trasera: z
-      .instanceof(File, { message: "Imagen de cédula trasera es requerida" })
-      .refine((file) => file.size <= 5 * MB, "El archivo debe ser menor a 5MB")
-      .refine(
-        (file) => ["image/jpeg", "image/jpg", "image/png"].includes(file.type),
-        "Solo se permiten archivos JPG, JPEG o PNG"
-      ),
-    selfie: z
-      .instanceof(File, { message: "Selfie es requerido" })
-      .refine((file) => file.size <= 5 * MB, "El archivo debe ser menor a 5MB")
-      .refine(
-        (file) => ["image/jpeg", "image/jpg", "image/png"].includes(file.type),
-        "Solo se permiten archivos JPG, JPEG o PNG"
-      ),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
@@ -289,13 +268,13 @@ export default function SolicitarCuentaVerificada() {
       formData.append("telefono", data.telefono);
 
       // Agregar archivos
-      if (data.cedula_frente) {
+      if (data?.cedula_frente) {
         formData.append("cedula_frontal", data.cedula_frente);
       }
-      if (data.cedula_trasera) {
+      if (data?.cedula_trasera) {
         formData.append("cedula_reverso", data.cedula_trasera);
       }
-      if (data.selfie) {
+      if (data?.selfie) {
         formData.append("selfie", data.selfie);
       }
 
@@ -665,66 +644,6 @@ export default function SolicitarCuentaVerificada() {
                         </div>
                       </div>
 
-                      {/* Campos de imágenes */}
-                      <div className="md:col-span-2 space-y-4">
-                        <h3 className="text-lg font-semibold text-center md:text-left">
-                          Documentos Requeridos
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <FormField
-                            name="cedula_frente"
-                            control={form.control}
-                            render={({ field: { onChange, value } }) => (
-                              <FormItem>
-                                <ImageUpload
-                                  value={value}
-                                  onChange={onChange}
-                                  error={
-                                    form.formState.errors.cedula_frente?.message
-                                  }
-                                  label="Cédula - Parte Frontal"
-                                  placeholder="PNG, JPG, JPEG (Max. 5MB)"
-                                />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            name="cedula_trasera"
-                            control={form.control}
-                            render={({ field: { onChange, value } }) => (
-                              <FormItem>
-                                <ImageUpload
-                                  value={value}
-                                  onChange={onChange}
-                                  error={
-                                    form.formState.errors.cedula_trasera
-                                      ?.message
-                                  }
-                                  label="Cédula - Parte Trasera"
-                                  placeholder="PNG, JPG, JPEG (Max. 5MB)"
-                                />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            name="selfie"
-                            control={form.control}
-                            render={({ field: { onChange, value } }) => (
-                              <FormItem>
-                                <ImageUpload
-                                  value={value}
-                                  onChange={onChange}
-                                  error={form.formState.errors.selfie?.message}
-                                  label="Selfie"
-                                  placeholder="PNG, JPG, JPEG (Max. 5MB)"
-                                />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
 
                       <div className="flex-1 mt-1 md:col-span-2">
                         <FormField
