@@ -96,11 +96,11 @@ export default function ListadoSolicitudesCuentasPage({
             <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm font-medium text-gray-500 truncate">
+            <p className="text-xs sm:text-sm font-medium truncate">
               {titulo}
             </p>
             <div className="w-full text-right">
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">
+              <p className="text-lg sm:text-2xl font-bold">
               {valor || 0}
             </p>
             </div>
@@ -124,7 +124,7 @@ export default function ListadoSolicitudesCuentasPage({
             {/* Resumen de solicitudes en tarjetas responsivas */}
             {resumenSolicitudes && (
               <div className="mb-6">
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+                <div className="grid grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4">
                   <ResumenCard
                     icon={Clock}
                     titulo="Pendientes Verificación"

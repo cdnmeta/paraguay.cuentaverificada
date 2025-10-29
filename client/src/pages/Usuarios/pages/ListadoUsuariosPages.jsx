@@ -49,7 +49,7 @@ export default function ListadoUsuariosPages() {
             {roles.map((rol, index) => (
               <span
                 key={index}
-                className="bg-blue-100 text-blue-800 text-xs font-medium  px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300"
+                className="bg-info text-xs font-medium  px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300"
               >
                 {rol.descripcion}
               </span>
@@ -127,7 +127,7 @@ export default function ListadoUsuariosPages() {
   
 
   return (
-    <div className="container mx-auto bg-white p-6 rounded-lg shadow-md">
+    <div className="container mx-auto  p-6 rounded-lg shadow-md">
       <h1 className="text-xl font-bold">Filtro de Usuarios</h1>
 
       <FormFiltroUsuarios

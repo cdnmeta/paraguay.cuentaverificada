@@ -86,7 +86,7 @@ export default function FormFiltroUsuarios({ onResults, onLoadingChange }) {
   return (
     <form
       onSubmit={handleSubmit(handleOnSubmit)}
-      className="p-4 border rounded-md bg-white"
+      className="p-4 border rounded-md"
     >
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <div className="flex flex-col space-y-1">

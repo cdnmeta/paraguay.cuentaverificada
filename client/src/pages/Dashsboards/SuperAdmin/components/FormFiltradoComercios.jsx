@@ -75,7 +75,7 @@ export default function FormFiltradoComercios({onResults, onLoadingChange}) {
     onResults([]);
   }
   return (
-    <form onSubmit={handleSubmit(handleOnSubmit)} className="p-4 border rounded-md bg-white">
+    <form onSubmit={handleSubmit(handleOnSubmit)} className="p-4 border rounded-md">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div className="flex flex-col space-y-1">
           <Label>Nombre o Razón Social</Label>
