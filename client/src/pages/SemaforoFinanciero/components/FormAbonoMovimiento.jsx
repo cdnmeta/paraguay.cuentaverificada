@@ -98,8 +98,8 @@ const FormAbonoMovimiento = ({ movimiento, onSuccess }) => {
           Registrar Abono para: {movimiento?.descripcion}
         </h4>
         <div className="text-sm text-gray-600 space-y-1">
-          <p><span className="font-medium">Monto original:</span> {movimiento?.monto?.toLocaleString()} {movimiento?.id_moneda_movimiento === 1 ? 'USD' : 'PYG'}</p>
-          <p><span className="font-medium">Saldo pendiente:</span> {movimiento?.saldo_pendiente?.toLocaleString()} {movimiento?.id_moneda_movimiento === 1 ? 'USD' : 'PYG'}</p>
+          <p><span className="font-medium">Monto original:</span> {movimiento?.monto?.toLocaleString()} {movimiento?.id_moneda === 1 ? 'USD' : 'PYG'}</p>
+          <p><span className="font-medium">Saldo pendiente:</span> {movimiento?.saldo?.toLocaleString()} {movimiento?.id_moneda === 1 ? 'USD' : 'PYG'}</p>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSemaforoFinancieroDto, RegistrarAbonoMovimientoDto } from './dto/create-semaforo_financiero.dto';
 import { BorrarAbonoSemaforoFinancieroDto, UpdateSemaforoFinancieroDto } from './dto/update-semaforo_financiero.dto';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -52,6 +52,10 @@ export class SemaforoFinancieroService {
 
       if(movimientoExistente.id_usuario !== data.id_usuario){
         throw new ForbiddenException('No tiene permiso para abonar a este movimiento.');
+      }
+
+      if(data.monto > (movimientoExistente.saldo ?? 0)){
+        throw new BadRequestException('El monto del abono no puede ser mayor al saldo pendiente.');
       }
 
       const movimiento = await this.prismaService.runInTransaction(tx, async (client) => {

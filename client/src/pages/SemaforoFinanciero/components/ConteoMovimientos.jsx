@@ -261,13 +261,13 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
     // Calcular egresos por pagar
     (data.movimientos.por_pagar || []).forEach((mov) => {
       totales.egresosPorPagar += convertirAGuaranies(mov.monto, mov.id_moneda);
-      totales.egresosSaldosPagar += convertirAGuaranies(mov.acumulado || 0, mov.id_moneda);
+      totales.egresosSaldosPagar += convertirAGuaranies(mov.saldo || 0, mov.id_moneda);
     });
 
     // Calcular ingresos por cobrar
     (data.movimientos.por_cobrar || []).forEach((mov) => {
       totales.ingresosPorCobrar += convertirAGuaranies(mov.monto, mov.id_moneda);
-      totales.ingresosSaldosCobrar += convertirAGuaranies(mov.acumulado || 0, mov.id_moneda);
+      totales.ingresosSaldosCobrar += convertirAGuaranies(mov.saldo || 0, mov.id_moneda);
     });
 
     return totales;
@@ -552,8 +552,8 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
   return (
     <div className="space-y-6">
       {/* Sección de Resúmenes */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+      <div className="rounded-lg p-6 border-2  border-primary">
+        <h3 className="text-xl font-semibold text-foregroundmb-6 flex items-center gap-2">
           <Calculator className="h-5 w-5 text-blue-600" />
           Resumen Financiero
         </h3>
@@ -671,6 +671,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
           
           // Calcular total en guaraníes para este tipo
           let totalTipo = 0;
+          let saldosGenerales = 0;
           switch (tipo) {
             case 1:
               totalTipo = totales.ingresoFijo;
@@ -680,13 +681,14 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
               break;
             case 6:
               totalTipo = totales.ingresosPorCobrar;
+              saldosGenerales = totales.ingresosSaldosCobrar;
               break;
           }
 
           return (
             <Card
               key={tipo}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105`}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border-primary border-2`}
               onClick={() => handleCardClick(tipo)}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -702,6 +704,13 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                 <div className="text-lg font-semibold text-green-600">
                   {formatMoney(totalTipo, "PYG")}
                 </div>
+                {
+                  saldosGenerales > 0 && (
+                    <div className="text-sm font-bold text-yellow-600">
+                      por Cobrar: {formatMoney(saldosGenerales, "PYG")}
+                    </div>
+                  )
+                }
                 <p className="text-xs text-muted-foreground">
                   Tipo de movimiento ({config.label})
                 </p>
@@ -723,6 +732,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
           
           // Calcular total en guaraníes para este tipo
           let totalTipo = 0;
+          let saldosGenerales = 0;
           switch (tipo) {
             case 3:
               totalTipo = totales.gastoFijo;
@@ -732,13 +742,14 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
               break;
             case 5:
               totalTipo = totales.egresosPorPagar;
+              saldosGenerales = totales.egresosSaldosPagar;
               break;
           }
 
           return (
             <Card
               key={tipo}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105`}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border-primary border-2 `}
               onClick={() => handleCardClick(tipo)}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -754,6 +765,13 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                 <div className="text-lg font-semibold text-red-600">
                   {formatMoney(totalTipo, "PYG")}
                 </div>
+                {
+                  saldosGenerales > 0 && (
+                    <div className="text-sm font-bold text-yellow-600">
+                      Por Pagar: {formatMoney(saldosGenerales, "PYG")}
+                    </div>
+                  )
+                }
                 <p className="text-xs text-muted-foreground">
                   Tipo de movimiento ({config.label})
                 </p>
@@ -815,14 +833,82 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                             <h4 className="font-semibold text-base">
                               {movimiento.titulo || movimiento.descripcion} - {formatDate(movimiento.fecha_creacion)}
                             </h4>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">
+                                Monto:
+                              </span>
+                              <p className="font-medium">
+                                {formatMoney(
+                                  movimiento.monto,
+                                  getMonedaDescripcion(movimiento.id_moneda)
+                                )}
+                              </p>
+                            </div>
+                            {/* Solo mostrar Abonos realizados para por_pagar y por_cobrar */}
+                            {(selectedTipo.tipo === 5 || selectedTipo.tipo === 6) && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Abonos
+                                </span>
+                                <p className="font-medium text-blue-600">
+                                  {movimiento.abonos?.length || 0}
+                                </p>
+                              </div>
+                            )}
+                            {/* Solo mostrar Estado para por_pagar y por_cobrar */}
+                            {(selectedTipo.tipo === 5 || selectedTipo.tipo === 6) && (
+                              <div>
+                                <span className="text-muted-foreground">
+                                  {selectedTipo.tipo == 5 ? "Por Pagar" : "Por Cobrar"}
+                                </span>
+                                <p className="font-medium text-yellow-500 ">
+                                  {formatMoney(
+                                    movimiento.saldo,
+                                    getMonedaDescripcion(movimiento.id_moneda)
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          {/* Solo mostrar badge de estado para por_pagar y por_cobrar */}
+                          {(selectedTipo.tipo === 5 || selectedTipo.tipo === 6) && movimiento.id_estado && (
+                            <div className="mt-2">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  getEstadoDescripcion(movimiento.id_estado) === "Vencido"
+                                    ? "bg-red-100 text-red-800"
+                                    : getEstadoDescripcion(movimiento.id_estado) ===
+                                      "Pendiente"
+                                    ? "bg-orange-100 text-orange-800"
+                                    : "bg-green-100 text-green-800"
+                                }`}
+                              >
+                                {getEstadoDescripcion(movimiento.id_estado)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        {(movimiento.abonos?.length || 0) > 0 && (
+                          <div className="mx-4 text-right">
+                            <p className="text-lg font-bold text-green-600">
+                              {formatMoney(
+                                calcularTotalGS(movimiento.abonos),
+                                "PYG"
+                              )}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Total abonado (GS)
+                            </p>
+                          </div>
+                        )}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
                                 >
-                                  <MoreVertical className="h-4 w-4" />
+                                  <MoreVertical className="h-10 w-10" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
@@ -869,73 +955,6 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                                 )}
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">
-                                Monto:
-                              </span>
-                              <p className="font-medium">
-                                {formatMoney(
-                                  movimiento.monto,
-                                  getMonedaDescripcion(movimiento.id_moneda)
-                                )}
-                              </p>
-                            </div>
-                            {/* Solo mostrar Abonos realizados para por_pagar y por_cobrar */}
-                            {(selectedTipo.tipo === 5 || selectedTipo.tipo === 6) && (
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Abonos realizados:
-                                </span>
-                                <p className="font-medium text-blue-600">
-                                  {movimiento.abonos?.length || 0}
-                                </p>
-                              </div>
-                            )}
-                            {/* Solo mostrar Estado para por_pagar y por_cobrar */}
-                            {(selectedTipo.tipo === 5 || selectedTipo.tipo === 6) && (
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Estado:
-                                </span>
-                                <p className="font-medium">
-                                  {getEstadoDescripcion(movimiento.id_estado)}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                          {/* Solo mostrar badge de estado para por_pagar y por_cobrar */}
-                          {(selectedTipo.tipo === 5 || selectedTipo.tipo === 6) && movimiento.id_estado && (
-                            <div className="mt-2">
-                              <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  getEstadoDescripcion(movimiento.id_estado) === "Vencido"
-                                    ? "bg-red-100 text-red-800"
-                                    : getEstadoDescripcion(movimiento.id_estado) ===
-                                      "Pendiente"
-                                    ? "bg-orange-100 text-orange-800"
-                                    : "bg-green-100 text-green-800"
-                                }`}
-                              >
-                                {getEstadoDescripcion(movimiento.id_estado)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        {(movimiento.abonos?.length || 0) > 0 && (
-                          <div className="ml-4 text-right">
-                            <p className="text-lg font-bold text-green-600">
-                              {formatMoney(
-                                calcularTotalGS(movimiento.abonos),
-                                "PYG"
-                              )}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Total abonado (GS)
-                            </p>
-                          </div>
-                        )}
                       </div>
                     </div>
                   ))}
