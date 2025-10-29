@@ -119,10 +119,10 @@ export const FormLogin = ({redirect=true, afterSubmit = ()=>{}}) => {
                 name="documento"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Documento</FormLabel>
+                    <FormLabel>Cedula de Identidad</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Ingrese su documento"
+                        placeholder="Ingrese su cedula de identidad sin puntos"
                         {...field}
                         autoComplete="username"
                       />
@@ -178,13 +178,13 @@ export const FormLogin = ({redirect=true, afterSubmit = ()=>{}}) => {
               <div className="text-center mt-4 text-sm">
                 <Link
                   to={PUBLIC_ROUTES.solicitarCuentaVerificada}
-                  className="text-blue-600 underline block mt-2"
+                  className="text-primary underline block mt-2"
                 >
                   ¿No tenés cuenta? Registrarte
                 </Link>
                 <Link
                   to={PUBLIC_ROUTES.resetPassword}
-                  className="text-blue-600 underline block mt-2"
+                  className="text-white underline block mt-2"
                 >
                   ¿Olvidaste tu contraseña? Restablecer contraseña
                 </Link>

@@ -667,7 +667,7 @@ export default function SolicitarCuentaVerificada() {
                                 <FormLabel className="text-sm text-muted-foreground">
                                   <span>
                                     He leido y acepto los{" "}
-                                    <span className="text-blue-600 hover:underline">
+                                    <span className="text-primary hover:underline">
                                       <a href="#">Terminos y Condiciones</a>
                                     </span>
                                   </span>

@@ -293,7 +293,7 @@ const FormResetPassword = () => {
 
           {/* Información adicional */}
           <div className="text-center pt-2">
-            <Link to={PUBLIC_ROUTES.recoveryPin} className="text-blue-500 text-sm underline" >
+            <Link to={PUBLIC_ROUTES.recoveryPin} className="text-white text-sm underline" >
               ¿Olvidaste tu PIN ?, restablece aquí
             </Link>
           </div>

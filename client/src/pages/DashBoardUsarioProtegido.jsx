@@ -280,7 +280,7 @@ export default function DashBoardUsarioProtegido() {
                   {emociones.map((item, i) => (
                     <Card
                       key={i}
-                      className="cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-105 group bg-background/50 backdrop-blur-sm border border-border/30 hover:border-primary/50 hover:bg-primary/5"
+                      className="cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-105 group  hover:bg-primary/5"
                       onClick={() => handleEmotionClick(item)}
                     >
                       <CardContent className="flex flex-col items-center p-4 space-y-2">
@@ -304,7 +304,7 @@ export default function DashBoardUsarioProtegido() {
 
         {/* Mensaje cuando ya se vio el mensaje del día */}
         {!mostrarEmociones && !mostrarMensaje && (
-          <div className="bg-background/90 backdrop-blur-sm border border-border/50 rounded-xl p-6 shadow-lg">
+          <Card className="rounded-xl p-6 shadow-lg">
             <div className="flex flex-col items-center space-y-4">
               <div className="text-6xl">✨</div>
               <h2 className="text-2xl font-bold text-foreground">
@@ -314,7 +314,7 @@ export default function DashBoardUsarioProtegido() {
                 Ya has recibido tu mensaje inspirador de hoy. Vuelve mañana para descubrir un nuevo mensaje.
               </p>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Secciones */}
@@ -322,7 +322,7 @@ export default function DashBoardUsarioProtegido() {
           {secciones.map((item, i) => (
             <Card
               key={i}
-              className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 group bg-background/95 backdrop-blur-sm border border-border/50 hover:border-primary/50"
+              className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 group"
               onClick={item.onClick}
             >
               <CardHeader className="pb-3">
