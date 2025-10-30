@@ -571,21 +571,23 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
   return (
     <div className="space-y-6">
       {/* Sección de Resúmenes */}
-      <div className="rounded-lg p-6 border-2  border-primary">
-        <h3 className="text-xl font-semibold text-foregroundmb-6 flex items-center gap-2">
+      <div className="rounded-lg p-6 border-2 border-primary">
+        <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
           <Calculator className="h-5 w-5 text-blue-600" />
           Resumen Financiero
         </h3>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 ">
           {/* Columna Izquierda - Semáforo */}
           <div className="flex items-center justify-center">
-            <div className="bg-white rounded-lg p-6 shadow-sm border">
-              <h4 className="font-semibold text-gray-700 mb-4">Estado Financiero ({porcentajeMostrar.toFixed(2)}%)</h4>
+            <div className="bg-card border-2 border-primary rounded-lg p-4 shadow-sm">
+              <h4 className="font-semibold mb-4">Estado Financiero ({porcentajeMostrar.toFixed(2)}%)</h4>
                 <div className="flex justify-center">
-                   <SemaforoImg tipo={tipoSemaforo} />
+                   <div className="w-15 h-auto max-w-xs">
+                     <SemaforoImg tipo={tipoSemaforo} />
+                   </div>
                 </div>
-              <p className="text-sm text-gray-600 mt-4">
+              <p className="text-sm text-foreground mt-4">
                 {tipoSemaforo == "rojo" &&  <p>🟥 <span className="text-red-500 font-bold">Zona Roja:</span> Tus gastos están dominando tu economía. Detente y analiza antes de seguir.</p>}
                 {tipoSemaforo == "amarillo" && <p>🟨 <span className="text-yellow-500 font-bold">Alerta Financiera:</span> Estás en un punto delicado. Ajusta tus gastos antes de que sea tarde.</p>}
                 {tipoSemaforo == "verde" &&  <p>🟩 <span className="text-green-500 font-bold">Estabilidad:</span> Manejas tus finanzas con sabiduría. Mantén el equilibrio y sigue ahorrando.</p>}
@@ -594,28 +596,28 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
           </div>
 
           {/* Columna Derecha - Resúmenes Numéricos */}
-          <div className="space-y-4">
+
             {/* Promedio Diario */}
-            <div className="bg-white rounded-lg p-4 shadow-sm border">
-              <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <div className="bg-card border-2 border-primary rounded-lg p-4 shadow-sm">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-green-600" />
                 Promedio Diario
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Ingresos:</span>
+                  <span className="text-foreground">Ingresos:</span>
                   <span className="font-semibold text-green-600">
                     {formatMoney(resumenes.promedioDiario.ingresos, "PYG")}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Gastos:</span>
+                  <span className="text-foreground">Gastos:</span>
                   <span className="font-semibold text-red-600">
                     {formatMoney(resumenes.promedioDiario.gastos, "PYG")}
                   </span>
                 </div>
-                <div className="flex justify-between border-t pt-2">
-                  <span className="text-gray-600">Ganancia:</span>
+                <div className="flex justify-between border-t pt-2">  
+                  <span className="text-foreground">Ganancia:</span>
                   <span className={`font-bold ${resumenes.promedioDiario.ganancia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatMoney(resumenes.promedioDiario.ganancia, "PYG")}
                   </span>
@@ -624,26 +626,26 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
             </div>
 
             {/* Promedio Mensual */}
-            <div className="bg-white rounded-lg p-4 shadow-sm border">
-              <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <div className="bg-card border-2 border-primary rounded-lg p-4 shadow-sm">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-blue-600" />
                 Promedio Mensual
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Ingresos:</span>
+                  <span className="text-foreground">Ingresos:</span>
                   <span className="font-semibold text-green-600">
                     {formatMoney(resumenes.promedioMensual.ingresos, "PYG")}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Gastos:</span>
+                  <span className="text-foreground">Gastos:</span>
                   <span className="font-semibold text-red-600">
                     {formatMoney(resumenes.promedioMensual.gastos, "PYG")}
                   </span>
                 </div>
                 <div className="flex justify-between border-t pt-2">
-                  <span className="text-gray-600">Ganancia:</span>
+                  <span className="text-foreground">Ganancia:</span>
                   <span className={`font-bold ${resumenes.promedioMensual.ganancia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatMoney(resumenes.promedioMensual.ganancia, "PYG")}
                   </span>
@@ -652,33 +654,33 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
             </div>
 
             {/* Resumen de Ganancias */}
-            <div className="bg-white rounded-lg p-4 shadow-sm border">
-              <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <div className="bg-card border-2 border-primary rounded-lg p-4 shadow-sm">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-purple-600" />
-                Resumen de Ganancias (Total en Guaraníes)
+                Resultado (Total en Guaraníes)
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Saldo Total:</span>
+                  <span className="text-foreground">Saldo Total:</span>
                   <span className={`font-semibold ${resumenes.saldoTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatMoney(resumenes.saldoTotal, "PYG")}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Mensual:</span>
+                  <span className="text-foreground">Mensual:</span>
                   <span className={`font-semibold ${resumenes.promedioMensual.ganancia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatMoney(resumenes.promedioMensual.ganancia, "PYG")}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Diario:</span>
+                <div className="flex justify-between border-t pt-2">
+                  <span className="text-foreground">Diario:</span>
                   <span className={`font-semibold ${resumenes.promedioDiario.ganancia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatMoney(resumenes.promedioDiario.ganancia, "PYG")}
                   </span>
                 </div>
               </div>
             </div>
-          </div>
+          
         </div>
       </div>
 
@@ -716,9 +718,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                 <div className="flex items-center gap-2">
                   <Icon className={`h-4 w-4 ${config.color}`} />
                   <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 hover:bg-green-100"
+                    className="h-10 w-10 p-0 hover:opacity-20"
                     onClick={(e) => {
                       e.stopPropagation();
                       let tipoMovimiento;
@@ -740,7 +740,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                       abrirFormularioMovimiento(tipoMovimiento, titulo);
                     }}
                   >
-                    <Plus className="h-3 w-3 text-green-600" />
+                    <Plus className="h-10 w-10" />
                   </Button>
                 </div>
               </CardHeader>
@@ -754,7 +754,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                 {
                   saldosGenerales > 0 && (
                     <div className="text-sm font-bold text-yellow-600">
-                      por Cobrar: {formatMoney(saldosGenerales, "PYG")}
+                      Por Cobrar: {formatMoney(saldosGenerales, "PYG")}
                     </div>
                   )
                 }
@@ -807,9 +807,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                 <div className="flex items-center gap-2">
                   <Icon className={`h-4 w-4 ${config.color}`} />
                   <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 hover:bg-red-100"
+                    className="h-10 w-10 p-0 hover:opacity-20"
                     onClick={(e) => {
                       e.stopPropagation();
                       let tipoMovimiento;
@@ -831,7 +829,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                       abrirFormularioMovimiento(tipoMovimiento, titulo);
                     }}
                   >
-                    <Plus className="h-3 w-3 text-red-600" />
+                    <Plus className="h-3 w-3" />
                   </Button>
                 </div>
               </CardHeader>

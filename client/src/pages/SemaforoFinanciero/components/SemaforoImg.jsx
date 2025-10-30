@@ -17,5 +17,5 @@ export default function SemaforoImg({tipo='default'}) {
       semanoforMostrar=semaforoVerde;
       break;
   }
-  return <img src={semanoforMostrar} alt="Semaforo" />;
+  return <img src={semanoforMostrar} className='w-full' alt="Semaforo" />;
 }

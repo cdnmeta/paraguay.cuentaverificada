@@ -114,7 +114,7 @@ const TimeLineMensajes = ({ mensajes, usuarioActual }) => {
               </div>
 
               {/* Footer con fecha */}
-              <div className={`text-xs text-gray-500 mt-1 ${esMio ? 'text-right' : 'text-left'}`}>
+              <div className={`text-xs mt-1 ${esMio ? 'text-right' : 'text-left'}`}>
                 {formatearFecha(mensaje.fecha_creacion)}
               </div>
             </div>

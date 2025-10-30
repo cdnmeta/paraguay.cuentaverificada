@@ -73,7 +73,7 @@ export default function MisTicketsPage() {
       case 'baja':
         return 'text-green-500';
       default:
-        return 'text-gray-500';
+        return ' text-foreground';
     }
   };
 
@@ -144,7 +144,7 @@ export default function MisTicketsPage() {
           <div className="flex flex-col items-center">
             <Tag className="h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">No tienes tickets</h3>
-            <p className="text-gray-500">Aún no has creado ningún ticket de soporte</p>
+            <p className=" text-foreground">Aún no has creado ningún ticket de soporte</p>
           </div>
         </div>
       ) : (
@@ -167,7 +167,7 @@ export default function MisTicketsPage() {
                         <Badge variant={getEstadoBadgeVariant(ticket.id_estado)}>
                           {ticket.descripcion_estado}
                         </Badge>
-                        <span className="text-xs text-gray-500">#{ticket.id}</span>
+                        <span className="text-xs  text-foreground">#{ticket.id}</span>
                       </div>
                       <h3 
                         className="font-medium text-foreground text-sm leading-5 mb-1"
@@ -195,7 +195,7 @@ export default function MisTicketsPage() {
                   </span>
                   <div className="space-y-3">
                     {/* Fecha y hora del último mensaje */}
-                    <div className="flex items-center text-xs text-gray-600">
+                    <div className="flex items-center text-xs text-foreground">
                       <span className='mr-2'>Último Mensaje</span>
                       <Calendar className="h-3 w-3 mr-1.5" />
                       <span className="mr-3">{fecha}</span>
@@ -204,7 +204,7 @@ export default function MisTicketsPage() {
                     </div>
 
                     {/* Tipo de ticket */}
-                    <div className="flex items-center text-xs text-gray-600">
+                    <div className="flex items-center text-xs text-foreground">
                       <Tag className="h-3 w-3 mr-1.5" />
                       <span className="truncate">
                         {ticket.descripcion_tipo_ticket || 'No Asignado'}
@@ -212,7 +212,7 @@ export default function MisTicketsPage() {
                     </div>
 
                     {/* Nombre del soporte asignado */}
-                    <div className="flex items-center text-xs text-gray-600">
+                    <div className="flex items-center text-xs text-foreground">
                       <User className="h-3 w-3 mr-1.5" />
                       <span className="truncate">
                         {ticket.nombre_asignado || 'Sin asignar'}
@@ -221,14 +221,14 @@ export default function MisTicketsPage() {
 
                     {/* Prioridad */}
                     <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                      <span className="text-xs text-gray-500">Prioridad:</span>
+                      <span className="text-xs  text-foreground">Prioridad:</span>
                       <span className={`text-xs font-medium ${getPrioridadColor(ticket.prioridad)}`}>
                         {ticket.prioridad}
                       </span>
                     </div>
 
                     {/* Reportante */}
-                    <div className="text-xs text-gray-500 truncate">
+                    <div className="text-xs  text-foreground truncate">
                       Reportado por: {ticket.nombre_reportante}
                     </div>
                   </div>

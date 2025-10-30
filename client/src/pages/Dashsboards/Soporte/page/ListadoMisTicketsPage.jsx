@@ -199,11 +199,13 @@ export default function ListadoMisTicketsPage() {
               </div>
             </div>
           ) : (
-            <ListadoTickets
+            <div className="grid grid-cols-1">
+              <ListadoTickets
               data={tickets}
               columnas_habilitar={columnasHabilitadas}
               opciones_habilitar={opcionesHabilitadas}
             />
+            </div>
           )}
         </CardContent>
       </Card>

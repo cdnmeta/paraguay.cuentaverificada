@@ -190,62 +190,8 @@ export default function SemaforoFinancieroPage() {
     <div className="">
       <div className="mb-6">
         <div>
-          {/* Sección de Cotizaciones */}
-          <div className="mb-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-blue-600" />
-                  Cotizaciones a Guaraníes (PYG)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {getCotizacionesAGuaranies().map((cotizacion) => (
-                    <div key={cotizacion.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">
-                            {cotizacion.moneda_origen_iso}
-                          </Badge>
-                          <span className="text-sm text-gray-600">→</span>
-                          <Badge variant="secondary">
-                            {cotizacion.moneda_destino_iso}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm ">Compra:</span>
-                          <span className="font-semibold text-green-600">
-                            ₲{cotizacion.monto_compra?.toLocaleString() || 'N/A'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm ">Venta:</span>
-                          <span className="font-semibold text-red-600">
-                            ₲{cotizacion.monto_venta?.toLocaleString() || 'N/A'}
-                          </span>
-                        </div>
-                        <div className="text-xs mt-2">
-                          {cotizacion.moneda_origen_nombre}
-                        </div>
-                        <div className="text-xs ">
-                          Actualizado: {new Date(cotizacion.fecha).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {getCotizacionesAGuaranies().length === 0 && (
-                    <div className="col-span-full text-center py-8 text-gray-500">
-                      <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-                      <p>No hay cotizaciones disponibles para guaraníes</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Sección de Cotizaciones - Listado simple */}
+          
           
           <h1 className="text-3xl font-bold tracking-tight">
             Semáforo Financiero
@@ -255,6 +201,28 @@ export default function SemaforoFinancieroPage() {
           </p>
         </div>
       </div>
+
+      <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium text-muted-foreground">Cotizaciones actuales</h3>
+            </div>
+            
+            {getCotizacionesAGuaranies().length > 0 ? (
+              <div className="flex flex-wrap gap-4 text-sm">
+                {getCotizacionesAGuaranies().map((cotizacion) => (
+                  <div key={cotizacion.id} className="flex items-center gap-2 text-muted-foreground">
+                    <Badge variant="outline" className="text-xs">
+                      {cotizacion.moneda_origen_iso}
+                    </Badge>
+                    <span>₲{cotizacion.monto_venta?.toLocaleString() || 'N/A'}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No hay cotizaciones disponibles</p>
+            )}
+          </div>
 
       {/* Botones de acción adicionales */}
       <div className="flex items-center gap-3 mb-6">

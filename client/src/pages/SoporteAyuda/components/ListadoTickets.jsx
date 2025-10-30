@@ -372,9 +372,9 @@ export default function ListadoTickets({
                 <Eye className="h-4 w-4" />
               </Button>
             )}
-            
-            
-            {defaultOpciones.mostrarAbrir && ticket.id_estado === 1 && (
+
+
+            {defaultOpciones.mostrarAbrir && [2, 3, 4, 5].includes(ticket.id_estado) && (
               <Button
                 onClick={() => handleAccion('abrir', ticket)}
                 variant="outline"
