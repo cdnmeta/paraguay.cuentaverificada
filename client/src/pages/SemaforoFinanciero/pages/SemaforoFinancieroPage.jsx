@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -9,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,18 +19,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  TrendingUp,
-  TrendingDown,
   DollarSign,
   Calendar,
   AlertCircle,
-  CheckCircle,
   Clock,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Banknote,
-  CreditCard,
-  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -42,15 +32,6 @@ import {
 } from "@/apis/semaforoFinanciero.api";
 import TablaSemaforoMovimientos from "../components/TablaSemaforoMovimientos";
 import ConteoMovimientos from "../components/ConteoMovimientos";
-import FormSemaforoFinancieroMovimiento from "../components/FormSemaforoFinancieroMovimiento";
-import { TIPOS_MOVIMIENTOS } from "../utils/constanst";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { getCotizacionesEmpresa } from "@/apis/cotizacion-empresa.api";
 
 // Constantes
@@ -72,11 +53,6 @@ export default function SemaforoFinancieroPage() {
   const [mesSeleccionado, setMesSeleccionado] = useState(
     new Date().getMonth() + 1
   ); // mes actual
-  const [formDialog, setFormDialog] = useState({
-    open: false,
-    tipoMovimiento: null,
-    titulo: "",
-  });
 
   useEffect(() => {
     cargarDatosSemaforo({ mes: mesSeleccionado });
@@ -112,11 +88,6 @@ export default function SemaforoFinancieroPage() {
     new Date(0, key).toLocaleString("es", { month: "long" })
   );
 
-  const getCotizacionByMoneda = (idDestino = ID_MONEDA_GUARANIES) => {
-    const cotizacion = cotizaciones.find((cot => cot.id_moneda_destino === idDestino));
-    return cotizacion;
-  };
-
   // Obtener cotizaciones donde el destino sea guaraníes
   const getCotizacionesAGuaranies = () => {
     return cotizaciones.filter(cot => cot.id_moneda_destino === ID_MONEDA_GUARANIES);
@@ -140,19 +111,6 @@ export default function SemaforoFinancieroPage() {
 
   const cancelarEliminarMovimiento = () => {
     setDeleteDialog({ open: false, movimientoId: null, titulo: "" });
-  };
-
-  const abrirFormularioMovimiento = (tipoMovimiento, titulo) => {
-    setFormDialog({ open: true, tipoMovimiento, titulo });
-  };
-
-  const cerrarFormularioMovimiento = () => {
-    setFormDialog({ open: false, tipoMovimiento: null, titulo: "" });
-  };
-
-  const onFormularioSuccess = () => {
-    cerrarFormularioMovimiento();
-    cargarDatosSemaforo({ mes: mesSeleccionado });
   };
 
   if (loading) {
@@ -298,103 +256,6 @@ export default function SemaforoFinancieroPage() {
         </div>
       </div>
 
-      {/* Grilla de acciones principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Registrar Ingresos */}
-        <div className="border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-          <div className="p-6 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-8 w-8 text-green-600" />
-              </div>
-            </div>
-            <h2 className="text-xl font-semibold mb-4">Registrar Ingresos</h2>
-            <div className="space-y-3">
-              <Button
-                onClick={() =>
-                  abrirFormularioMovimiento(
-                    TIPOS_MOVIMIENTOS.INGRESO_FIJO,
-                    "Registrar Ingreso Fijo"
-                  )
-                }
-                className="w-full bg-green-600 hover:bg-green-700 text-white rounded-md"
-              >
-                Ingresos Fijos
-              </Button>
-              <Button
-                onClick={() =>
-                  abrirFormularioMovimiento(
-                    TIPOS_MOVIMIENTOS.INGRESO_EXTRA,
-                    "Registrar Ingreso Extra"
-                  )
-                }
-                className="w-full bg-green-600 hover:bg-green-700 text-white rounded-md"
-              >
-                Ingresos Extras
-              </Button>
-              <Button
-                onClick={() =>
-                  abrirFormularioMovimiento(
-                    TIPOS_MOVIMIENTOS.CUENTAS_POR_COBRAR,
-                    "Registrar Cuenta por Cobrar"
-                  )
-                }
-                className="w-full bg-green-600 hover:bg-green-700 text-white rounded-md"
-              >
-                Cuentas por Cobrar
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Registrar Gastos */}
-        <div className="text-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-          <div className="p-6 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <TrendingDown className="h-8 w-8 text-red-600" />
-              </div>
-            </div>
-            <h2 className="text-xl font-semibold  mb-4">Registrar Gastos</h2>
-            <div className="space-y-3">
-              <Button
-                onClick={() =>
-                  abrirFormularioMovimiento(
-                    TIPOS_MOVIMIENTOS.GASTO_FIJO,
-                    "Registrar Gasto Fijo"
-                  )
-                }
-                className="w-full bg-red-600 hover:bg-red-700 text-white rounded-md"
-              >
-                Gastos Fijos
-              </Button>
-              <Button
-                onClick={() =>
-                  abrirFormularioMovimiento(
-                    TIPOS_MOVIMIENTOS.GASTO_EXTRA,
-                    "Registrar Gasto Extra"
-                  )
-                }
-                className="w-full bg-red-600 hover:bg-red-700 text-white rounded-md"
-              >
-                Gastos Extras
-              </Button>
-              <Button
-                onClick={() =>
-                  abrirFormularioMovimiento(
-                    TIPOS_MOVIMIENTOS.CUENTAS_POR_PAGAR,
-                    "Registrar Cuenta por Pagar"
-                  )
-                }
-                className="w-full bg-red-600 hover:bg-red-700 text-white rounded-md"
-              >
-                Cuentas por Pagar
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Botones de acción adicionales */}
       <div className="flex items-center gap-3 mb-6">
         <Button
@@ -491,25 +352,6 @@ export default function SemaforoFinancieroPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Dialog del formulario de movimientos */}
-      <Dialog
-        open={formDialog.open}
-        onOpenChange={(open) => !open && cerrarFormularioMovimiento()}
-      >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{formDialog.titulo}</DialogTitle>
-            <DialogDescription>
-              Complete los datos del movimiento financiero
-            </DialogDescription>
-          </DialogHeader>
-          <FormSemaforoFinancieroMovimiento
-            tipoMovimiento={formDialog.tipoMovimiento}
-            onSuccess={onFormularioSuccess}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

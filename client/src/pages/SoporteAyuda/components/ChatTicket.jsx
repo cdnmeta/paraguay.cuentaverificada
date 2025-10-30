@@ -192,7 +192,7 @@ const ChatTicket = ({
   const mensaje = watch('mensaje');
 
   return (
-    <div className="bg-white border rounded-lg p-4 shadow-sm">
+    <div className=" border rounded-lg p-4 shadow-sm">
       
       {/* Estado del ticket */}
       <div className={`mb-4 p-3 rounded-lg text-sm ${

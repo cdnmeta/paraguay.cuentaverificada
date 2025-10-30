@@ -240,9 +240,9 @@ export default function TicketDetalle({ id_ticket }) {
     <div className="space-y-6 p-4">
       
       {/* Header del ticket */}
-      <div className="bg-white border rounded-lg p-4 shadow-sm">
+      <div className=" border rounded-lg p-4 shadow-sm">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold">
           <Button className="mr-4" variant={'outline'} onClick={() => window.history.back()}>&lt; Volver</Button>
             Ticket #{id_ticket}
             {ticketInfo?.asunto && ` - ${ticketInfo.asunto}`}

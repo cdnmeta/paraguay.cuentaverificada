@@ -71,7 +71,7 @@ const TimeLineMensajes = ({ mensajes, usuarioActual }) => {
   }
 
   return (
-    <div className="flex flex-col space-y-4 p-4 h-96 overflow-y-auto bg-gray-50 rounded-lg">
+    <div className="flex flex-col space-y-4 p-4 h-96 overflow-y-auto border-primary border-2 rounded-lg">
       {mensajes.map((mensaje) => {
         const esMio = esMensajeMio(mensaje);
         
@@ -81,10 +81,10 @@ const TimeLineMensajes = ({ mensajes, usuarioActual }) => {
             id={`msg-${mensaje.id}`}
             className={`flex ${esMio ? 'justify-end' : 'justify-start'}`}
           >
-            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${esMio ? 'rounded-br-none' : 'rounded-bl-none'}`}>
+            <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-secondary shadow-sm ${esMio ? 'rounded-br-none' : 'rounded-bl-none'}`}>
               
               {/* Header del mensaje */}
-              <div className={`flex items-center justify-between mb-1 ${esMio ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className={`flex items-center justify-between mb-2 ${esMio ? 'flex-row-reverse' : 'flex-row'}`}>
                 <div className={`text-xs font-medium ${esMio ? 'text-right' : 'text-left'}`}>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${obtenerColorPorRol(mensaje.rol_autor, esMio)}`}>
                     {esMio ? 'Tú' : `${mensaje.autor_nombre} (${obtenerTipoUsuario(mensaje.rol_autor)})`}

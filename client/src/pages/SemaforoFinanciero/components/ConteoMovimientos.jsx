@@ -76,6 +76,12 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
     open: false,
     movimiento: null,
   });
+  const [formDialog, setFormDialog] = useState({
+      open: false,
+      tipoMovimiento: null,
+      titulo: "",
+    });
+  
 
   const [porcentajeMostrar, setPorcentajeMostrar] = useState(0);
 
@@ -545,6 +551,19 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
     }
   };
 
+  const abrirFormularioMovimiento = (tipoMovimiento, titulo) => {
+    setFormDialog({ open: true, tipoMovimiento, titulo });
+  };
+
+  const cerrarFormularioMovimiento = () => {
+    setFormDialog({ open: false, tipoMovimiento: null, titulo: "" });
+  };
+
+  const onFormularioSuccess = () => {
+    cerrarFormularioMovimiento();
+    afterDelete?.(); // Recarga los datos
+  };
+
   // Calcular resúmenes
   const resumenes = calcularResumenes();
   const totales = calcularTotalesPorTipo();
@@ -569,7 +588,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
               <p className="text-sm text-gray-600 mt-4">
                 {tipoSemaforo == "rojo" &&  <p>🟥 <span className="text-red-500 font-bold">Zona Roja:</span> Tus gastos están dominando tu economía. Detente y analiza antes de seguir.</p>}
                 {tipoSemaforo == "amarillo" && <p>🟨 <span className="text-yellow-500 font-bold">Alerta Financiera:</span> Estás en un punto delicado. Ajusta tus gastos antes de que sea tarde.</p>}
-                {tipoSemaforo == "verde" &&  <p>🟩 <span className="text-green-500 font-bold">Estabilidad:</span> Manejas tus finanzas con sabiduría. Mantén el equilibrio y sigue ahorrando.</p>}
+                {tipoSemaforo == "verde" &&  <p>🟩 <span className="text-green-500 font-bold">Estabilidad:</span> Manejas tus finanzas con sabiduría. Mantén el equilibrio y sigue ahorrando.</p>}
               </p>
             </div>
           </div>
@@ -689,13 +708,41 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
             <Card
               key={tipo}
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border-primary border-2`}
-              onClick={() => handleCardClick(tipo)}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {config.label}
                 </CardTitle>
-                <Icon className={`h-4 w-4 ${config.color}`} />
+                <div className="flex items-center gap-2">
+                  <Icon className={`h-4 w-4 ${config.color}`} />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0 hover:bg-green-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      let tipoMovimiento;
+                      let titulo;
+                      switch (tipo) {
+                        case 1:
+                          tipoMovimiento = TIPOS_MOVIMIENTOS.INGRESO_FIJO;
+                          titulo = "Registrar Ingreso Fijo";
+                          break;
+                        case 2:
+                          tipoMovimiento = TIPOS_MOVIMIENTOS.INGRESO_EXTRA;
+                          titulo = "Registrar Ingreso Extra";
+                          break;
+                        case 6:
+                          tipoMovimiento = TIPOS_MOVIMIENTOS.CUENTAS_POR_COBRAR;
+                          titulo = "Registrar Cuenta por Cobrar";
+                          break;
+                      }
+                      abrirFormularioMovimiento(tipoMovimiento, titulo);
+                    }}
+                  >
+                    <Plus className="h-3 w-3 text-green-600" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className={`text-2xl font-bold ${config.color}`}>
@@ -714,7 +761,9 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                 <p className="text-xs text-muted-foreground">
                   Tipo de movimiento ({config.label})
                 </p>
-                <Button variant="outline" size="sm" className="w-full mt-2">
+                <Button  variant="outline" size="sm" className="w-full mt-2"
+                 onClick={() => handleCardClick(tipo)}
+                >
                   <Eye className="h-3 w-3 mr-1" />
                   Ver Movimientos ({obtenerMovimientosPorTipo(tipo).length})
                 </Button>
@@ -750,13 +799,41 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
             <Card
               key={tipo}
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border-primary border-2 `}
-              onClick={() => handleCardClick(tipo)}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {config.label}
                 </CardTitle>
-                <Icon className={`h-4 w-4 ${config.color}`} />
+                <div className="flex items-center gap-2">
+                  <Icon className={`h-4 w-4 ${config.color}`} />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0 hover:bg-red-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      let tipoMovimiento;
+                      let titulo;
+                      switch (tipo) {
+                        case 3:
+                          tipoMovimiento = TIPOS_MOVIMIENTOS.GASTO_FIJO;
+                          titulo = "Registrar Gasto Fijo";
+                          break;
+                        case 4:
+                          tipoMovimiento = TIPOS_MOVIMIENTOS.GASTO_EXTRA;
+                          titulo = "Registrar Gasto Extra";
+                          break;
+                        case 5:
+                          tipoMovimiento = TIPOS_MOVIMIENTOS.CUENTAS_POR_PAGAR;
+                          titulo = "Registrar Cuenta por Pagar";
+                          break;
+                      }
+                      abrirFormularioMovimiento(tipoMovimiento, titulo);
+                    }}
+                  >
+                    <Plus className="h-3 w-3 text-red-600" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className={`text-2xl font-bold ${config.color}`}>
@@ -775,7 +852,9 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                 <p className="text-xs text-muted-foreground">
                   Tipo de movimiento ({config.label})
                 </p>
-                <Button variant="outline" size="sm" className="w-full mt-2">
+                <Button variant="outline" size="sm" className="w-full mt-2"
+                 onClick={() => handleCardClick(tipo)}
+                >
                   <Eye className="h-3 w-3 mr-1" />
                   Ver Movimientos ({obtenerMovimientosPorTipo(tipo).length})
                 </Button>
@@ -1199,6 +1278,25 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog del formulario de movimientos */}
+      <Dialog
+        open={formDialog.open}
+        onOpenChange={(open) => !open && cerrarFormularioMovimiento()}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{formDialog.titulo}</DialogTitle>
+            <DialogDescription>
+              Complete los datos del movimiento financiero
+            </DialogDescription>
+          </DialogHeader>
+          <FormSemaforoFinancieroMovimiento
+            tipoMovimiento={formDialog.tipoMovimiento}
+            onSuccess={onFormularioSuccess}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

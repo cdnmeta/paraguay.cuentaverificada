@@ -237,9 +237,9 @@ export class TicketsService {
       if (validateEstadosTickets) {
         if (ticket.id_estado === 1)
           throw new BadRequestException('El ticket aun no ha sido asignado');
-        if (ticket.id_estado === 3)
+        if (ticket.id_estado === 3 && data.rol_usuario == RolUsuario.SOPORTE)
           throw new ForbiddenException('Espera a que el cliente responda');
-        if (ticket.id_estado === 4)
+        if (ticket.id_estado === 4 && data.rol_usuario == RolUsuario.CLIENTE)
           throw new ForbiddenException('Espera a que el soporte responda');
       }
     }
