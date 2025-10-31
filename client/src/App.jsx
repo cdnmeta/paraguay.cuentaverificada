@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, Outlet, useNavigate } from "react-router-dom";
 import Pacto from "./components/Pacto";
 import CrearCuenta from "./pages/CrearCuenta";
 import Login from "./pages/Login";
@@ -30,7 +30,11 @@ import { routes as verificadorRoutes } from "./pages/Verificador/verficador.rout
 import { SuperAdminRoutes } from "./pages/Dashsboards/SuperAdmin/admin.routes";
 import { ParticipantesRoutes } from "./pages/Dashsboards/Participante/participantes.routes";
 import RecordatoriosUsuariosRoutes from "./pages/recordatoriosUsuarios";
-import { RecoveryPinPage, ResetPinPage, ResetPasswordPage } from "./pages/recovery";
+import {
+  RecoveryPinPage,
+  ResetPinPage,
+  ResetPasswordPage,
+} from "./pages/recovery";
 import SemaforoFinancieroPage from "./pages/SemaforoFinanciero/pages/SemaforoFinancieroPage";
 import SemaforoFinancieroRoutes from "./pages/SemaforoFinanciero";
 import { PlanesPage } from "./pages/Planes";
@@ -40,10 +44,69 @@ import FavoritosRoutes from "./pages/Favoritos/favoritos.routes";
 import SoporteAyudaRoute from "./pages/SoporteAyuda/soporteAyuda.route";
 import SoporteRoutes from "./pages/Dashsboards/Soporte/soporte.routes";
 
+function ProtectedRoutesByRol({ permitirNavegacionExterna = false }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { pathname } = location;
+
+  // Definir dashboards válidos y sus rutas base
+  const DASHBOARDS_VALIDOS = {
+    '/admin': 'SuperAdmin',
+    '/verificador': 'Verificador', 
+    '/soporte': 'Soporte',
+    '/participante': 'Participante',
+    '/dpto-legal': 'DepartamentoLegal'
+  };
+
+  const segmentos = pathname.split("/").filter(Boolean);
+  const dashboardActual = `/${segmentos[0] ?? ""}`;
+  
+  // Verificar si estamos en un dashboard válido
+  const esDashboardValido = Object.keys(DASHBOARDS_VALIDOS).includes(dashboardActual);
+  
+  // Efecto para interceptar navegación del botón atrás del navegador
+  useEffect(() => {
+
+    console.log("evaluar permicion")
+
+    if (!esDashboardValido || permitirNavegacionExterna) return;
+
+    const handlePopState = (event) => {
+      console.log("evludar evento de atra")
+      const newPath = window.location.pathname;
+      const newDashboard = `/${newPath.split("/").filter(Boolean)[0] ?? ""}`;
+      
+      // Si intenta salir del dashboard actual sin permisos
+      if (!newPath.startsWith(dashboardActual) && newDashboard !== dashboardActual) {
+        event.preventDefault();
+        navigate(dashboardActual, { replace: true });
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [dashboardActual, permitirNavegacionExterna, esDashboardValido, navigate]);
+
+  if (esDashboardValido && !permitirNavegacionExterna) {
+    // Verificar si se intenta acceder a una ruta fuera del dashboard actual
+    if (!pathname.startsWith(dashboardActual) || pathname === dashboardActual) {
+      // Si está exactamente en el dashboard root, permitir acceso
+      if (pathname === dashboardActual) {
+        return <Outlet />;
+      }
+      // Si intenta salir del dashboard, redirigir de vuelta
+      return <Navigate to={dashboardActual} replace state={{ from: location }} />;
+    }
+  }
+
+  return <Outlet />;
+}
+
 export default function App() {
   const { isHydrated, user } = useAuthStore();
 
   useEffect(() => {
+    console.log(location);
     checkAuthOnStart(); // Verifica si hay sesión activa con Firebase
   }, []);
 
@@ -53,18 +116,29 @@ export default function App() {
     <Routes>
       <Route element={<DefaultLayout />}>
         <Route index element={<Navigate to="/login" />} />
-        <Route path="/login" element={user ? <Navigate to="/panel" /> : <Login />} />
+        <Route
+          path="/login"
+          element={user ? <Navigate to="/panel" /> : <Login />}
+        />
         <Route path="/login/:token" element={<LoginToken />} />
         <Route path="/recuperar" element={<RecuperarContrasena />} />
         <Route path="/recovery-pin" element={<RecoveryPinPage />} />
         <Route path="/reset-pin" element={<ResetPinPage />} />
-        <Route path={`${PUBLIC_ROUTES.resetPassword}`} element={<ResetPasswordPage />} />
+        <Route
+          path={`${PUBLIC_ROUTES.resetPassword}`}
+          element={<ResetPasswordPage />}
+        />
         <Route path="/verificado" element={<Verificado />} />
-        <Route path="/solicitar-cuenta-verificada" element={<SolicitarCuentaVerificada />} />
-        <Route path="/verificacion-cuenta" element={<InicializarContrasenaPin />} />
+        <Route
+          path="/solicitar-cuenta-verificada"
+          element={<SolicitarCuentaVerificada />}
+        />
+        <Route
+          path="/verificacion-cuenta"
+          element={<InicializarContrasenaPin />}
+        />
         <Route path="/pacto" element={<Pacto />} />
         <Route path="*" element={<h1>404 Not Found</h1>} />
-
       </Route>
       <Route element={<DashboardApp />}>
         <Route element={<ProtectedRoute isAuthorized={!!user} />}>
@@ -77,34 +151,38 @@ export default function App() {
             path={PROTECTED_ROUTES.verificacionComercio}
             element={<VerificacionComercioPage />}
           />
-          <Route
-            path={PROTECTED_ROUTES.misDatos}
-            element={<MisDatosPage />}
-          />
+          <Route path={PROTECTED_ROUTES.misDatos} element={<MisDatosPage />} />
           {RecordatoriosUsuariosRoutes()}
 
           {FavoritosRoutes()}
 
           {SoporteAyudaRoute()}
-
-          
         </Route>
       </Route>
+
+      {/*Departamento Legal*/}
       {DptoLegalRoutes({ user })}
 
-      {/*Verificador*/}
-      {VerificadorRoutes()}
-      
-      {/*Admin*/}
-      {SuperAdminRoutes({ user })}
-      {/*Participante*/}
-      {ParticipantesRoutes({ user })}
+      {/* Dashboards con navegación restringida */}
+      <Route element={<ProtectedRoutesByRol permitirNavegacionExterna={false} />}>
+        {/*Verificador - Aislado*/}
+        {VerificadorRoutes()}
+
+        {/*Admin - Aislado*/}
+        {SuperAdminRoutes({ user })}
+
+        {/*Soporte - Aislado*/}
+        {SoporteRoutes({ user })}
+      </Route>
+
+      {/* Dashboards con navegación externa permitida */}
+      <Route element={<ProtectedRoutesByRol permitirNavegacionExterna={true} />}>
+        {/*Participante - Puede navegar externamente*/}
+        {ParticipantesRoutes({ user })}
+      </Route>
 
       {/*Comercio*/}
       {ComercioRoutes()}
-
-      {/*Soporte*/}
-      {SoporteRoutes({user})}
     </Routes>
   );
 }

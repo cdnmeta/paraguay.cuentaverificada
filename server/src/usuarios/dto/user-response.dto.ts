@@ -90,4 +90,12 @@ export class MisDatosResponseDto {
   @Expose({name: "fecha_verificacion"})
   f_vfd: Date;
 
+  @Expose()
+  selfie: string;
+
+  @Expose()
+  cedula_frente: string;
+
+  @Expose()
+  cedula_reverso: string;
 }

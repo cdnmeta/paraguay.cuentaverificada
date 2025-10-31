@@ -156,7 +156,7 @@ export default function SemaforoFinancieroPage() {
             Semáforo Financiero
           </h1>
           <p className="text-muted-foreground">
-            Visualiza el estado de tus finanzas por moneda y tipo de movimiento
+            Controla tus finanzas como un profesional
           </p>
         </div>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -197,15 +197,15 @@ export default function SemaforoFinancieroPage() {
             Semáforo Financiero
           </h1>
           <p className="text-muted-foreground">
-            Visualiza el estado de tus finanzas por moneda y tipo de movimiento
+            Controla tus finanzas como un profesional
           </p>
         </div>
       </div>
 
-      <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
+      <div className="mb-6 flex gap-2">
+            <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-medium text-muted-foreground">Cotizaciones actuales</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">Cotizacion</h3>
             </div>
             
             {getCotizacionesAGuaranies().length > 0 ? (
@@ -277,12 +277,6 @@ export default function SemaforoFinancieroPage() {
 
       {/* Sección de Conteos de Movimientos */}
       <div className="mb-8">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold mb-2">Resumen de Movimientos</h2>
-          <p className="text-sm text-muted-foreground">
-            Conteos por tipo de movimiento con abonos detallados
-          </p>
-        </div>
         <ConteoMovimientos
           data={data}
           cotizaciones={cotizaciones}

@@ -148,96 +148,96 @@ export default function MisTicketsPage() {
           </div>
         </div>
       ) : (
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {tickets.map((ticket) => {
-            const { fecha, hora } = formatearFecha(ticket.ultimo_mensaje_at);
-            const { fecha: fechaCreacion, hora: horaCreacion } = formatearFecha(ticket.fecha_creacion);
-            
-            return (
-              <Card 
-                key={ticket.id} 
-                className="hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                onClick={() => navigate(`/${SoporteAyudaRoutes.ticketDetalle(ticket.id)}`)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant={getEstadoBadgeVariant(ticket.id_estado)}>
-                          {ticket.descripcion_estado}
-                        </Badge>
-                        <span className="text-xs  text-foreground">#{ticket.id}</span>
-                      </div>
-                      <h3 
-                        className="font-medium text-foreground text-sm leading-5 mb-1"
-                        style={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}
-                        title={ticket.asunto}
-                      >
-                        {ticket.asunto}
-                      </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {tickets.map((ticket) => {
+          const { fecha, hora } = formatearFecha(ticket.ultimo_mensaje_at);
+          const { fecha: fechaCreacion, hora: horaCreacion } = formatearFecha(ticket.fecha_creacion);
+          
+          return (
+            <Card 
+              key={ticket.id} 
+              className="hover:shadow-md transition-shadow duration-200 cursor-pointer"
+              onClick={() => navigate(`/${SoporteAyudaRoutes.ticketDetalle(ticket.id)}`)}
+            >
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant={getEstadoBadgeVariant(ticket.id_estado)}>
+                        {ticket.descripcion_estado}
+                      </Badge>
+                      <span className="text-xs  text-foreground">#{ticket.id}</span>
                     </div>
-                    <div className={`ml-2 ${getPrioridadColor(ticket.prioridad)}`}>
-                      <AlertCircle className="h-4 w-4" />
-                    </div>
+                    <h3 
+                      className="font-medium text-foreground text-sm leading-5 mb-1"
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                      title={ticket.asunto}
+                    >
+                      {ticket.asunto}
+                    </h3>
                   </div>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <span className='text-xs font-medium'>
-                    Creado el {fechaCreacion} {horaCreacion}
-                  </span>
-                  <div className="space-y-3">
-                    {/* Fecha y hora del último mensaje */}
-                    <div className="flex items-center text-xs text-foreground">
-                      <span className='mr-2'>Último Mensaje</span>
-                      <Calendar className="h-3 w-3 mr-1.5" />
-                      <span className="mr-3">{fecha}</span>
-                      <Clock className="h-3 w-3 mr-1.5" />
-                      <span>{hora}</span>
-                    </div>
-
-                    {/* Tipo de ticket */}
-                    <div className="flex items-center text-xs text-foreground">
-                      <Tag className="h-3 w-3 mr-1.5" />
-                      <span className="truncate">
-                        {ticket.descripcion_tipo_ticket || 'No Asignado'}
-                      </span>
-                    </div>
-
-                    {/* Nombre del soporte asignado */}
-                    <div className="flex items-center text-xs text-foreground">
-                      <User className="h-3 w-3 mr-1.5" />
-                      <span className="truncate">
-                        {ticket.nombre_asignado || 'Sin asignar'}
-                      </span>
-                    </div>
-
-                    {/* Prioridad */}
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                      <span className="text-xs  text-foreground">Prioridad:</span>
-                      <span className={`text-xs font-medium ${getPrioridadColor(ticket.prioridad)}`}>
-                        {ticket.prioridad}
-                      </span>
-                    </div>
-
-                    {/* Reportante */}
-                    <div className="text-xs  text-foreground truncate">
-                      Reportado por: {ticket.nombre_reportante}
-                    </div>
+                  <div className={`ml-2 ${getPrioridadColor(ticket.prioridad)}`}>
+                    <AlertCircle className="h-4 w-4" />
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                </div>
+              </CardHeader>
+
+              <CardContent className="pt-0">
+                <span className='text-xs font-medium'>
+                  Creado el {fechaCreacion} {horaCreacion}
+                </span>
+                <div className="space-y-3">
+                  {/* Fecha y hora del último mensaje */}
+                  <div className="flex items-center text-xs text-foreground">
+                    <span className='mr-2'>Último Mensaje</span>
+                    <Calendar className="h-3 w-3 mr-1.5" />
+                    <span className="mr-3">{fecha}</span>
+                    <Clock className="h-3 w-3 mr-1.5" />
+                    <span>{hora}</span>
+                  </div>
+
+                  {/* Tipo de ticket */}
+                  <div className="flex items-center text-xs text-foreground">
+                    <Tag className="h-3 w-3 mr-1.5" />
+                    <span className="truncate">
+                      {ticket.descripcion_tipo_ticket || 'No Asignado'}
+                    </span>
+                  </div>
+
+                  {/* Nombre del soporte asignado */}
+                  <div className="flex items-center text-xs text-foreground">
+                    <User className="h-3 w-3 mr-1.5" />
+                    <span className="truncate">
+                      {ticket.nombre_asignado || 'Sin asignar'}
+                    </span>
+                  </div>
+
+                  {/* Prioridad */}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <span className="text-xs  text-foreground">Prioridad:</span>
+                    <span className={`text-xs font-medium ${getPrioridadColor(ticket.prioridad)}`}>
+                      {ticket.prioridad}
+                    </span>
+                  </div>
+
+                  {/* Reportante */}
+                  <div className="text-xs  text-foreground truncate">
+                    Reportado por: {ticket.nombre_reportante}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
         </div>
-        </div>
+        
 
         
       )}

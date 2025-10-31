@@ -577,7 +577,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
           Resumen Financiero
         </h3>
         
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 ">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
           {/* Columna Izquierda - Semáforo */}
           <div className="flex items-center justify-center">
             <div className="bg-card border-2 border-primary rounded-lg p-4 shadow-sm">
@@ -616,8 +616,8 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                     {formatMoney(resumenes.promedioDiario.gastos, "PYG")}
                   </span>
                 </div>
-                <div className="flex justify-between border-t pt-2">  
-                  <span className="text-foreground">Ganancia:</span>
+                <div className="flex justify-between border-t pt-2">
+                  <span className="text-foreground">{resumenes.promedioDiario.ganancia >=0 ? ' Disponible:' : 'Saldo Negativo:'}</span>
                   <span className={`font-bold ${resumenes.promedioDiario.ganancia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatMoney(resumenes.promedioDiario.ganancia, "PYG")}
                   </span>
@@ -645,46 +645,18 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
                   </span>
                 </div>
                 <div className="flex justify-between border-t pt-2">
-                  <span className="text-foreground">Ganancia:</span>
+                  <span className="text-foreground">{resumenes.promedioMensual.ganancia >=0 ? ' Disponible:' : 'Saldo Negativo:'}</span>
                   <span className={`font-bold ${resumenes.promedioMensual.ganancia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatMoney(resumenes.promedioMensual.ganancia, "PYG")}
                   </span>
                 </div>
               </div>
-            </div>
-
-            {/* Resumen de Ganancias */}
-            <div className="bg-card border-2 border-primary rounded-lg p-4 shadow-sm">
-              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-purple-600" />
-                Resultado (Total en Guaraníes)
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-foreground">Saldo Total:</span>
-                  <span className={`font-semibold ${resumenes.saldoTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatMoney(resumenes.saldoTotal, "PYG")}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground">Mensual:</span>
-                  <span className={`font-semibold ${resumenes.promedioMensual.ganancia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatMoney(resumenes.promedioMensual.ganancia, "PYG")}
-                  </span>
-                </div>
-                <div className="flex justify-between border-t pt-2">
-                  <span className="text-foreground">Diario:</span>
-                  <span className={`font-semibold ${resumenes.promedioDiario.ganancia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatMoney(resumenes.promedioDiario.ganancia, "PYG")}
-                  </span>
-                </div>
-              </div>
-            </div>
-          
+            </div>          
         </div>
       </div>
 
       {/* Cards de Ingresos */}
+      <p className="flex text-2xl border-t pt-2" >Informes  y Operaciones</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {ingresos.map(({ tipo, count }) => {
           const config = getTipoMovimientoConfig(tipo);

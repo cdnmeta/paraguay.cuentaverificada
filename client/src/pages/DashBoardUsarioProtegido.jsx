@@ -278,20 +278,20 @@ export default function DashBoardUsarioProtegido() {
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
                   {emociones.map((item, i) => (
-                    <Card
+                    <div
                       key={i}
                       className="cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-105 group  hover:bg-primary/5"
                       onClick={() => handleEmotionClick(item)}
                     >
-                      <CardContent className="flex flex-col items-center p-4 space-y-2">
+                      <div className="flex flex-col items-center p-4 space-y-2">
                         <div className="text-4xl group-hover:scale-110 transition-transform duration-300">
                           {item.emoji}
                         </div>
                         <p className="text-sm font-medium text-center group-hover:text-primary transition-colors">
                           {item.label}
                         </p>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </div>
                 <p className="text-sm italic mt-4 text-muted-foreground">
