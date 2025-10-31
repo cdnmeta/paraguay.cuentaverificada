@@ -134,6 +134,8 @@ export const TOKEN_CACHE_DURATION = 55 * 60 * 1000; // 55 minutos (tokens de Fir
 export const REGEX_CEDULA_IDENTIDAD = /^[1-9]\d{5,7}$/;
 export const CANT_MIN_CARACTERES_CONTRASENA = 6;
 
+export const CODIGO_PAIS_BASE = "PY";
+
 
 
 export const estadosVerificacionDeComercio = [

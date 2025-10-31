@@ -45,6 +45,7 @@ import {
 import {
   CANT_MIN_CARACTERES_CONTRASENA,
   REGEX_CEDULA_IDENTIDAD,
+  CODIGO_PAIS_BASE,
 } from "@/utils/constants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@radix-ui/react-dropdown-menu";
@@ -210,7 +211,7 @@ export default function SolicitarCuentaVerificada() {
       email: "",
       password: "",
       confirmPassword: "",
-      codigo_pais: "",
+      codigo_pais: CODIGO_PAIS_BASE,
       telefono: "",
       terminos: false,
       cedula_frente: null,
