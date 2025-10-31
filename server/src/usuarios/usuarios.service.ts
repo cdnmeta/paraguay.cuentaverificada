@@ -140,14 +140,11 @@ export class UsuariosService {
         where: {
           OR: [{ email: dto.correo }, { documento: dto.documento }, { telefono: dto.telefono }],
         },
-      });      
+      });  
+
 
       if (userExists) {
-        if (userExists.estado === 2) {
-          return {...userExists, activo: true}; // Si el usuario ya está activo, simplemente retorna el usuario existente
-        } else {
-          throw new BadRequestException('La cédula, correo o teléfono ya están registrados');
-        }
+        throw new BadRequestException('La cédula, correo o teléfono ya están registrados');
       }
 
       // guardar usuario en firebase para autenticación
