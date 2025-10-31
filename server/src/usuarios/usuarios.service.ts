@@ -129,7 +129,7 @@ export class UsuariosService {
     try {
 
       // buscar correo en firebase
-      const firebaseUserExists = await this.firebaseService.auth.getUserByEmail(dto.correo).catch(() => null);
+      const firebaseUserExists = await this.firebaseService.auth.getUserByEmail(dto.correo).then(user => user).catch(() => null);
 
       if (firebaseUserExists) {
         throw new BadRequestException('El correo ya está registrado');

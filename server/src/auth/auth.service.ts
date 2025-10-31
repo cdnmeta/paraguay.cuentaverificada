@@ -138,20 +138,7 @@ export class AuthService {
   async register(registerDto: RegisterUsuariosDto, files?: UsuariosArchivos) {
     const { cedulaFrente, cedulaReverso, selfie } = files || {};
     try {
-      const userExiste = await this.prismaService.usuarios.findFirst({
-        where: {
-          OR: [
-            { documento: registerDto.documento },
-            { email: registerDto.correo },
-          ],
-        },
-      });
-
-      if (userExiste) {
-        if (userExiste.estado === 2) {
-          return {...userExiste,activo:true}; // Si el usuario ya está activo, simplemente retorna el usuario existente
-        }
-      }
+      
 
       const dataUsuarioNuevo: CrearUsuarioDTO = {
         nombre: registerDto.nombre,
@@ -166,10 +153,10 @@ export class AuthService {
         id_estado: 1, // activo por defecto
       };
 
-      let userNew: usuarios | null = userExiste;
+      
 
-     if(!userNew){
-       userNew  = await this.usuariosService.crearUsuario(
+     
+       let userNew  = await this.usuariosService.crearUsuario(
         dataUsuarioNuevo,
         {
           cedulaFrente,
@@ -177,7 +164,11 @@ export class AuthService {
           selfie,
         },
       );
-     }
+
+      if(userNew.estado === 2){
+        return {...userNew,activo:true}; // Si el usuario ya está activo, simplemente retorna el usuario existente
+      }
+     
 
       const codigoVerificacion = await this.generarTokenForUser(userNew.id, {
         tipo_token: 2, // codigo verificacion
