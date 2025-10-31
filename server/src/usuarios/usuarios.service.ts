@@ -127,21 +127,30 @@ export class UsuariosService {
     let uidUserFirebase = '';
     let codVendedor: string | null = null;
     try {
-      // buscar usuarios
 
-      const userExists = await this.prismaService.usuarios.findFirst({
-        where: {
-          OR: [{ email: dto.correo }, { documento: dto.documento }],
-        },
-      });
+      // buscar correo en firebase
+      const firebaseUserExists = await this.firebaseService.auth.getUserByEmail(dto.correo).catch(() => null);
 
-      if (userExists) {
-        throw new BadRequestException(
-          'La cédula o correo ya están registrados',
-        );
+      if (firebaseUserExists) {
+        throw new BadRequestException('El correo ya está registrado');
       }
 
-      // guardar ususario en firebase para autenticación
+      // buscar usuarios existentes
+      const userExists = await this.prismaService.usuarios.findFirst({
+        where: {
+          OR: [{ email: dto.correo }, { documento: dto.documento }, { telefono: dto.telefono }],
+        },
+      });      
+
+      if (userExists) {
+        if (userExists.estado === 2) {
+          return {...userExists, activo: true}; // Si el usuario ya está activo, simplemente retorna el usuario existente
+        } else {
+          throw new BadRequestException('La cédula, correo o teléfono ya están registrados');
+        }
+      }
+
+      // guardar usuario en firebase para autenticación
       const { cedulaFrente, cedulaReverso, selfie } = files || {};
       const firebaseUser = await this.firebaseService.createUser({
         email: dto.correo,
@@ -192,7 +201,7 @@ export class UsuariosService {
         );
       }
 
-      // verificar que el usuario no exista
+      // crear nuevo usuario en la base de datos
       const userNew = await this.prismaService.$transaction(async (tx) => {
         // encriptar contraseña
         const contrasenaEncryptada = await encrypt(dto.contrasena);
@@ -249,6 +258,7 @@ export class UsuariosService {
       throw error;
     }
   }
+
 
   async getUserByQuery(query: UserByQueryDto) {
     const whereClause: any = { activo: true, is_super_admin: false };
