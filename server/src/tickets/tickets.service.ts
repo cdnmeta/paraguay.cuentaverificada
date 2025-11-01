@@ -391,13 +391,16 @@ FROM
 	LEFT JOIN TIPO_TICKET TTK ON TTK.ID = TK.ID_TIPO_TICKET
 	LEFT JOIN USUARIOS ASG ON ASG.ID = TK.ID_ASIGNADO
 WHERE
-	TK.ID_REPORTANTE = $1 and tk.activo = true`;
+	TK.ID_REPORTANTE = $1 and tk.activo = true
+  order by TK.ULTIMO_MENSAJE_AT DESC
+  `;
       const resultado = await this.dataBasePromise.result(sql, [id_usuario]);
       return resultado.rows;
     } catch (error) {
       throw error;
     }
   }
+
 
   async getResumenMisTickets(id_usuario_asignado: number) {
     try {

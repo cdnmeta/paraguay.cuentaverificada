@@ -8,14 +8,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import FormFiltroUsuarios from "@/pages/Usuarios/components/FormFiltroUsuarios";
 import ListUsuariosFiltrados from "@/pages/Usuarios/components/ListUsuariosFiltrados";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import {getUsersByQuery} from '@/apis/usuarios.api'
+import {getUsersByQuery, eliminarUsuario} from '@/apis/usuarios.api'
 import { routes as usuariosRoutes } from "@/pages/Usuarios/config/routes";
 
 
@@ -24,6 +35,8 @@ export default function ListadoUsuariosPages() {
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [configDilaog, setConfigDialog] = useState({});
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const navigate = useNavigate()
 
@@ -94,10 +107,20 @@ export default function ListadoUsuariosPages() {
       header: "Acciones",
       cell: ({ row }) => {
         const userId = row.original.id;
+        const nombreCompleto = `${row.original.nombre} ${row.original.apellido}`;
         return (
           <div className="flex gap-2">
             <Button onClick={() => onclickEditUser(userId)} variant="outline" size="icon" title="Editar Usuario">
               <Pencil className="h-4 w-4" />
+            </Button>
+            <Button 
+              onClick={() => onclickDeleteUser(userId, nombreCompleto)} 
+              variant="destructive" 
+              size="icon" 
+              title="Eliminar Usuario"
+              disabled={loading}
+            >
+              <Trash className="h-4 w-4" />
             </Button>
           </div>
         );
@@ -106,6 +129,35 @@ export default function ListadoUsuariosPages() {
   ];
 
   const onclickEditUser = (id) =>  navigate(`../${id}`, { relative: "path" }); // <- sube de .../listado a .../usuarios/:id
+
+  const onclickDeleteUser = (id, nombreCompleto) => {
+    setUserToDelete({ id, nombreCompleto });
+    setOpenDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setLoading(true);
+      await eliminarUsuario(userToDelete.id);
+      toast.success("Usuario eliminado correctamente");
+      // Recargar la lista de usuarios después de eliminar
+      await loadUsuarios();
+      setOpenDeleteDialog(false);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error);
+      toast.error("Error al eliminar el usuario. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setOpenDeleteDialog(false);
+    setUserToDelete(null);
+  };
 
   const loadUsuarios = async () => {
     try {
@@ -170,6 +222,36 @@ export default function ListadoUsuariosPages() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar al usuario{" "}
+              <span className="font-semibold text-destructive">
+                "{userToDelete?.nombreCompleto}"
+              </span>
+              ?
+              <br />
+              <br />
+              Esta acción no se puede deshacer y eliminará permanentemente todos los datos del usuario.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDelete} disabled={loading}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={loading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {loading ? "Eliminando..." : "Eliminar usuario"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -48,6 +48,8 @@ import {
 } from './dto/direciones-usuario.dto';
 import { FavoritosService } from './favoritos/favoritos.service';
 import { UsuarioAgregarFavoritoDto } from './dto/favorito.dto';
+import { RequireGroupIdsAll } from '@/auth/decorators/groups.decorator';
+import { DeleteUserDto } from './dto/delete-user.dto';
 
 @Controller('usuarios')
 export class UsuariosController {
@@ -461,5 +463,22 @@ export class UsuariosController {
               throw error;
           }
       }
-    
+  
+  @Delete(':id')
+  @IsOnlyAdmin()
+  async eliminarUsuario(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response,
+    ) {
+    try {
+      const dataDelete:DeleteUserDto ={
+        id_usuario_eliminacion: id
+      }
+      await this.usuariosService.deleteUser(id,dataDelete);
+      return res.status(200).json({ message: 'Usuario eliminado exitosamente' });
+    } catch (error) {
+      throw error;
+    }
+  }
 }

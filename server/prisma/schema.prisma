@@ -301,7 +301,9 @@ model usuarios {
   motivo_rechazo             String?
   id_usuario_actualizacion     Int?
   id_usuario_verificacion      Int?
+  id_usuario_eliminacion      Int?
   fecha_verificacion          DateTime?                     @db.Timestamptz(6)
+  fecha_eliminacion          DateTime?                     @db.Timestamptz(6)
   comercio                    comercio[]
   factura_suscripciones       factura_suscripciones[]
   seguimiento_verificacion    seguimiento_verificacion[]

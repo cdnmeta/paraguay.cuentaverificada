@@ -126,6 +126,15 @@ export const cambiarContrasena = async (data) => {
   });
 }
 
+export const eliminarUsuario = async (id) => {
+  return await api.delete(`/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${await getIdToken()}`
+    },
+  });
+
+}
+
 // ===== ENDPOINTS PARA DIRECCIONES DE USUARIOS =====
 
 export const obtenerMisDirecciones = async () => {

@@ -29,6 +29,7 @@ import {
   ActualizarDireccionUsuarioDTO,
   CrearDireccionUsuarioDTO,
 } from './dto/direciones-usuario.dto';
+import { DeleteUserDto } from './dto/delete-user.dto';
 
 @Injectable()
 export class UsuariosService {
@@ -127,9 +128,11 @@ export class UsuariosService {
     let uidUserFirebase = '';
     let codVendedor: string | null = null;
     try {
-
       // buscar correo en firebase
-      const firebaseUserExists = await this.firebaseService.auth.getUserByEmail(dto.correo).then(user => user).catch(() => null);
+      const firebaseUserExists = await this.firebaseService.auth
+        .getUserByEmail(dto.correo)
+        .then((user) => user)
+        .catch(() => null);
 
       if (firebaseUserExists) {
         throw new BadRequestException('El correo ya está registrado');
@@ -138,13 +141,18 @@ export class UsuariosService {
       // buscar usuarios existentes
       const userExists = await this.prismaService.usuarios.findFirst({
         where: {
-          OR: [{ email: dto.correo }, { documento: dto.documento }, { telefono: dto.telefono }],
+          OR: [
+            { email: dto.correo },
+            { documento: dto.documento },
+            { telefono: dto.telefono },
+          ],
         },
-      });  
-
+      });
 
       if (userExists) {
-        throw new BadRequestException('La cédula, correo o teléfono ya están registrados');
+        throw new BadRequestException(
+          'La cédula, correo o teléfono ya están registrados',
+        );
       }
 
       // guardar usuario en firebase para autenticación
@@ -223,7 +231,7 @@ export class UsuariosService {
             dispositivo_origen: dto.dispositivo_origen || null,
           },
         });
-         
+
         // si viene el id del usuario que registra, actualizar el campo
         if (dto.grupos && dto.grupos.length > 0) {
           const dataGruposAsiganar: AsignarGruposDto = {
@@ -255,7 +263,6 @@ export class UsuariosService {
       throw error;
     }
   }
-
 
   async getUserByQuery(query: UserByQueryDto) {
     const whereClause: any = { activo: true, is_super_admin: false };
@@ -773,9 +780,11 @@ export class UsuariosService {
 
   async obtenerDireccionById(id: number) {
     try {
-      const direccion = await this.prismaService.direcciones_usuarios.findFirst({
-        where: { id, activo: true },
-      });
+      const direccion = await this.prismaService.direcciones_usuarios.findFirst(
+        {
+          where: { id, activo: true },
+        },
+      );
       if (!direccion) throw new NotFoundException('Dirección no encontrada');
       return direccion;
     } catch (error) {
@@ -801,4 +810,34 @@ export class UsuariosService {
     }
   }
 
+  async deleteUser(id: number, dataDelete: DeleteUserDto) {
+    try {
+      const usuarioExistente = await this.prismaService.usuarios.findFirst({
+        where: { id },
+      });
+
+      if (!usuarioExistente) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+
+      if (usuarioExistente.estado == 1) {
+        // borrar usuario pend activacion
+        await this.prismaService.usuarios.delete({
+          where: { id },
+        });
+        return null;
+      }
+      // desactivar usuario
+      await this.prismaService.usuarios.update({
+        where: { id },
+        data: {
+          activo: false,
+          id_usuario_eliminacion: dataDelete.id_usuario_eliminacion,
+          fecha_eliminacion: new Date(),
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
 }

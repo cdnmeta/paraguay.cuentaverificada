@@ -374,7 +374,7 @@ export default function ListadoTickets({
             )}
 
 
-            {defaultOpciones.mostrarAbrir && [2, 3, 4, 5].includes(ticket.id_estado) && (
+            {defaultOpciones.mostrarAbrir && [1,2, 3, 4, 5].includes(ticket.id_estado) && (
               <Button
                 onClick={() => handleAccion('abrir', ticket)}
                 variant="outline"
