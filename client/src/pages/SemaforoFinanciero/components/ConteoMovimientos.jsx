@@ -1254,7 +1254,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
         open={formDialog.open}
         onOpenChange={(open) => !open && cerrarFormularioMovimiento()}
       >
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[50vh] sm:max-h-[90vh] md:max-h-[90vh] lg:max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{formDialog.titulo}</DialogTitle>
             <DialogDescription>
