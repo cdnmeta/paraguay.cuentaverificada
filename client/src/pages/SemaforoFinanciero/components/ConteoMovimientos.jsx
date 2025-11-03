@@ -53,7 +53,6 @@ import FormAbonoMovimiento from './FormAbonoMovimiento';
 import { convertirMoneda } from "@/utils/funciones";
 import { TIPOS_MOVIMIENTOS } from "../utils/constanst";
 import SemaforoImg from "./SemaforoImg";
-import { useMultipleMobileDialogs } from "@/hooks/useMobileDialog";
 
 const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {} }) => {
   const [selectedTipo, setSelectedTipo] = useState(null);
@@ -91,17 +90,6 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
     abonoId: null,
     abonoMonto: "",
     movimientoId: null,
-  });
-
-  // Hook para optimizar diálogos en móviles
-  useMultipleMobileDialogs({
-    dialogOpen,
-    abonosDialog,
-    editDialog,
-    abonoDialog,
-    deleteDialog,
-    deleteAbonoDialog,
-    formDialog
   });
 
   // useEffect para actualizar el porcentaje cuando cambien los datos
@@ -848,7 +836,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
 
       {/* Dialog para mostrar abonos */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {selectedTipo && (
@@ -1031,7 +1019,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
         open={abonosDialog.open}
         onOpenChange={(open) => setAbonosDialog({ open, movimiento: null })}
       >
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Receipt className="h-5 w-5 text-blue-600" />
@@ -1168,41 +1156,37 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
 
       {/* Dialog de edición de movimiento */}
       <Dialog open={editDialog.open} onOpenChange={(open) => !open && cerrarEditDialog()}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden mobile-dialog-ios">
-          <DialogHeader className="flex-shrink-0">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
             <DialogTitle>Editar Movimiento</DialogTitle>
             <DialogDescription>
               Actualiza los datos del movimiento: {editDialog.titulo}
             </DialogDescription>
           </DialogHeader>
-          <div className="dialog-scroll-container mobile-form-container">
-            {editDialog.movimientoId && (
-              <FormSemaforoFinancieroMovimiento
-                id_movimiento={editDialog.movimientoId}
-                onSuccess={onEditSuccess}
-              />
-            )}
-          </div>
+          {editDialog.movimientoId && (
+            <FormSemaforoFinancieroMovimiento
+              id_movimiento={editDialog.movimientoId}
+              onSuccess={onEditSuccess}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
       {/* Dialog para registrar abono */}
       <Dialog open={abonoDialog.open} onOpenChange={(open) => !open && cerrarAbonoDialog()}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden mobile-dialog-ios">
-          <DialogHeader className="flex-shrink-0">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
             <DialogTitle>Registrar Abono</DialogTitle>
             <DialogDescription>
               Registra un abono para el movimiento seleccionado
             </DialogDescription>
           </DialogHeader>
-          <div className="dialog-scroll-container mobile-form-container">
-            {abonoDialog.movimiento && (
-              <FormAbonoMovimiento
-                movimiento={abonoDialog.movimiento}
-                onSuccess={onAbonoSuccess}
-              />
-            )}
-          </div>
+          {abonoDialog.movimiento && (
+            <FormAbonoMovimiento
+              movimiento={abonoDialog.movimiento}
+              onSuccess={onAbonoSuccess}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
@@ -1270,19 +1254,17 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
         open={formDialog.open}
         onOpenChange={(open) => !open && cerrarFormularioMovimiento()}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden mobile-dialog-ios">
-          <DialogHeader className="flex-shrink-0">
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
             <DialogTitle>{formDialog.titulo}</DialogTitle>
             <DialogDescription>
               Complete los datos del movimiento financiero
             </DialogDescription>
           </DialogHeader>
-          <div className="dialog-scroll-container mobile-form-container">
-            <FormSemaforoFinancieroMovimiento
-              tipoMovimiento={formDialog.tipoMovimiento}
-              onSuccess={onFormularioSuccess}
-            />
-          </div>
+          <FormSemaforoFinancieroMovimiento
+            tipoMovimiento={formDialog.tipoMovimiento}
+            onSuccess={onFormularioSuccess}
+          />
         </DialogContent>
       </Dialog>
     </div>
