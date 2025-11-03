@@ -15,6 +15,7 @@ import { UsuariosRoutes } from "@/pages/Usuarios/usuarios.routes";
 import FormCotizacion from "@/pages/cotizacionesEmpresa/components/FormCotizacion";
 import CotizacionEmpresaPage from "@/pages/cotizacionesEmpresa/page/CotizacionEmpresaPage";
 import { FacturasPlanesRoutes } from "@/pages/FacturaPlanes/facturasPlanes.routes";
+import EstadosAnimosRoutes from "@/pages/EstadosAnimos/estados-animos.routes";
 const DashBoardSuperAdmin = lazy(() => import("./DashBoardSuperAdmin"));
 
 export function SuperAdminRoutes({ user }) {
@@ -84,6 +85,8 @@ export function SuperAdminRoutes({ user }) {
 
       {/*usuarios rutas*/}
       {UsuariosRoutes({ user })}
+
+      {EstadosAnimosRoutes()}
     </Route>
   );
 }

@@ -315,7 +315,6 @@ model usuarios {
   recordatorios_usuarios      direcciones_usuarios[]
   semaforo_movimientos        semaforo_movimientos[]
   usuarios_comercios_fav      usuarios_comercios_fav[]
-
 }
 
 model usuarios_grupos {
@@ -508,8 +507,12 @@ model estados_animos {
   mensaje     String
   fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
   fecha_actualizacion DateTime? @db.Timestamptz(6)
+  fecha_eliminacion DateTime? @db.Timestamptz(6)
   id_tipo_animo    Int // 1= Entusiasmado 2=Contento 3=Pensativo 4=Decepcionado 5=Triste 6=Sorprendeme
   activo      Boolean   @default(true)
+  id_usuario_creacion  Int?
+  id_usuario_actualizacion Int?
+  id_usuario_eliminacion Int?
   tipo_estado_animo tipo_estado_animo @relation(fields: [id_tipo_animo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tipo_estado_animo_id_estados_animos")
 }
 

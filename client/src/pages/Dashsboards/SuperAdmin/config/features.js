@@ -60,5 +60,12 @@ export const seccionesFeatures = [
     icon: TrendingUp,
     path: `${ROUTE_BASE}/cotizacion-empresa`,
     variant: "default"
+  },
+  {
+    title:"Estados de Ánimo",
+    desc:"Gestionar mensajes de estados de ánimo del sistema",
+    icon: CheckCircle,
+    path: `${ROUTE_BASE}/estados-animos`,
+    variant: "default"
   }
 ];
