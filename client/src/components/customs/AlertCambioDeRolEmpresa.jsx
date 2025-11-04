@@ -11,7 +11,7 @@ import {
 import { Checkbox } from "../ui/checkbox";
 import { useGruposEmpresaStore } from "@/store/useGrupoEmpresaStore";
 import { useGruposEmpresa } from "@/hooks/useGrupoEmpresa";
-import { useNavigate } from "react-router-dom";
+import { redirect, replace, useNavigate } from "react-router-dom";
 import { getUrlDashboardGrupos } from "@/utils/routes.routes";
 import { useDialogCleanup } from "@/hooks/useBodyPointerEvents";
 import { useCallback, useMemo } from "react";
@@ -50,7 +50,8 @@ const AlertCambioDeRolEmpresa = ({ user }) => {
     
     // Navegar al dashboard del grupo seleccionado
     try {
-      navigate(getUrlDashboardGrupos(id));
+      // ir a al dashboard del grupo reemplazando el historial
+      navigate(getUrlDashboardGrupos(id), { replace: true }); 
     } catch (error) {
       console.error("Error al navegar:", error);
     }

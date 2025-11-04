@@ -25,7 +25,8 @@ export default function AvatarUserComponent({ user }) {
 
   const handleLogout = () => {
     logout();
-    navigate(PUBLIC_ROUTES.login);
+    navigate(PUBLIC_ROUTES.login, { replace: true, state: { fromLogout: true } });
+    
   };
 
   // ===== Menú superior (nav) =====

@@ -119,10 +119,14 @@ export class AuthController {
   @IsPublic()
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res: Response) {
-    const user = await this.authService.login(loginDto);
+    try {
+      const user = await this.authService.login(loginDto);
     const userJwt = this.authService.toJwtPayload(user);
     const customToken = await this.authService.autenticarWithFirebase(user);
     return res.status(200).json({ token: customToken, user: userJwt });
+    } catch (error) { 
+      throw  error
+    }
   }
 
   @IsPublic()

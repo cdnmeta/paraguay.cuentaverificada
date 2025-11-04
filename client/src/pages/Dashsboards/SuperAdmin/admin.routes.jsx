@@ -38,7 +38,7 @@ export function SuperAdminRoutes({ user }) {
       path={ROUTE_BASE}
       element={
         <ProtectedRoute isAuthorized={isAuthorized(user)} redirectPath="/">
-          <AdminLayout />
+            <AdminLayout />
         </ProtectedRoute>
       }
     >

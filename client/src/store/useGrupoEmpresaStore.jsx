@@ -26,14 +26,7 @@ export const useGruposEmpresaStore = create((set, get) => ({
       set({ grupoSeleccionado: savedId });
     } else {
       // Si no existe, seleccionar el primer grupo disponible o limpiar
-      if (validGroups.length > 0) {
-        const firstGroupId = String(validGroups[0].id);
-        localStorage.setItem("grupoSeleccionado", firstGroupId);
-        set({ grupoSeleccionado: firstGroupId });
-      } else {
-        localStorage.removeItem("grupoSeleccionado");
-        set({ grupoSeleccionado: null });
-      }
+      set({ grupoSeleccionado: 'protegido' })
     }
   },
 
