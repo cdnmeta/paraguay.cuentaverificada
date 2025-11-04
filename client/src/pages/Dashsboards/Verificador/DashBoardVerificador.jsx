@@ -9,7 +9,9 @@ export default function DashBoardVerificador() {
   const secciones = useSecciones({ user });
   return (
     <div className="min-h-screen text-white">
-      <h1>Departamento Legal Dashboard</h1>
+      <h1 className="text-2xl text-white font-bold mb-4">
+        Panel del Verificador, {user?.nombre} {user?.apellido}
+      </h1>
       {/* Secciones */}
       <div className="justify-center">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">

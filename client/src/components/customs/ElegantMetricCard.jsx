@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 // Paleta de colores elegante con gradientes sutiles
 const ELEGANT_VARIANTS = {
   default: {
-    card: "bg-gradient-to-br from-card via-card to-card/95 border-border/50 shadow-sm hover:shadow-md",
+    card: "border-border/50 shadow-sm hover:shadow-md",
     ring: "ring-ring/30",
     value: "text-foreground",
     icon: "text-muted-foreground",
@@ -16,7 +16,7 @@ const ELEGANT_VARIANTS = {
     focus: "focus-visible:ring-ring/50",
   },
   emerald: {
-    card: "bg-gradient-to-br from-emerald-50 via-emerald-25 to-white border-emerald-200/60 dark:from-emerald-950/20 dark:via-emerald-950/10 dark:to-background dark:border-emerald-800/30",
+    card: "border-emerald-200/60 dark:from-emerald-950/20 dark:via-emerald-950/10 dark:to-background dark:border-emerald-800/30",
     ring: "ring-emerald-300/40",
     value: "text-emerald-700 dark:text-emerald-400",
     icon: "text-emerald-600 dark:text-emerald-500",
@@ -25,7 +25,7 @@ const ELEGANT_VARIANTS = {
     focus: "focus-visible:ring-emerald-400/50",
   },
   sapphire: {
-    card: "bg-gradient-to-br from-blue-50 via-blue-25 to-white border-blue-200/60 dark:from-blue-950/20 dark:via-blue-950/10 dark:to-background dark:border-blue-800/30",
+    card: "border-blue-200/60 dark:from-blue-950/20 dark:via-blue-950/10 dark:to-background dark:border-blue-800/30",
     ring: "ring-blue-300/40",
     value: "text-blue-700 dark:text-blue-400",
     icon: "text-blue-600 dark:text-blue-500",
@@ -34,7 +34,7 @@ const ELEGANT_VARIANTS = {
     focus: "focus-visible:ring-blue-400/50",
   },
   amber: {
-    card: "bg-gradient-to-br from-amber-50 via-amber-25 to-white border-amber-200/60 dark:from-amber-950/20 dark:via-amber-950/10 dark:to-background dark:border-amber-800/30",
+    card: "border-amber-200/60 dark:from-amber-950/20 dark:via-amber-950/10 dark:to-background dark:border-amber-800/30",
     ring: "ring-amber-300/40",
     value: "text-amber-700 dark:text-amber-400",
     icon: "text-amber-600 dark:text-amber-500",
@@ -43,7 +43,7 @@ const ELEGANT_VARIANTS = {
     focus: "focus-visible:ring-amber-400/50",
   },
   rose: {
-    card: "bg-gradient-to-br from-rose-50 via-rose-25 to-white border-rose-200/60 dark:from-rose-950/20 dark:via-rose-950/10 dark:to-background dark:border-rose-800/30",
+    card: "border-rose-200/60 dark:from-rose-950/20 dark:via-rose-950/10 dark:to-background dark:border-rose-800/30",
     ring: "ring-rose-300/40",
     value: "text-rose-700 dark:text-rose-400",
     icon: "text-rose-600 dark:text-rose-500",
@@ -52,7 +52,7 @@ const ELEGANT_VARIANTS = {
     focus: "focus-visible:ring-rose-400/50",
   },
   violet: {
-    card: "bg-gradient-to-br from-violet-50 via-violet-25 to-white border-violet-200/60 dark:from-violet-950/20 dark:via-violet-950/10 dark:to-background dark:border-violet-800/30",
+    card: "border-violet-200/60 dark:from-violet-950/20 dark:via-violet-950/10 dark:to-background dark:border-violet-800/30",
     ring: "ring-violet-300/40",
     value: "text-violet-700 dark:text-violet-400",
     icon: "text-violet-600 dark:text-violet-500",
@@ -61,7 +61,7 @@ const ELEGANT_VARIANTS = {
     focus: "focus-visible:ring-violet-400/50",
   },
   slate: {
-    card: "bg-gradient-to-br from-slate-50 via-slate-25 to-white border-slate-200/60 dark:from-slate-950/20 dark:via-slate-950/10 dark:to-background dark:border-slate-800/30",
+    card: "text-black border-slate-200/60 dark:from-slate-950/20 dark:via-slate-950/10 dark:to-background dark:border-slate-800/30",
     ring: "ring-slate-300/40",
     value: "text-slate-700 dark:text-slate-400",
     icon: "text-slate-600 dark:text-slate-500",

@@ -1,29 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  Ticket, 
-  Clock, 
-  CheckCircle, 
-  AlertTriangle, 
-  Users, 
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Ticket,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Users,
   TrendingUp,
   Plus,
   MessageSquare,
   XCircle,
-  Pause
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { getResumenMisTickets } from '@/apis/tickets.api';
-import { routes } from './config/route';
+  Pause,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { getResumenMisTickets } from "@/apis/tickets.api";
+import { routes } from "./config/route";
+import { useAuthStore } from "@/hooks/useAuthStorge";
 
 export default function DashBoardSoportePage() {
   const [statsData, setStatsData] = useState([]);
   const [secondaryStats, setSecondaryStats] = useState([]);
   const [recentTickets, setRecentTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); 
+  const {user} = useAuthStore()
 
   useEffect(() => {
     const fetchResumenTickets = async () => {
@@ -31,110 +39,110 @@ export default function DashBoardSoportePage() {
         setLoading(true);
         const response = await getResumenMisTickets();
         const data = response.data;
-        
+
         // Mapear los datos de la API a las estadísticas principales del dashboard
         const mappedStats = [
           {
-            title: 'Total Tickets',
+            title: "Total Tickets",
             value: data.cant_total_tickets.toString(),
-            description: 'Tickets totales en el sistema',
+            description: "Tickets totales en el sistema",
             icon: Ticket,
-            color: 'text-blue-600',
-            bgColor: 'bg-blue-100',
+            color: "text-blue-600",
+            bgColor: "bg-blue-100",
           },
           {
-            title: 'Nuevos',
+            title: "Nuevos",
             value: data.cant_nuevos.toString(),
-            description: 'Tickets recién creados',
+            description: "Tickets recién creados",
             icon: Plus,
-            color: 'text-purple-600',
-            bgColor: 'bg-purple-100',
+            color: "text-purple-600",
+            bgColor: "bg-purple-100",
           },
           {
-            title: 'Pendiente Soporte',
+            title: "Pendiente Soporte",
             value: data.cant_pend_soporte.toString(),
-            description: 'Esperando respuesta del soporte',
+            description: "Esperando respuesta del soporte",
             icon: Clock,
-            color: 'text-yellow-600',
-            bgColor: 'bg-yellow-100',
+            color: "text-yellow-600",
+            bgColor: "bg-yellow-100",
           },
           {
-            title: 'Resueltos',
+            title: "Resueltos",
             value: data.cant_resueltos.toString(),
-            description: 'Tickets resueltos',
+            description: "Tickets resueltos",
             icon: CheckCircle,
-            color: 'text-green-600',
-            bgColor: 'bg-green-100',
+            color: "text-green-600",
+            bgColor: "bg-green-100",
           },
         ];
 
         // Estadísticas secundarias
         const mappedSecondaryStats = [
           {
-            title: 'Abiertos',
+            title: "Abiertos",
             value: data.cant_abiertos.toString(),
-            description: 'Tickets en estado abierto',
+            description: "Tickets en estado abierto",
             icon: MessageSquare,
-            color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
+            color: "text-blue-600",
+            bgColor: "bg-blue-50",
           },
           {
-            title: 'Pendiente Cliente',
+            title: "Pendiente Cliente",
             value: data.cant_pend_cliente.toString(),
-            description: 'Esperando respuesta del cliente',
+            description: "Esperando respuesta del cliente",
             icon: Users,
-            color: 'text-orange-600',
-            bgColor: 'bg-orange-50',
+            color: "text-orange-600",
+            bgColor: "bg-orange-50",
           },
           {
-            title: 'En Espera',
+            title: "En Espera",
             value: data.cant_en_espera.toString(),
-            description: 'Tickets pausados',
+            description: "Tickets pausados",
             icon: Pause,
-            color: 'text-gray-600',
-            bgColor: 'bg-gray-50',
+            color: "text-gray-600",
+            bgColor: "bg-gray-50",
           },
           {
-            title: 'Cerrados',
+            title: "Cerrados",
             value: data.cant_cerrados.toString(),
-            description: 'Tickets finalizados',
+            description: "Tickets finalizados",
             icon: XCircle,
-            color: 'text-red-600',
-            bgColor: 'bg-red-50',
+            color: "text-red-600",
+            bgColor: "bg-red-50",
           },
         ];
 
         setStatsData(mappedStats);
         setSecondaryStats(mappedSecondaryStats);
-        
+
         // Procesar tickets recientes de la API
         if (data.tickets_recientes && Array.isArray(data.tickets_recientes)) {
-          const processedTickets = data.tickets_recientes.map(ticket => ({
+          const processedTickets = data.tickets_recientes.map((ticket) => ({
             id: ticket.id,
             subject: ticket.descripcion,
             priority: getPriorityText(ticket.prioridad),
-            status: 'Nuevo', // Asumiendo que los tickets recientes son nuevos
+            status: "Nuevo", // Asumiendo que los tickets recientes son nuevos
             user: ticket.reportante,
             time: formatTimeAgo(ticket.fecha_creacion),
-            originalData: ticket
+            originalData: ticket,
           }));
           setRecentTickets(processedTickets);
         } else {
           setRecentTickets([]);
         }
       } catch (err) {
-        setError('Error al cargar las estadísticas');
-        console.error('Error fetching stats:', err);
-        
+        setError("Error al cargar las estadísticas");
+        console.error("Error fetching stats:", err);
+
         // Datos de respaldo en caso de error
         setStatsData([
           {
-            title: 'Total Tickets',
-            value: '0',
-            description: 'Error al cargar datos',
+            title: "Total Tickets",
+            value: "0",
+            description: "Error al cargar datos",
             icon: Ticket,
-            color: 'text-gray-600',
-            bgColor: 'bg-gray-100',
+            color: "text-gray-600",
+            bgColor: "bg-gray-100",
           },
         ]);
       } finally {
@@ -148,10 +156,14 @@ export default function DashBoardSoportePage() {
   // Función auxiliar para convertir prioridad numérica a texto
   const getPriorityText = (prioridadNum) => {
     switch (prioridadNum) {
-      case 1: return 'Alta';
-      case 2: return 'Media'; 
-      case 3: return 'Baja';
-      default: return 'Media';
+      case 1:
+        return "Alta";
+      case 2:
+        return "Media";
+      case 3:
+        return "Baja";
+      default:
+        return "Media";
     }
   };
 
@@ -164,30 +176,38 @@ export default function DashBoardSoportePage() {
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffDays > 0) {
-      return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
+      return `Hace ${diffDays} día${diffDays > 1 ? "s" : ""}`;
     } else if (diffHours > 0) {
-      return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+      return `Hace ${diffHours} hora${diffHours > 1 ? "s" : ""}`;
     } else {
       const diffMinutes = Math.floor(diffMs / (1000 * 60));
-      return `Hace ${diffMinutes} minuto${diffMinutes > 1 ? 's' : ''}`;
+      return `Hace ${diffMinutes} minuto${diffMinutes > 1 ? "s" : ""}`;
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'Alta': return 'bg-red-100 text-red-800';
-      case 'Media': return 'bg-yellow-100 text-yellow-800';
-      case 'Baja': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "Alta":
+        return "bg-red-100 text-red-800";
+      case "Media":
+        return "bg-yellow-100 text-yellow-800";
+      case "Baja":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Pendiente': return 'bg-yellow-100 text-yellow-800';
-      case 'En Proceso': return 'bg-blue-100 text-blue-800';
-      case 'Resuelto': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "Pendiente":
+        return "bg-yellow-100 text-yellow-800";
+      case "En Proceso":
+        return "bg-blue-100 text-blue-800";
+      case "Resuelto":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -196,8 +216,12 @@ export default function DashBoardSoportePage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard de Soporte</h1>
-          <p className="text-gray-600 mt-1">Panel de control para gestión de tickets de soporte</p>
+          <h1 className="text-2xl text-foreground font-bold mb-4">
+            Panel del Soporte, {user?.nombre} {user?.apellido}
+          </h1>
+          <p className="text-foreground mt-1">
+            Panel de control para gestión de tickets de soporte
+          </p>
         </div>
       </div>
 
@@ -233,7 +257,7 @@ export default function DashBoardSoportePage() {
           {statsData.map((stat, index) => (
             <Card key={index} className="relative overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
+                <CardTitle className="text-sm font-medium text-foreground">
                   {stat.title}
                 </CardTitle>
                 <div className={`p-2 rounded-full ${stat.bgColor}`}>
@@ -241,8 +265,10 @@ export default function DashBoardSoportePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+                <div className="text-2xl font-bold text-foreground">
+                  {stat.value}
+                </div>
+                <p className="text-xs text-foreground mt-1">{stat.description}</p>
               </CardContent>
             </Card>
           ))}
@@ -253,9 +279,13 @@ export default function DashBoardSoportePage() {
       {!loading && !error && secondaryStats.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {secondaryStats.map((stat, index) => (
-            <Card key={index} className="relative overflow-hidden border-l-4" style={{borderLeftColor: stat.color.replace('text-', '#')}}>
+            <Card
+              key={index}
+              className="relative overflow-hidden border-l-4"
+              style={{ borderLeftColor: stat.color.replace("text-", "#") }}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
+                <CardTitle className="text-sm font-medium text-foreground">
                   {stat.title}
                 </CardTitle>
                 <div className={`p-2 rounded-full ${stat.bgColor}`}>
@@ -263,8 +293,10 @@ export default function DashBoardSoportePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-xl font-bold text-gray-900">{stat.value}</div>
-                <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+                <div className="text-xl font-bold text-foreground">
+                  {stat.value}
+                </div>
+                <p className="text-xs text-foreground mt-1">{stat.description}</p>
               </CardContent>
             </Card>
           ))}
@@ -287,7 +319,10 @@ export default function DashBoardSoportePage() {
             {loading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="h-4 bg-gray-200 rounded animate-pulse w-16"></div>
@@ -313,21 +348,37 @@ export default function DashBoardSoportePage() {
             ) : (
               <div className="space-y-4">
                 {recentTickets.map((ticket, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm text-blue-600">#T-{ticket.id}</span>
-                        <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
+                        <span className="font-medium text-sm text-blue-600">
+                          #T-{ticket.id}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={getPriorityColor(ticket.priority)}
+                        >
                           {ticket.priority}
                         </Badge>
-                        <Button className={'bg-green-500'}>
-                          <Link to={`/${routes.ticketDetail(ticket.id)}`} className="text-xs">Ver Detalle</Link>
+                        <Button className={"bg-green-500"}>
+                          <Link
+                            to={`/${routes.ticketDetail(ticket.id)}`}
+                            className="text-xs"
+                          >
+                            Ver Detalle
+                          </Link>
                         </Button>
                       </div>
-                      <p className="text-sm font-medium text-gray-900 truncate" title={ticket.subject}>
+                      <p
+                        className="text-sm font-medium text-foreground truncate"
+                        title={ticket.subject}
+                      >
                         {ticket.subject}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-foreground">
                         {ticket.user} • {ticket.time}
                       </p>
                     </div>
@@ -361,19 +412,31 @@ export default function DashBoardSoportePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Button asChild className="w-full justify-start" variant="outline">
+              <Button
+                asChild
+                className="w-full justify-start"
+                variant="outline"
+              >
                 <Link to={`/${routes.ticketsListado}`}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Ver mis tickets asignados
                 </Link>
               </Button>
-              <Button asChild className="w-full justify-start" variant="outline">
+              <Button
+                asChild
+                className="w-full justify-start"
+                variant="outline"
+              >
                 <Link to={`/${routes.ticketsListado}?estado=pendiente_soporte`}>
                   <Clock className="h-4 w-4 mr-2" />
                   Tickets Pendientes Responder
                 </Link>
               </Button>
-              <Button asChild className="w-full justify-start" variant="outline">
+              <Button
+                asChild
+                className="w-full justify-start"
+                variant="outline"
+              >
                 <Link to={`/${routes.ticketsListado}?prioridad=alta`}>
                   <AlertTriangle className="h-4 w-4 mr-2" />
                   Tickets urgentes
@@ -389,20 +452,21 @@ export default function DashBoardSoportePage() {
         <CardHeader>
           <CardTitle>Bienvenido al Sistema de Soporte</CardTitle>
           <CardDescription>
-            Desde este panel puedes gestionar todos los aspectos del soporte técnico
+            Desde este panel puedes gestionar todos los aspectos del soporte
+            técnico
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
             <div className="p-4 border rounded-lg">
               <h3 className="font-medium mb-2">📋 Ver Tickets</h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-foreground">
                 Ver, Abrir y solucionar tickets de soporte de manera eficiente
               </p>
             </div>
             <div className="p-4 border rounded-lg">
               <h3 className="font-medium mb-2">📊 Reportes y Análisis</h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-foreground">
                 Buscar y ver tickets por estado, prioridad o usuario
               </p>
             </div>

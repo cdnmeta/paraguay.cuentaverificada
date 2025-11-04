@@ -24,8 +24,8 @@ export const ROUTES_DASHBOARD = {
   'admin': PROTECTED_ROUTES.admin,
   1: dtoLegalRoutes.index,
   2: verficadorRoutes.index,
-  3: DashBoardParticipante,
-  4: DashBoardParticipante,
+  3: DashBoardParticipante.index,
+  4: DashBoardParticipante.index,
   5: SorporteRoutes.index,
 };
 

@@ -53,11 +53,14 @@ import FormAbonoMovimiento from './FormAbonoMovimiento';
 import { convertirMoneda } from "@/utils/funciones";
 import { TIPOS_MOVIMIENTOS } from "../utils/constanst";
 import SemaforoImg from "./SemaforoImg";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {} }) => {
   const [selectedTipo, setSelectedTipo] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [tipoSemaforo, setTipoSemaforo] = useState('default');
+  const isMobile = useIsMobile();
   const [abonosDialog, setAbonosDialog] = useState({
     open: false,
     movimiento: null,
@@ -1254,7 +1257,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
         open={formDialog.open}
         onOpenChange={(open) => !open && cerrarFormularioMovimiento()}
       >
-        <DialogContent className="max-h-[50vh] sm:max-h-[90vh] md:max-h-[90vh] lg:max-h-[90vh] overflow-y-auto">
+        <DialogContent className={cn("max-h-[50vh] sm:max-h-[90vh] md:max-h-[90vh] lg:max-h-[90vh] overflow-y-auto",isMobile ? "fixed top-[30%]" : "")}>
           <DialogHeader>
             <DialogTitle>{formDialog.titulo}</DialogTitle>
             <DialogDescription>

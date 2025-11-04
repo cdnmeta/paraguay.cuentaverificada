@@ -99,9 +99,9 @@ export default function DashBoardParticipante() {
     fetchData();
   }, []);
   return (
-    <div className="max-h-screen">
+    <div>
       <h1 className="text-2xl text-white font-bold mb-4">
-        Bienvenido, {user?.nombre} {user?.apellido}
+        Panel del Participante, {user?.nombre} {user?.apellido}
       </h1>
 
       <div className="mx-auto max-w-6xl p-4">
@@ -122,7 +122,7 @@ export default function DashBoardParticipante() {
               showGlow={true}
               showAccent={true}
               size="default"
-              className="min-h-[180px] hover:scale-105 transition-transform duration-300"
+              className="hover:scale-105 transition-transform duration-300"
             />
           ))}
 
