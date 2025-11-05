@@ -7,9 +7,9 @@ export const NOMBRE_APP = 'Hola Yo Soy';
 const baseDir = PRODUCCION ? 'dist' : 'src';
 
 const url_origins_dev = ['http://localhost:5173']
-const url_origins_prod = ['https://cuenta-verificada-py.pages.dev', 'https://paraguay.cuentaverificada.com']
+const url_origins_prod = ['https://paraguay.cuentaverificada.com',"https://py-dev.cuentaverificada.com"]
 
-
+  
 export const URL_BASE = PRODUCCION
   ? 'https://holayosoy.com'
   : 'http://localhost:3000';
