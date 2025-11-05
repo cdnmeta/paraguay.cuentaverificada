@@ -56,7 +56,6 @@ import { ENTORNO } from "./utils/constants";
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
-  console.log("app en",ENTORNO)
   useEffect(() => {
     console.log(location);
     checkAuthOnStart(); // Verifica si hay sesión activa con Firebase
