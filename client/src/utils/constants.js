@@ -3,12 +3,19 @@ import { z } from "zod";
 
 
 const PRODUCCION = import.meta.env.MODE === 'production';
+const ENTORNO = import.meta.env.NODE_ENV || 'development';
 let url_backend = "http://localhost:3000";
 let url_backend_api = "http://localhost:3000/api";
   
-if(PRODUCCION){
-  url_backend = "https://py.cuentaverificada.com";
-  url_backend_api = "https://py.cuentaverificada.com/api";
+if(ENTORNO === 'production'){
+  url_backend = "https://api-py.cuentaverificada.com";
+  url_backend_api = "https://api-py.cuentaverificada.com/api";
+}else if(ENTORNO === 'test'){
+  url_backend = "https://api-py-dev.cuentaverificada.com";
+  url_backend_api = "https://api-py-dev.cuentaverificada.com/api";
+}else{
+  url_backend = "http://localhost:3000";
+  url_backend_api = "http://localhost:3000/api";
 }
 
 export const NOMBRE_APP = "Cuenta Verificada";
