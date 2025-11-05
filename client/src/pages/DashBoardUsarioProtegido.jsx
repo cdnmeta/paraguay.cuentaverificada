@@ -232,7 +232,9 @@ export default function DashBoardUsarioProtegido() {
             </AlertDescription>
           </Alert>
         )}
-        <Alert className="">
+        {
+          user?.vfd == true && (
+            <Alert className="">
           <CheckCircle2Icon />
           <AlertTitle>Hola, {`${user?.nombre} ${user?.apellido}`}</AlertTitle>
           <AlertDescription>
@@ -249,6 +251,8 @@ export default function DashBoardUsarioProtegido() {
             </Button>
           </AlertDescription>
         </Alert>
+          )
+        }
       </div>
 
       <div className="max-w-7xl mx-auto text-center space-y-4">
