@@ -51,11 +51,12 @@ import FavoritosRoutes from "./pages/Favoritos/favoritos.routes";
 import SoporteAyudaRoute from "./pages/SoporteAyuda/soporteAyuda.route";
 import SoporteRoutes from "./pages/Dashsboards/Soporte/soporte.routes";
 import ForwardOnlyBoundary from "./utils/ForwardOnlyBoundary";
+import { ENTORNO } from "./utils/constants";
 
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
-
+  console.log("app en",ENTORNO)
   useEffect(() => {
     console.log(location);
     checkAuthOnStart(); // Verifica si hay sesión activa con Firebase
