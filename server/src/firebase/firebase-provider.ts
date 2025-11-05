@@ -3,20 +3,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
 import * as path from 'path';
-import {URL_BUCKET_FIREBASE_DEV, URL_BUCKET_FIREBASE_PROD, URL_BUCKET_FIREBASE_TEST } from './constantsFirebase';
+import {URL_BUCKET_FIREBASE_DEV, URL_BUCKET_FIREBASE_PROD } from './constantsFirebase';
 
 const pathBuscar = PRODUCCION ? 'firebase-credentials-prod.json' : 'firebase-credentials-dev.json';
-let BUCKET_UTILIZAR = "";
-
-if(ENTORNO === 'production'){
-  BUCKET_UTILIZAR = URL_BUCKET_FIREBASE_PROD;
-} else if (ENTORNO === 'test') {
-  BUCKET_UTILIZAR = URL_BUCKET_FIREBASE_TEST;
-}else{
-  BUCKET_UTILIZAR = URL_BUCKET_FIREBASE_DEV;
-}
-
-
+let BUCKET_UTILIZAR = PRODUCCION ? URL_BUCKET_FIREBASE_PROD : URL_BUCKET_FIREBASE_DEV;
 
 export const firebaseCredentialPath = path.join(
   process.cwd(),

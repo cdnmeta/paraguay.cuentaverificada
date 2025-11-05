@@ -6,7 +6,7 @@ export const PRODUCCION = import.meta.env.MODE === 'production';
 export const ENTORNO = import.meta.env.NODE_ENV || 'development';
 let url_backend = "http://localhost:3000";
 let url_backend_api = "http://localhost:3000/api";
-  
+
 if(ENTORNO === 'production'){
   url_backend = "https://api-py.cuentaverificada.com";
   url_backend_api = "https://api-py.cuentaverificada.com/api";

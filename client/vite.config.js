@@ -35,8 +35,7 @@ export default defineConfig(({ mode }) => ({
       "@pages": path.resolve(__dirname, "./src/pages"),
     },
   },
- // En prod, elimina solo estos métodos
-    pure: mode === "production" ? ["console.log", "console.info", "console.debug"] : [],
-    // (opcional) también puedes dropear debugger:
-    drop: mode === "production" ? ["debugger"] : [],
+  esbuild: mode === 'production' || mode === 'test'
+    ? { pure: ['console.log', 'console.info', 'console.debug'] }
+    : undefined,
 }));
