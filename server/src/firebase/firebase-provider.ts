@@ -3,9 +3,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
 import * as path from 'path';
+import { config } from 'process';
 
 const pathBuscar = PRODUCCION ? 'firebase-credentials-prod.json' : 'firebase-credentials-dev.json';
-let BUCKET_UTILIZAR = process.env.URL_BUCKET_FIREBASE || '';
+
 
 export const firebaseCredentialPath = path.join(
   process.cwd(),
@@ -16,6 +17,7 @@ const firebaseProvider = {
   provide: 'FIREBASE_APP',
   useFactory: async (configService: ConfigService) => {
     console.log('firebaseCredentialPath', firebaseCredentialPath);
+    let BUCKET_UTILIZAR = configService.get<string>('URL_BUCKET_FIREBASE'); 
     const serviceAccount = firebaseCredentialPath;
     if (!serviceAccount) {
       throw new Error('FIREBASE_SERVICE_ACCOUNT is not defined');
@@ -30,6 +32,7 @@ const firebaseProvider = {
       storageBucket: BUCKET_UTILIZAR,
     });
   },
+  inject: [ConfigService],
 };
 
 export const FirebaseProvider = firebaseProvider;
