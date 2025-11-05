@@ -8,5 +8,4 @@ export const FIREBASE_STORAGE_FOLDERS = {
 }
 
 export const URL_BUCKET_FIREBASE_DEV = 'gs://cuenta-verificada-paraguay-dev.firebasestorage.app';
-export const URL_BUCKET_FIREBASE_TEST = 'gs://cuenta-verificada-paraguay-dev.firebasestorage.app';
-export const URL_BUCKET_FIREBASE_PROD = 'gs://cuenta-verificada-paraguay-dev.firebasestorage.app';
+export const URL_BUCKET_FIREBASE_PROD = 'gs://paraguay-cuenta-verificada.firebasestorage.app';
