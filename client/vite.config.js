@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => ({
       "@pages": path.resolve(__dirname, "./src/pages"),
     },
   },
-  esbuild: mode === 'production' || mode === 'test'
+  esbuild: mode === 'production'
     ? { pure: ['console.log', 'console.info', 'console.debug'] }
     : undefined,
 }));

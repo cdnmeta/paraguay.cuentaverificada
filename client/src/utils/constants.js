@@ -3,7 +3,7 @@ import { z } from "zod";
 
 
 export const PRODUCCION = import.meta.env.MODE === 'production';
-export const ENTORNO = import.meta.env.NODE_ENV || 'development';
+export const ENTORNO = import.meta.env.VITE_ENTORNO || 'development';
 let url_backend = "http://localhost:3000";
 let url_backend_api = "http://localhost:3000/api";
 
