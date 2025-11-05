@@ -1,12 +1,21 @@
-import { PRODUCCION } from '@/utils/constants';
+import { ENTORNO, PRODUCCION } from '@/utils/constants';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
 import * as path from 'path';
-import {URL_BUCKET_FIREBASE_DEV, URL_BUCKET_FIREBASE_PROD } from './constantsFirebase';
+import {URL_BUCKET_FIREBASE_DEV, URL_BUCKET_FIREBASE_PROD, URL_BUCKET_FIREBASE_TEST } from './constantsFirebase';
 
 const pathBuscar = PRODUCCION ? 'firebase-credentials-prod.json' : 'firebase-credentials-dev.json';
-const BUCKET_UTILIZAR = PRODUCCION ? URL_BUCKET_FIREBASE_PROD : URL_BUCKET_FIREBASE_DEV;
+let BUCKET_UTILIZAR = PRODUCCION ? URL_BUCKET_FIREBASE_PROD : URL_BUCKET_FIREBASE_DEV;
+
+if(ENTORNO === 'production'){
+  BUCKET_UTILIZAR = URL_BUCKET_FIREBASE_PROD;
+} else if (ENTORNO === 'development') {
+  BUCKET_UTILIZAR = URL_BUCKET_FIREBASE_DEV;
+} else if (ENTORNO === 'test') {
+  BUCKET_UTILIZAR = URL_BUCKET_FIREBASE_TEST;
+}
+
 
 
 export const firebaseCredentialPath = path.join(

@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { BadRequestException, ConsoleLogger, ValidationPipe } from '@nestjs/common';
-import { PRODUCCION, URL_BASE, URL_ORIGINS } from '@/utils/constants';
+import { ENTORNO, PRODUCCION, URL_BASE, URL_ORIGINS } from '@/utils/constants';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
@@ -54,6 +54,6 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(logger));
 
   await app.listen(process.env.PORT ?? 3000);
-  logger.log(`Iniciando servidor en modo ${PRODUCCION ? 'producción' : 'desarrollo'}`);
+  logger.log(`Iniciando servidor en modo ${ENTORNO}`);
 }
 bootstrap();
