@@ -6,14 +6,14 @@ import * as path from 'path';
 import {URL_BUCKET_FIREBASE_DEV, URL_BUCKET_FIREBASE_PROD, URL_BUCKET_FIREBASE_TEST } from './constantsFirebase';
 
 const pathBuscar = PRODUCCION ? 'firebase-credentials-prod.json' : 'firebase-credentials-dev.json';
-let BUCKET_UTILIZAR = PRODUCCION ? URL_BUCKET_FIREBASE_PROD : URL_BUCKET_FIREBASE_DEV;
+let BUCKET_UTILIZAR = "";
 
 if(ENTORNO === 'production'){
   BUCKET_UTILIZAR = URL_BUCKET_FIREBASE_PROD;
-} else if (ENTORNO === 'development') {
-  BUCKET_UTILIZAR = URL_BUCKET_FIREBASE_DEV;
 } else if (ENTORNO === 'test') {
   BUCKET_UTILIZAR = URL_BUCKET_FIREBASE_TEST;
+}else{
+  BUCKET_UTILIZAR = URL_BUCKET_FIREBASE_DEV;
 }
 
 

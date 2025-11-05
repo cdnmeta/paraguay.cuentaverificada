@@ -2,8 +2,8 @@
 import { z } from "zod";
 
 
-const PRODUCCION = import.meta.env.MODE === 'production';
-const ENTORNO = import.meta.env.NODE_ENV || 'development';
+export const PRODUCCION = import.meta.env.MODE === 'production';
+export const ENTORNO = import.meta.env.NODE_ENV || 'development';
 let url_backend = "http://localhost:3000";
 let url_backend_api = "http://localhost:3000/api";
   
