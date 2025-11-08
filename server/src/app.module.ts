@@ -27,11 +27,14 @@ import { EmailModule } from './email/email.module';
 import { SemaforoFinancieroModule } from './semaforo_financiero/semaforo_financiero.module';
 import { EstadosAnimosModule } from './estados-animos/estados-animos.module';
 import { TicketsModule } from './tickets/tickets.module';
+import { WalletModule } from './wallet/wallet.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
      WinstonModule.forRoot(winstonOptions),
+     ScheduleModule.forRoot(),
     UsuariosModule,
     AuthModule,
     PrismaModule,
@@ -54,6 +57,7 @@ import { TicketsModule } from './tickets/tickets.module';
     SemaforoFinancieroModule,
     EstadosAnimosModule,
     TicketsModule,
+    WalletModule,
   ],
   providers: [
     {
