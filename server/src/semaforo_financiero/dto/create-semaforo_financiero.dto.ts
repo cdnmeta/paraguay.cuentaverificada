@@ -9,6 +9,10 @@ export class SemaforoMovimientoDtoBase {
     @Transform(({ value }) => sanitizeTexto(value))
     titulo: string;
 
+    @IsDateString({},{ message: 'El campo fecha debe ser una fecha válida en formato ISO 8601.' })
+    @IsOptional()
+    fecha?: Date;
+
     @IsDateString({},{ message: 'El campo fecha_vencimiento debe ser una fecha válida en formato ISO 8601.' })
     @IsOptional()
     fecha_vencimiento?: Date;

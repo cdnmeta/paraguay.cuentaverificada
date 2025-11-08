@@ -58,6 +58,11 @@ const movimientoSchema = z.object({
     })
     .optional()
     .nullable(),
+  fecha: z
+    .date({
+      required_error: "La fecha es requerida",
+      invalid_type_error: "La fecha debe ser una fecha válida",
+    })
 });
 
 // Constantes
@@ -91,6 +96,7 @@ const FormSemaforoFinancieroMovimiento = ({
     defaultValues: {
       titulo: "",
       tipo_movimiento: "",
+      fecha: new Date(),
       fecha_vencimiento: null,
       id_estado: "",
       monto: "",
@@ -144,6 +150,10 @@ const FormSemaforoFinancieroMovimiento = ({
           form.setValue("id_moneda", data.id_moneda.toString());
           form.setValue("observacion", data.observacion || "");
           form.setValue(
+            "fecha",
+            data.fecha ? new Date(data.fecha) : new Date()
+          );
+          form.setValue(
             "fecha_vencimiento",
             data.fecha_vencimiento ? new Date(data.fecha_vencimiento) : null
           );
@@ -171,6 +181,7 @@ const FormSemaforoFinancieroMovimiento = ({
         ...data,
         tipo_movimiento: data.tipo_movimiento,
         id_moneda: data.id_moneda,
+        fecha: data.fecha ? new Date(data.fecha).toISOString() : new Date().toISOString(),
         fecha_vencimiento: data.fecha_vencimiento
           ? new Date(data.fecha_vencimiento).toISOString()
           : null,
@@ -229,6 +240,24 @@ const FormSemaforoFinancieroMovimiento = ({
                   placeholder="Ingrese el título del movimiento"
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Fecha */}
+        <FormField
+          control={form.control}
+          name="fecha"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Fecha *</FormLabel>
+              <DatePicker
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Seleccione una fecha"
+                diasableDate={{after: new Date()}}
+              />
               <FormMessage />
             </FormItem>
           )}

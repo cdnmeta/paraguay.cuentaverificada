@@ -30,6 +30,8 @@ export const UPLOADS_DIR = join(process.cwd(), '..', '..', 'uploads');
 export const AVATARS_FOLDER = 'avatars';
 export const CEDULAS_FOLDER = 'cedulas';
 
+export const SEMAFORO_FINANCIERO_CRON_TIME = process.env.SEMAFORO_FINANCIERO_CRON_TIME || '0 0 3 1 * *'; // Valor por defecto: Cada día 1 de cada mes a las 3:00 AM
+
 /**
  * Devuelve la ruta de la carpeta de almacenamiento según si es pública o privada.
  *

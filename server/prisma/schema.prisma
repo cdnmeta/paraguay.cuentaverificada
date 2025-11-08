@@ -145,6 +145,7 @@ model monedas {
   factura_suscripciones                                            factura_suscripciones[]
   pagos_factura_suscripciones                                      pagos_factura_suscripciones[]
   semaforo_movimientos                                             semaforo_movimientos[]
+  wallet                                                           wallet[]
 }
 
 
@@ -315,6 +316,8 @@ model usuarios {
   recordatorios_usuarios      direcciones_usuarios[]
   semaforo_movimientos        semaforo_movimientos[]
   usuarios_comercios_fav      usuarios_comercios_fav[]
+  wallet                      wallet[]
+  wallet_movimientos_verificador wallet_movimientos[] @relation("WalletMovimientosVerificador")
 }
 
 model usuarios_grupos {
@@ -578,4 +581,65 @@ model ticket_mensaje {
 
   @@index([id_ticket, fecha_creacion])
   @@map("ticket_mensaje")
+}
+// Tabla de movimientos de la wallet
+
+model wallet {
+  id                     Int                  @id @default(autoincrement())
+  id_usuario             Int
+  id_estado              Int?
+  activo                 Boolean              @default(true)
+  id_moneda              Int?
+  fecha_creacion         DateTime             @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion    DateTime?            @db.Timestamptz(6)
+  saldo                  Float                @default(0)
+
+  // Relaciones
+  usuario                usuarios             @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  moneda                 monedas?             @relation(fields: [id_moneda], references: [id], onDelete: SetNull)
+  wallet_movimientos     wallet_movimientos[]
+
+  @@map("wallet")
+}
+
+
+
+model wallet_movimientos {
+  id                      Int                      @id @default(autoincrement())
+  id_wallet               Int
+  id_tipo_movimiento      Int
+  id_estado               Int?
+  monto                   Float?
+  url_imagen              String?
+  observacion             String?
+  motivo_rechazo          String?
+  id_usuario_verificador  Int?
+  fecha_creacion          DateTime                 @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion     DateTime?                @db.Timestamptz(6)
+  fecha_verificacion      DateTime?                @db.Timestamptz(6)
+  fecha_rechazo           DateTime?                @db.Timestamptz(6)
+  fecha_anulacion        DateTime?                @db.Timestamptz(6)
+  id_usuario_rechazo      Int?
+  id_usuario_anulacion    Int?
+  activo                  Boolean                  @default(true)
+
+  // Relaciones
+  wallet                  wallet                   @relation(fields: [id_wallet], references: [id], onDelete: Cascade)
+  tipo_movimiento         tipo_movimiento_wallet   @relation(fields: [id_tipo_movimiento], references: [id], onDelete: Restrict)
+  usuario_verificador     usuarios?                @relation("WalletMovimientosVerificador", fields: [id_usuario_verificador], references: [id], onDelete: SetNull)
+
+  @@map("wallet_movimientos")
+}
+
+model tipo_movimiento_wallet {
+  id                      Int                      @id @default(autoincrement())
+  descripcion             String
+  tipo_movimiento         Int?
+  fecha_creacion          DateTime                 @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion     DateTime?                @db.Timestamptz(6)
+
+  // Relaciones
+  wallet_movimientos      wallet_movimientos[]
+
+  @@map("tipo_movimiento_wallet")
 }
