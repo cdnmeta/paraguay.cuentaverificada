@@ -52,7 +52,7 @@ import SoporteAyudaRoute from "./pages/SoporteAyuda/soporteAyuda.route";
 import SoporteRoutes from "./pages/Dashsboards/Soporte/soporte.routes";
 import ForwardOnlyBoundary from "./utils/ForwardOnlyBoundary";
 import { ENTORNO } from "./utils/constants";
-
+import WalletRoutes from "./pages/Wallet/wallet.route";
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
@@ -93,9 +93,11 @@ export default function App() {
       </Route>
 
       <Route element={<DashboardApp />}>
-        <Route element={<ForwardOnlyBoundary>
-          <ProtectedRoute isAuthorized={!!user} />
-        </ForwardOnlyBoundary>}>
+        <Route
+          element={
+            <ProtectedRoute isAuthorized={!!user} />
+          }
+        >
           {SemaforoFinancieroRoutes()}
           <Route
             path={PROTECTED_ROUTES.dashboard}
@@ -109,6 +111,8 @@ export default function App() {
           {RecordatoriosUsuariosRoutes()}
 
           {FavoritosRoutes()}
+
+          {WalletRoutes()}
 
           {SoporteAyudaRoute()}
         </Route>
@@ -128,10 +132,7 @@ export default function App() {
         {ParticipantesRoutes({ user })}
         {/*Admin - Aislado*/}
         {SuperAdminRoutes({ user })}
-
       </Route>
-
-      
 
       {/* Dashboards con navegación externa permitida */}
 

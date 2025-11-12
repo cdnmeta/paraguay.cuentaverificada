@@ -16,6 +16,8 @@ import FormCotizacion from "@/pages/cotizacionesEmpresa/components/FormCotizacio
 import CotizacionEmpresaPage from "@/pages/cotizacionesEmpresa/page/CotizacionEmpresaPage";
 import { FacturasPlanesRoutes } from "@/pages/FacturaPlanes/facturasPlanes.routes";
 import EstadosAnimosRoutes from "@/pages/EstadosAnimos/estados-animos.routes";
+import { Wallet } from "lucide-react";
+import OperacionesWalletRoute from "@/pages/Wallet/operaciones-wallet.route";
 const DashBoardSuperAdmin = lazy(() => import("./DashBoardSuperAdmin"));
 
 export function SuperAdminRoutes({ user }) {
@@ -87,6 +89,8 @@ export function SuperAdminRoutes({ user }) {
       {UsuariosRoutes({ user })}
 
       {EstadosAnimosRoutes()}
+      {/*Rutas Wallets*/}
+      {OperacionesWalletRoute({ user })}
     </Route>
   );
 }
