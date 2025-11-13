@@ -172,16 +172,8 @@ const SaldosTab = ({ walletData }) => {
               <h4 className="font-medium text-foreground">Información de la Wallet</h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">ID de la Wallet:</span>
-                  <span className="font-mono text-sm">{walletData?.id_wallet}</span>
-                </div>
-                <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-500">Moneda:</span>
                   <span className="font-medium">{walletData?.moneda} ({walletData?.sigla_iso})</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">ID Moneda:</span>
-                  <span className="font-mono text-sm">{walletData?.id_moneda}</span>
                 </div>
               </div>
             </div>
