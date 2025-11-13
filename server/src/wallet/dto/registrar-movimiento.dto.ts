@@ -37,12 +37,12 @@ export class RegistrarSolicitudRecargaDto extends RegistrarSolicitudRecargaPaylo
 }
 
 export class ReHabilitarSolicitudRecargaPayloadDto {
-    @IsString({message: 'la descripcion debe ser un string'})
+    @IsString({message: 'la observacion debe ser un string'})
     @IsOptional()
-    descripcion?: string;
+    observacion?: string;
 }
 
 export class ReHabilitarSolicitudRecargaDto extends ReHabilitarSolicitudRecargaPayloadDto {
-    id_usuario_rehabilitacion: number;
+    id_usuario_propietario: number;
 }
 

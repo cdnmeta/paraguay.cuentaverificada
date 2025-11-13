@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { routes as RecordatoriosUsuariosRoutes } from "@/pages/recordatoriosUsuarios/config/routes";
 import { routes as FavoritosRoutes } from "@/pages/Favoritos/config/routes";
 import { routes as SoporteAyudaRoutes } from "@/pages/SoporteAyuda/config/routes";
+import {routes as WalletRoutes} from '@/pages/Wallet/config/routes'
 
 
 // Constantes para el localStorage del mensaje del día
@@ -170,47 +171,58 @@ export default function DashBoardUsarioProtegido() {
       title: "Cuenta",
       onClick: () => navigate(`${PROTECTED_ROUTES.misDatos}`),
       desc: "Datos - Seguridad - Más",
+      habilitado:true,
     },
     {
       icon: "/icons/1331244-f39d5970.png",
       title: "Favoritos",
       desc: "Comercios - Productos - Links",
       onClick: () => navigate(`/${FavoritosRoutes.index}`),
+      habilitado:true,
     },
     {
       icon: "/icons/1176025.png",
       title: "Publicar",
       desc: "Expresa lo que deseas comprar",
+      habilitado:true,
     },
     {
       icon: "/icons/443115.png",
       title: "Semáforo Financiero",
       onClick: () => navigate(`/semaforo-financiero`),
       desc: "No permitas que tus finanzas lleguen al rojo",
+      habilitado:true
     },
     {
       icon: "/icons/80957-74a5697e.png",
       title: "¿Dónde lo guardé?",
       onClick: () => navigate(`/${RecordatoriosUsuariosRoutes.index}`),
       desc: "Que no se te olvide nada",
+      habilitado:true
     },
     {
       icon: "/icons/709049.png",
       title: "Wallet",
       desc: "Depósitos - Pagos - Ganancias",
+      onClick: () => navigate(`/${WalletRoutes.index}`),
+      habilitado: () => user?.vfd === true,
     },
     {
       icon: "/icons/709049.png",
       title: "Suscripciones",
       desc: "Planes - Facturas - Historial",
+      habilitado:true,
     },
     {
       icon: "/icons/709049.png",
       title: "Soporte y Ayuda",
       desc: "Autoayuda + asistencia personalizada",
+      habilitado:true,
       onClick: () => navigate(`/${SoporteAyudaRoutes.index}`),
     },
   ];
+
+  const seccionesFiltradas = secciones.filter(item => item.habilitado === true || (typeof item.habilitado === 'function' && item.habilitado()));
   return (
     <div className="min-h-screen text-white">
       <div className="w-full flex flex-col md:flex-row lg:flex-row gap-2 mb-6 px-2">
@@ -323,7 +335,7 @@ export default function DashBoardUsarioProtegido() {
 
         {/* Secciones */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
-          {secciones.map((item, i) => (
+          {seccionesFiltradas.map((item, i) => (
             <Card
               key={i}
               className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 group"

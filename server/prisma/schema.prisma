@@ -78,6 +78,7 @@ model empresa_config {
   nuv_actual           Int?
   nuv_fin             Int?
   activo               Boolean?  @default(true)
+  
   id_moneda_base       Int
   id_plan_verificacion Int
 }
@@ -607,8 +608,8 @@ model wallet {
 model wallet_movimientos {
   id                      Int                      @id @default(autoincrement())
   id_wallet               Int
-  id_tipo_movimiento      Int
-  id_estado               Int?
+  id_tipo_movimiento      Int                       
+  id_estado               Int?                      // 1=pendiente, 2=verificado, 3=rechazado, 4=anulado
   monto                   Float?
   url_imagen              String?
   observacion             String?

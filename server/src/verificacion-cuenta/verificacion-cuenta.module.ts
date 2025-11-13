@@ -6,10 +6,11 @@ import { DatabaseModule } from '@/database/database.module';
 import { FirebaseModule } from '@/firebase/firebase.module';
 import { AuthModule } from '@/auth/auth.module';
 import { EmailModule } from '@/email/email.module';
+import { WalletService } from '@/wallet/wallet.service';
 
 @Module({
   controllers: [VerificacionCuentaController],
-  providers: [VerificacionCuentaService],
+  providers: [VerificacionCuentaService, WalletService],
   imports: [PrismaModule, DatabaseModule, FirebaseModule, forwardRef(() => AuthModule), EmailModule],
   exports: [VerificacionCuentaService],
 })

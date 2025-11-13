@@ -21,6 +21,7 @@ export class SolicitudesRecargaService {
     private readonly firebaseService: FirebaseService,
   ) {}
 
+
   async registrarSolicitudRecarga(
     data: RegistrarSolicitudRecargaDto,
     comprobantePago: Express.Multer.File,
@@ -51,18 +52,9 @@ export class SolicitudesRecargaService {
               id_estado: 1, // estado activo
             },
           });
-          // sino existe la wallet, crearla
-          if (!wallet) {
-            wallet = await tx.wallet.create({
-              data: {
-                id_usuario: data.id_usuario,
-                id_moneda: data.id_moneda,
-                activo: true,
-                id_estado: 1, // estado activo
-                fecha_creacion: new Date(),
-              },
-            });
-          }
+
+          if (!wallet || wallet.id_estado !== 1) throw new NotFoundException('Wallet no encontrada o no habilitada');
+          
           // crear la solicitud de recarga
           const solicitudCreada = await tx.wallet_movimientos.create({
             data: {
@@ -118,7 +110,7 @@ export class SolicitudesRecargaService {
         },
         data: {
           id_estado: EstadosMovimientoWallet.RECHAZADO, // estado rechazado
-          observacion: data.motivo_rechazo,
+          motivo_rechazo: data.motivo_rechazo,
           id_usuario_rechazo: data.id_usuario_rechazo,
           fecha_actualizacion: new Date(),
           fecha_rechazo: new Date(),
@@ -197,14 +189,14 @@ export class SolicitudesRecargaService {
 
         const walletUsuario = await this.prismaService.wallet.findFirst({
             where: {
-                id_usuario: movimientoExistente?.id_wallet,
+                id_usuario: data?.id_usuario_propietario,
                 activo: true,
             }
         });
 
         if(!walletUsuario)  throw new NotFoundException('Wallet del usuario no encontrada');
 
-        if(walletUsuario.id_usuario !== data.id_usuario_rehabilitacion)  throw new ForbiddenException('No tiene permisos para re habilitar este movimiento');
+        if(walletUsuario.id_usuario !== data.id_usuario_propietario)  throw new ForbiddenException('No tiene permisos para re habilitar este movimiento');
 
         if(!movimientoExistente)  throw new NotFoundException('Movimiento no encontrado');
 
@@ -224,8 +216,9 @@ export class SolicitudesRecargaService {
             data:{
                 id_estado: EstadosMovimientoWallet.PENDIENTE_VERIFICACION,
                 fecha_actualizacion: new Date(),
-                observacion: data.descripcion || null,
-                url_imagen: rutaFirebase
+                observacion: data.observacion || null,
+                url_imagen: rutaFirebase,
+                motivo_rechazo: null,
             }
         })
 
@@ -233,5 +226,6 @@ export class SolicitudesRecargaService {
         throw error;
     }
   }
+
 
 }

@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',           // SW se actualiza solo
-      devOptions: { enabled: mode !== 'production' },        // permite probar en dev
+      devOptions: { enabled: mode === 'production' },        // permite probar en dev
       workbox: { globPatterns: ['**/*.{js,css,html,ico,png,svg}'] },
       includeAssets: ['favicon.ico'],       // opcional
       manifest: {
