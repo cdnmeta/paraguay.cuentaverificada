@@ -113,19 +113,19 @@ const WalletDashboard = ({ id }) => {
         {/* Header con Saldo Principal */}
         <Card className="mb-6 border-0 shadow-lg ">
           <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-white/20 rounded-full">
-                  <Wallet className="h-8 w-8 text-white" />
+            <div className="flex flex-col lg:flex-row items-start lg:items-center lg:justify-between gap-4">
+              <div className="flex items-start sm:items-center space-x-3 flex-1">
+                <div className="p-3 bg-white/20 rounded-full flex-shrink-0">
+                  <Wallet className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-green-100 text-sm font-medium">
                     {walletData.moneda || walletData.sigla_iso}
                   </p>
-                  <h1 className="text-4xl font-bold text-white">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white break-words">
                     {formatMoney(walletData.saldo, walletData.sigla_iso)}
                   </h1>
-                  <div className="flex gap-4 mt-2">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2">
                     <span className="text-green-100 text-sm">
                       Pendientes: {walletData.cantidad_pendientes || 0}
                     </span>
@@ -140,9 +140,9 @@ const WalletDashboard = ({ id }) => {
                 onClick={handleRecargar}
                 variant="secondary"
                 size="lg"
-                className="bg-white text-green-600 hover:bg-green-50 shadow-md"
+                className="bg-white text-green-600 hover:opacity-80 shadow-md w-full sm:w-auto flex-shrink-0"
               >
-                <PlusCircle className="h-5 w-5 mr-2" />
+                <PlusCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Recargar
               </Button>
             </div>
