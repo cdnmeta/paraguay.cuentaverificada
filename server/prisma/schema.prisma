@@ -79,8 +79,24 @@ model empresa_config {
   nuv_fin             Int?
   activo               Boolean?  @default(true)
   
-  id_moneda_base       Int
+  id_moneda_base       Int?
+  id_moneda_planes     Int?
+  id_moneda_wallet     Int?
+  id_pais_deploy       Int?
   id_plan_verificacion Int
+}
+
+// Tabla de paises
+
+model paises {
+  id          Int        @id @default(autoincrement())
+  nombre      String
+  codigo_iso_2  String?
+  codigo_iso_3  String?
+  dial_code   String?
+  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  activo      Boolean    @default(true)
 }
 
 model estados_comercios {
