@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ObtenerMensajeDelDiaDto } from './dto/obtner-mensaje.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { DatabasePromiseService } from '@/database/database-promise.service';
 import { CreateEstadosAnimosDto } from './dto/create-estados-animos.dto';
 import { UpdateEstadoAnimoDto } from './dto/update-estado-animo.dto';
 import { DeleteEstadosAnimosDto } from './dto/delete-estados-animos.dto';
+import { GuardarMensajeDiaDto } from './dto/guardar-mesaje-dia.dto';
+import { TiposNotificaciones } from '@/notificaciones/types/tipos-notificaciones';
 
 @Injectable()
 export class EstadosAnimosService {
@@ -15,6 +17,20 @@ export class EstadosAnimosService {
   async obtenerMensajeDiario(body: ObtenerMensajeDelDiaDto) {
     try {
       const whereClause: any = {};
+
+      // buscar si hoy ya se le envió un mensaje al usuario
+
+      const mensajeEnviado = await this.prismaService.notificaciones_usuarios.findFirst({
+        where: {
+          id_usuario: body.id_usuario,
+          id_tipo_notificacion: TiposNotificaciones.ESTADOS_ANIMOS,
+          fecha_creacion: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          },
+        },
+      });
+
+      if (mensajeEnviado)  throw new BadRequestException('Ya se ha enviado un mensaje del día al usuario hoy');
 
       const tipoExistente =
         await this.prismaService.tipo_estado_animo.findFirst({
@@ -27,17 +43,8 @@ export class EstadosAnimosService {
         throw new NotFoundException('El tipo de mensaje no existe');
       }
 
-      if (body.id_mensaje_ant) {
-        const estadoAnimoAnt =
-          await this.prismaService.estados_animos.findFirst({
-            where: {
-              id: body.id_mensaje_ant,
-            },
-          });
-        if (!estadoAnimoAnt) {
-          throw new NotFoundException('El estado de ánimo no existe');
-        }
-      }
+      
+
 
       let sql = `SELECT
                         ES.MENSAJE,
@@ -47,17 +54,24 @@ export class EstadosAnimosService {
                         ESTADOS_ANIMOS ES
                         LEFT JOIN TIPO_ESTADO_ANIMO TES ON TES.ID = ES.ID_TIPO_ANIMO where ES.ACTIVO = true`;
 
-      if (body.id_mensaje_ant) {
-        sql += ` AND ES.ID <> $(id_mensaje_ant )`;
-        whereClause.id_mensaje_ant = body.id_mensaje_ant;
-      }
       if (body.id_tipo_mensaje) {
         sql += ` AND ES.ID_TIPO_ANIMO = $(id_tipo_animo)`;
         whereClause.id_tipo_animo = body.id_tipo_mensaje;
       }
       sql += ` ORDER BY RANDOM() LIMIT 1;`;
 
-      const mensaje = await this.dbPromiseService.result(sql, whereClause);
+      const mensaje: any = await this.dbPromiseService.result(sql, whereClause);
+
+      // Guardar notificación de mensaje del día para el usuario
+      const mesajeExistente = await this.prismaService.notificaciones_usuarios.create({
+        data: {
+          id_usuario: body.id_usuario,
+          titulo: 'Mensaje del día',
+          cuerpo: mensaje.rows[0]?.mensaje || '',
+          id_tipo_notificacion: TiposNotificaciones.ESTADOS_ANIMOS, // Asumiendo que 1 es el tipo para estados de ánimo
+          id_estado: 3 //  3 es el estado "leido"
+        }
+      })
 
       return mensaje.rows[0];
     } catch (error) {

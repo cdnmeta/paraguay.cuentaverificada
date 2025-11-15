@@ -72,3 +72,12 @@ export const eliminarMensajeEstadoAnimo = async (id) => {
   });
   return response;
 };
+
+export const guardarMensajeDelDia = async (data) => {
+  const response = await api.post("/guardar-mensaje", data, {
+    headers: {
+      Authorization: `Bearer ${await getIdToken()}`,
+    },
+  });
+  return response;
+}

@@ -28,40 +28,6 @@ import { routes as FavoritosRoutes } from "@/pages/Favoritos/config/routes";
 import { routes as SoporteAyudaRoutes } from "@/pages/SoporteAyuda/config/routes";
 import {routes as WalletRoutes} from '@/pages/Wallet/config/routes'
 
-
-// Constantes para el localStorage del mensaje del día
-const STORAGE_KEY_ULTIMO_MENSAJE = 'ultimo_mensaje_del_dia'
-const STORAGE_KEY_FECHA_ULTIMO_MENSAJE = 'fecha_ultimo_mensaje_del_dia'
-
-// Funciones para manejar localStorage del mensaje del día
-const obtenerUltimoMensajeVisto = () => {
-  try {
-    const ultimoId = localStorage.getItem(STORAGE_KEY_ULTIMO_MENSAJE)
-    const fechaUltimo = localStorage.getItem(STORAGE_KEY_FECHA_ULTIMO_MENSAJE)
-    const hoy = new Date().toDateString()
-    
-    // Si la fecha es diferente a hoy, permitir ver un nuevo mensaje
-    if (fechaUltimo !== hoy) {
-      return null
-    }
-    
-    return ultimoId ? parseInt(ultimoId) : null
-  } catch (error) {
-    console.error('Error al obtener último mensaje del localStorage:', error)
-    return null
-  }
-}
-
-const guardarMensajeVisto = (idMensaje) => {
-  try {
-    const hoy = new Date().toDateString()
-    localStorage.setItem(STORAGE_KEY_ULTIMO_MENSAJE, idMensaje.toString())
-    localStorage.setItem(STORAGE_KEY_FECHA_ULTIMO_MENSAJE, hoy)
-  } catch (error) {
-    console.error('Error al guardar mensaje en localStorage:', error)
-  }
-}
-
 const emociones = [
   { emoji: "😄", label: "Entusiasmado", id:1 },
   { emoji: "😊", label: "Contento", id:2 },
@@ -79,35 +45,22 @@ export default function DashBoardUsarioProtegido() {
   const [mensajeDelDia, setMensajeDelDia] = useState(null)
   const [mostrarMensaje, setMostrarMensaje] = useState(false)
   const [cargandoMensaje, setCargandoMensaje] = useState(false)
-  const [mostrarEmociones, setMostrarEmociones] = useState(true)
+  const [mostrarEmociones, setMostrarEmociones] = useState(user?.estado_del_dia ? false : true)
 
-  // Verificar al cargar si ya se vio un mensaje hoy
-  useEffect(() => {
-    const ultimoIdVisto = obtenerUltimoMensajeVisto()
-    if (ultimoIdVisto) {
-      // Ya se vio un mensaje hoy, ocultar emociones
-      setMostrarEmociones(false)
-      console.log('📝 Mensaje ya visto hoy, ocultando emociones')
-    }
-  }, [])
+  
 
   // Obtener mensaje del día
   const fetchMensajeDelDia = async (id_emocion) => {
     try {
       setCargandoMensaje(true)
       
-      // Obtener el último ID de mensaje visto
-      const ultimoIdVisto = obtenerUltimoMensajeVisto()
+      
       
       // Preparar parámetros según el DTO
       const params = {
         id_tipo_mensaje: id_emocion  // Tipo de mensaje para ánimo/motivación (requerido)
       }
       
-      // Si hay un mensaje anterior visto hoy, incluir el ID para evitar repetición
-      if (ultimoIdVisto) {
-        params.id_mensaje_ant = ultimoIdVisto
-      }
       
       const response = await getMensajeDelDia(params)
       
@@ -134,14 +87,6 @@ export default function DashBoardUsarioProtegido() {
 
   // Cerrar mensaje del día y guardarlo como visto
   const cerrarMensajeDelDia = () => {
-    if (mensajeDelDia) {
-      // Guardar el ID del tipo de ánimo como mensaje visto
-      const idParaGuardar = mensajeDelDia.id_tipo_animo
-      if (idParaGuardar) {
-        guardarMensajeVisto(idParaGuardar)
-        console.log('💾 Mensaje guardado como visto:', idParaGuardar)
-      }
-    }
     
     // Cerrar el dialog y ocultar emociones
     setMostrarMensaje(false)
@@ -152,14 +97,6 @@ export default function DashBoardUsarioProtegido() {
   // Manejar selección de emoción - cargar mensaje del día
   const handleEmotionClick = async (emocion) => {
     console.log('👤 Usuario se siente:', emocion.label)
-    
-    // Verificar si ya se vio un mensaje hoy
-    const ultimoIdVisto = obtenerUltimoMensajeVisto()
-    if (ultimoIdVisto) {
-      console.log('📝 Ya se vio un mensaje hoy')
-      setMostrarEmociones(false) // Ocultar emociones si ya se vio mensaje
-      return
-    }
     
     // Cargar mensaje del día basado en la emoción seleccionada
     await fetchMensajeDelDia(emocion.id)

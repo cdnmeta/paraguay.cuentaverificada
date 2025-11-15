@@ -29,6 +29,8 @@ import { EstadosAnimosModule } from './estados-animos/estados-animos.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { WalletModule } from './wallet/wallet.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { NotificacionesModule } from './notificaciones/notificaciones.module';
+
 
 @Module({
   imports: [
@@ -58,6 +60,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     EstadosAnimosModule,
     TicketsModule,
     WalletModule,
+    NotificacionesModule,
   ],
   providers: [
     {
@@ -68,6 +71,6 @@ import { ScheduleModule } from '@nestjs/schedule';
       provide: APP_GUARD,
       useClass: GroupsGuard,
     },
-  ]
+  ],
 })
 export class AppModule {}

@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { EstadosAnimosService } from './estados-animos.service';
 import { Request, Response } from 'express';
-import { ObtenerMensajeDelDiaDto } from './dto/obtner-mensaje.dto';
+import { ObtenerMensajeDelDiaDto, ObtenerMensajeDelDiaDtoPayload } from './dto/obtner-mensaje.dto';
 import { IsPublic } from '@/auth/decorators/public.decorator';
 import { CreateEstadosAnimosDtoPayload } from './dto/create-estados-animos.dto';
 import { AuthenticatedRequest } from '@/auth/types/AuthenticatedRequest';
@@ -26,6 +26,7 @@ import { IsOnlyAdmin } from '@/auth/decorators/onlyAdmin.decorator';
 import { plainToInstance } from 'class-transformer';
 import { TiposEstadosResponseDto } from './dto/tipos-estados-response.dto';
 import { EstadosAnimosResponseDto } from './dto/esatados-animos-response.dto';
+import { GuardarMensajeDiaDto, GuardarMensajeDiaPayloadDto } from './dto/guardar-mesaje-dia.dto';
 
 @Controller('estados-animos')
 export class EstadosAnimosController {
@@ -62,12 +63,16 @@ export class EstadosAnimosController {
   }
 
   @Get('obtener-mensaje')
-  @IsPublic()
   async obtenerMensajeDiario(
+    @Req() req: AuthenticatedRequest,
     @Res() res: Response,
-    @Query() query: ObtenerMensajeDelDiaDto,
+    @Query() query: ObtenerMensajeDelDiaDtoPayload,
   ) {
-    const mensaje = await this.estadosAnimosService.obtenerMensajeDiario(query);
+    const dataEnviar: ObtenerMensajeDelDiaDto = {
+      ...query,
+      id_usuario: req.user.userId,
+    };
+    const mensaje = await this.estadosAnimosService.obtenerMensajeDiario(dataEnviar);
     return res.status(200).json(mensaje);
   }
 

@@ -15,7 +15,7 @@ import SolicitarCuentaVerificada from "./pages/SolicitarCuentaVerificada";
 import DefaultLayout from "./components/layouts/DefaultLayout";
 import DashBoardUsarioProtegido from "./pages/DashBoardUsarioProtegido";
 import { useAuthStore } from "./hooks/useAuthStorge";
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import { checkAuthOnStart } from "./utils/funciones";
 import VerificacionComercioPage from "./pages/VerificacionComercioPage";
@@ -53,13 +53,36 @@ import SoporteRoutes from "./pages/Dashsboards/Soporte/soporte.routes";
 import ForwardOnlyBoundary from "./utils/ForwardOnlyBoundary";
 import { ENTORNO } from "./utils/constants";
 import WalletRoutes from "./pages/Wallet/wallet.route";
+import { useFirebaseMessaging } from "./hooks/useFirebaseMessaging";
+import { suscribirNotificaciones } from "./apis/notificaciones.api";
+import CentroMensajesRoutes from "./pages/CentroMensajes/centroMensajes.routes";
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
+  const { token, error, lastMessage } = useFirebaseMessaging();
   useEffect(() => {
     console.log(location);
     checkAuthOnStart(); // Verifica si hay sesión activa con Firebase
   }, []);
+
+  const suscribirseNotificaciones = async (fcmToken) => {
+    try {
+      const response = await suscribirNotificaciones({
+        token: fcmToken,
+        proveedor: "fcm",
+      });
+      console.log("Suscripción a notificaciones exitosa:", response.data);
+    } catch (error) {
+      console.error("Error al suscribirse a notificaciones:", error);
+    }
+  }
+  useEffect(() => {
+    if(token && user) {
+      suscribirseNotificaciones(token);
+      console.log("Aquí puedes enviar el token al servidor:", token);
+    }
+
+  },[token,user])
 
   if (!isHydrated) return <LoadingSpinner />; // O un Spinner
 
@@ -115,6 +138,8 @@ export default function App() {
           {WalletRoutes()}
 
           {SoporteAyudaRoute()}
+
+          {CentroMensajesRoutes()}
         </Route>
       </Route>
 
