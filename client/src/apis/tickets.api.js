@@ -1,19 +1,12 @@
-import { URL_BASE_BACKEND_API } from "@/utils/constants";
-import { getIdToken } from "@/utils/funciones";
-import axios from "axios";
+
+import api from "@/apis/axiosBase";
 
 const URL_ENDPOINT = "tickets";
 
-// Crear una instancia de Axios
-const api = axios.create({
-  baseURL: `${URL_BASE_BACKEND_API}/${URL_ENDPOINT}`,
-});
-
 export const getTiposTickets = async () => {
-  return await api.get("/tipos", {
-    headers: {
-      Authorization: `Bearer ${await getIdToken()}`,
-    },
+  return await api.get(`/${URL_ENDPOINT}/tipos`, {
+    
+    withCredentials: true,
   });
 };
 
@@ -22,10 +15,9 @@ export const getTiposTickets = async () => {
  * @returns {Promise} Response con las estadísticas de tickets
  */
 export const getResumenMisTickets = async () => {
-  return await api.get("/resumen-mis-tickets", {
-    headers: {
-      Authorization: `Bearer ${await getIdToken()}`,
-    },
+  return await api.get(`/${URL_ENDPOINT}/resumen-mis-tickets`, {
+    
+    withCredentials: true,
   });
 };
 
@@ -34,11 +26,11 @@ export const getResumenMisTickets = async () => {
  * @returns {Promise} Response con la lista de tickets
  */
 export const getMisTickets = async () => {
-  return await api.get("/mis-tickets", {
+  return await api.get(`/${URL_ENDPOINT}/mis-tickets`, {
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${await getIdToken()}`,
+      "Content-Type": "application/json"
     },
+    withCredentials: true,
   });
 };
 
@@ -48,32 +40,29 @@ export const getMisTickets = async () => {
  * @returns {Promise} Response con el ticket creado
  */
 export const createTicket = async (ticketData) => {
-  return await api.post("/nuevo", ticketData, {
-    headers: {
-      Authorization: `Bearer ${await getIdToken()}`,
-    },
+  return await api.post(`/${URL_ENDPOINT}/nuevo`, ticketData, {
+    
+    withCredentials: true,
   });
 };
 
 // abrir un ticket existente
 export const abrirTicket = async (id) => {
   return await api.put(
-    `/${id}/abrir`,
+    `${URL_ENDPOINT}/${id}/abrir`,
     {},
     {
-      headers: {
-        Authorization: `Bearer ${await getIdToken()}`,
-      },
+      
+      withCredentials: true,
     }
   );
 };
 
 // Obtener el hilo de mensajes de un ticket con paginación
 export const getTicketHilo = async (id, params) => {
-  return await api.get(`/${id}/hilo`, {
-    headers: {
-      Authorization: `Bearer ${await getIdToken()}`,
-    },
+  return await api.get(`/${URL_ENDPOINT}/${id}/hilo`, {
+    
+    withCredentials: true,
     params,
   });
 };
@@ -81,38 +70,34 @@ export const getTicketHilo = async (id, params) => {
 
 // agregar un mensaje al hilo de un ticket
 export const clienteAgregarMensajeTicket = async (mensajeData) => {
-  return await api.post(`/mensaje`, mensajeData, {
-    headers: {
-      Authorization: `Bearer ${await getIdToken()}`,
-    },
+  return await api.post(`/${URL_ENDPOINT}/mensaje`, mensajeData, {
+    
+    withCredentials: true,
   });
 };
 
 export const soporteAgregarMensajeTicket = async (mensajeData) => {
-  return await api.post(`/soporte/mensaje`, mensajeData, {
-    headers: {
-      Authorization: `Bearer ${await getIdToken()}`,
-    },
+  return await api.post(`/${URL_ENDPOINT}/soporte/mensaje`, mensajeData, {
+    
+    withCredentials: true,
   });
 }; 
 
 
 export const getTicketInfoById = async (id) => {
-  return await api.get(`/${id}/info`, {
-    headers: {
-      Authorization: `Bearer ${await getIdToken()}`,
-    },
+  return await api.get(`/${URL_ENDPOINT}/${id}/info`, {
+    
+    withCredentials: true,
   });
 };
 
 export const cerrarTicket = async (id, data) => {
   return await api.put(
-    `/${id}/cerrar`,
+    `/${URL_ENDPOINT}/${id}/cerrar`,
     data,
     {
-      headers: {
-        Authorization: `Bearer ${await getIdToken()}`,
-      },
+      
+      withCredentials: true,
     }
   );
   
@@ -120,21 +105,19 @@ export const cerrarTicket = async (id, data) => {
 
 export const completarTicket = async (id) => {
   return await api.put(
-    `/${id}/completar`,
+    `/${URL_ENDPOINT}/${id}/completar`,
     {},
     {
-      headers: {
-        Authorization: `Bearer ${await getIdToken()}`,
-      },
+      
+      withCredentials: true,
     }
   );
 }
 
 export const listadoTicketsSoporte = async (params) => {
-  return await api.get(`/soporte/listado`, {
-    headers: {
-      Authorization: `Bearer ${await getIdToken()}`,
-    },
+  return await api.get(`/${URL_ENDPOINT}/soporte/listado`, {
+    
+    withCredentials: true,
     params,
   });
 };

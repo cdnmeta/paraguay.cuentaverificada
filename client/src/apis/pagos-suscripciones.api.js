@@ -1,21 +1,15 @@
-import { URL_BASE_BACKEND_API } from "@/utils/constants";
-import { getIdToken } from "@/utils/funciones";
-import axios from "axios";
+
+import api from "@/apis/axiosBase";
 
 const URL_ENDPOINT = "pago-suscripciones";
-// Crear una instancia de Axios
-const api = axios.create({
-  headers: {
-    Authorization: `Bearer ${getIdToken()}`,
-  },
-  baseURL: `${URL_BASE_BACKEND_API}/${URL_ENDPOINT}`, // Cambia esto por
-});
+
+// Usa la instancia de axios importada (no volver a declararla)
 
 export const crearPagoSuscripcion = async (data) => {
-    const response = await api.post("/registrar-pago", data,{
-        headers: {
-            Authorization: `Bearer ${ await getIdToken()}`,
-        },
-    });
-    return response;
+  
+  const response = await api.post(`/${URL_ENDPOINT}/registrar-pago`, data, {
+    
+    withCredentials: true,
+  });
+  return response;
 };

@@ -29,7 +29,10 @@ import {
   SolicitudRecoveryPinDto,
   ValidacionTokenDto,
 } from './dto/password-recovery.dto';
-import { RefreshCodigoVerificacion, RefreshTokenDto } from './dto/refresh-token.dto';
+import {
+  RefreshCodigoVerificacion,
+  RefreshTokenDto,
+} from './dto/refresh-token.dto';
 import { UsuariosService } from '@/usuarios/usuarios.service';
 import { VerificacionCuentaService } from '@/verificacion-cuenta/verificacion-cuenta.service';
 import { TokenSolicitud } from '@/verificacion-cuenta/types/token-solicitudes';
@@ -41,6 +44,8 @@ import {
 import { UsuariosArchivos } from '@/usuarios/types/archivos-solicitud';
 import { generarCodigoNumericoAleatorio } from '@/utils/funciones';
 import { usuarios } from '@prisma/client';
+import { instanceToPlain } from 'class-transformer';
+import { userInfo } from 'os';
 interface UsuariosArchivosRegister {
   cedulaFrente?: Express.Multer.File;
 }
@@ -58,27 +63,22 @@ export class AuthService {
   ) {}
   async setTokenResponse(
     res: Response,
-    token: { access_token: string; refresh_token?: string },
+    token: {  refresh_token?: string },
   ) {
-    res.cookie('access_token', token.access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
-    // Check if refresh_token exists before setting it
-    if (!token.refresh_token) return;
-    res.cookie('refresh_token', token.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 1 month
-    });
+    if (token.refresh_token) {
+      console.log("establecer token",token.refresh_token)
+      res.cookie('refresh_token', token.refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+      });
+    }
   }
 
   async generarTokens(payload: any) {
     const accessToken = await this.jwtService.signAsync(payload, {
-      expiresIn: '15m', // duración típica
+      expiresIn: '8m', // duración típica
     });
 
     const refreshToken = await this.jwtService.signAsync(payload, {
@@ -138,8 +138,6 @@ export class AuthService {
   async register(registerDto: RegisterUsuariosDto, files?: UsuariosArchivos) {
     const { cedulaFrente, cedulaReverso, selfie } = files || {};
     try {
-      
-
       const dataUsuarioNuevo: CrearUsuarioDTO = {
         nombre: registerDto.nombre,
         apellido: registerDto.apellido,
@@ -153,22 +151,15 @@ export class AuthService {
         id_estado: 1, // activo por defecto
       };
 
-      
+      let userNew = await this.usuariosService.crearUsuario(dataUsuarioNuevo, {
+        cedulaFrente,
+        cedulaReverso,
+        selfie,
+      });
 
-     
-       let userNew  = await this.usuariosService.crearUsuario(
-        dataUsuarioNuevo,
-        {
-          cedulaFrente,
-          cedulaReverso,
-          selfie,
-        },
-      );
-
-      if(userNew.estado === 2){
-        return {...userNew,activo:true}; // Si el usuario ya está activo, simplemente retorna el usuario existente
+      if (userNew.estado === 2) {
+        return { ...userNew, activo: true }; // Si el usuario ya está activo, simplemente retorna el usuario existente
       }
-     
 
       const codigoVerificacion = await this.generarTokenForUser(userNew.id, {
         tipo_token: 2, // codigo verificacion
@@ -181,7 +172,7 @@ export class AuthService {
         codigo_verificacion: codigoVerificacion.token, // codigo sin hashear
       };
       await this.emailService.sendCodVerificacionSolicitudCuenta(datCorreo);
-      return {...userNew, activo: false};
+      return { ...userNew, activo: false };
     } catch (error) {
       throw error;
     }
@@ -389,12 +380,12 @@ export class AuthService {
 
       await this.prismaService.$transaction(async (prisma) => {
         // Crear usuario en Firebase
-        const firebaseUser = await this.firebaseService.auth.createUser({
+        /* const firebaseUser = await this.firebaseService.auth.createUser({
           email: dataUsuarioNuevo.correo,
           password: dto.password,
           displayName: `${dataUsuarioNuevo.nombre} ${dataUsuarioNuevo.apellido}`,
           emailVerified: true,
-        });
+        }); */
 
         // Crear usuario en la base de datos
         await prisma.usuarios.create({
@@ -409,7 +400,6 @@ export class AuthService {
             pin: dataUsuarioNuevo.pin,
             cedula_frente: user.cedula_frontal,
             cedula_reverso: user.cedula_reverso,
-            uid_firebase: firebaseUser.uid,
             ip_origen: dto.ip_origen,
             dispositivo_origen: dto.dispositivo_origen,
           },
@@ -569,11 +559,10 @@ export class AuthService {
     }
   }
 
-  async refreshCodigoVerificacion(data:RefreshCodigoVerificacion){
+  async refreshCodigoVerificacion(data: RefreshCodigoVerificacion) {
     const { cedula } = data;
 
     try {
-
       const userEncontrado = await this.prismaService.usuarios.findFirst({
         where: { documento: cedula, activo: true },
       });
@@ -584,15 +573,15 @@ export class AuthService {
 
       // 1. crear token ya validado
 
-      const tokenNuevo = await this.generarTokenForUser(userEncontrado.id,{tipo_token:2});
+      const tokenNuevo = await this.generarTokenForUser(userEncontrado.id, {
+        tipo_token: 2,
+      });
 
       return { token: tokenNuevo.token, cedula: cedula };
     } catch (error) {
       throw error;
     }
   }
-
-
 
   async resetContrasenaWithCedula(dto: CambiarContrasenaDto) {
     try {

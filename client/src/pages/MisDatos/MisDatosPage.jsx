@@ -45,7 +45,7 @@ export default function MisDatosPage() {
   const [loadingImages, setLoadingImages] = useState(false);
   const navigate = useNavigate();
 
-  const { user: userAuth } = useAuthStore(); // Usuario autenticado
+
 
   // const { logout } = useAuthStore(); // Descomentado cuando se necesite
 
@@ -121,7 +121,7 @@ export default function MisDatosPage() {
 
   useEffect(() => {
     loadDatos();
-  }, [loadDatos]);
+  }, []);
 
   // Efecto para manejar el scroll al hash #verificacion
   useEffect(() => {
@@ -345,7 +345,7 @@ export default function MisDatosPage() {
         
 
         {/* Dialog de confirmación de verificación */}
-        <Dialog open={showVerificationDialog} onOpenChange={() => {}}>
+        <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
           <DialogContent
             className="sm:max-w-[425px]"
             onPointerDownOutside={(e) => e.preventDefault()}

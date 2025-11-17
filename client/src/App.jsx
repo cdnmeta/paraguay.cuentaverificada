@@ -9,13 +9,12 @@ import {
 import Pacto from "./components/Pacto";
 import CrearCuenta from "./pages/CrearCuenta";
 import Login from "./pages/Login";
-import RecuperarContrasena from "./pages/RecuperarContrasena";
 import Verificado from "./pages/Verificado";
 import SolicitarCuentaVerificada from "./pages/SolicitarCuentaVerificada";
 import DefaultLayout from "./components/layouts/DefaultLayout";
 import DashBoardUsarioProtegido from "./pages/DashBoardUsarioProtegido";
 import { useAuthStore } from "./hooks/useAuthStorge";
-import { use, useEffect } from "react";
+import { useEffect } from "react";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import { checkAuthOnStart } from "./utils/funciones";
 import VerificacionComercioPage from "./pages/VerificacionComercioPage";
@@ -25,7 +24,6 @@ import LoadingSpinner from "./components/customs/loaders/LoadingSpinner";
 import DptoLegalRoutes from "./pages/departamento-legal/dpto-legal.routes";
 import FacturaPlanesPage from "./pages/FacturaPlanes/pages/FacturaPlanesPage";
 import CobroSuscripcionesPage from "./pages/CobroSuscripcionesPlanes/CobroSuscripcionesPage";
-import { verificarSesionYgrupoAdmitido } from "./utils/auth";
 import MisDatosPage from "./pages/MisDatos/MisDatosPage";
 import LoginToken from "./pages/Login/LoginToken";
 import InicializarContrasenaPin from "./pages/recovery/InicializarContrasenaPin";
@@ -33,7 +31,7 @@ import InicializarContrasenaPin from "./pages/recovery/InicializarContrasenaPin"
 import VerificadorRoutes from "./pages/Dashsboards/Verificador/verficador.routes";
 import LayoutDepartamentoLegal from "./pages/departamento-legal/LayoutDepartamentoLegal";
 import LayoutVerificador from "./pages/Dashsboards/Verificador/LayoutVerificador";
-import { routes as verificadorRoutes } from "./pages/Verificador/verficador.routes";
+
 import { SuperAdminRoutes } from "./pages/Dashsboards/SuperAdmin/admin.routes";
 import { ParticipantesRoutes } from "./pages/Dashsboards/Participante/participantes.routes";
 import RecordatoriosUsuariosRoutes from "./pages/recordatoriosUsuarios";
@@ -59,10 +57,10 @@ import CentroMensajesRoutes from "./pages/CentroMensajes/centroMensajes.routes";
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
-  const { token, error, lastMessage } = useFirebaseMessaging();
+  const { token } = useFirebaseMessaging();
   useEffect(() => {
     console.log(location);
-    checkAuthOnStart(); // Verifica si hay sesión activa con Firebase
+    checkAuthOnStart(); // Verifica si hay sesión activa
   }, []);
 
   const suscribirseNotificaciones = async (fcmToken) => {
@@ -95,7 +93,6 @@ export default function App() {
           element={user ? <Navigate to="/panel" /> : <Login />}
         />
         <Route path="/login/:token" element={<LoginToken />} />
-        <Route path="/recuperar" element={<RecuperarContrasena />} />
         <Route path="/recovery-pin" element={<RecoveryPinPage />} />
         <Route path="/reset-pin" element={<ResetPinPage />} />
         <Route

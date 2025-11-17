@@ -696,7 +696,7 @@ export default function SolicitarCuentaVerificada() {
                       >
                         {form.formState.isSubmitting
                           ? "Enviando..."
-                          : "Enviar Solicitud"}
+                          : "Crear Cuenta"}
                       </Button>
                       <div className="text-center mt-4">
                         <span className="text-sm text-muted-foreground">

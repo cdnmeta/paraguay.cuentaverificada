@@ -30,6 +30,7 @@ import { TicketsModule } from './tickets/tickets.module';
 import { WalletModule } from './wallet/wallet.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificacionesModule } from './notificaciones/notificaciones.module';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 
 @Module({
@@ -65,7 +66,7 @@ import { NotificacionesModule } from './notificaciones/notificaciones.module';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: FirebaseAuthGuard,
+      useClass: JwtAuthGuard,
     },
     {
       provide: APP_GUARD,

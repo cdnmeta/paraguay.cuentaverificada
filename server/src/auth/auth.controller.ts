@@ -122,8 +122,13 @@ export class AuthController {
     try {
       const user = await this.authService.login(loginDto);
     const userJwt = this.authService.toJwtPayload(user);
-    const customToken = await this.authService.autenticarWithFirebase(user);
-    return res.status(200).json({ token: customToken, user: userJwt });
+    const {access_token, refresh_token} = await this.authService.generarTokens(userJwt);
+    //console.log(access_token)
+    //const customToken = await this.authService.autenticarWithFirebase(user);
+
+    // colocar el refresh token en una cookie httpOnly
+    await this.authService.setTokenResponse(res, { refresh_token });
+    return res.status(200).json({ token: access_token, user: userJwt });
     } catch (error) { 
       throw  error
     }
@@ -131,23 +136,18 @@ export class AuthController {
 
   @IsPublic()
   @Post('refresh')
-  async refreshToken(@Req() req: Request, @Res() res: Response) {
+  async refreshToken(@Req() req: Request, @Res() res: Response,) {
     const token = req.cookies['refresh_token'];
-    if (!token) {
-      return res.status(401).json({ message: 'No refresh token provided' });
-    }
-
+    console.log("token de refresko", token)
     try {
       const payload = this.jwtService.verify(token);
       const userId = payload.userId;
       const user = await this.usuariosService.getUserInfoJwt(userId);
       const userResponse = this.authService.toJwtPayload(user);
-      const newTokens = await this.authService.generarTokens(userResponse);
-      const accessToken = newTokens.access_token;
-      this.authService.setTokenResponse(res, { access_token: accessToken });
+      const {access_token, refresh_token} = await this.authService.generarTokens(userResponse);
       return res
         .status(200)
-        .json({ message: 'Token refrescado correctamente' });
+        .json({ message: 'Token refrescado correctamente', token: access_token });
     } catch (error) {
       return res
         .status(401)

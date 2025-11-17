@@ -1,33 +1,19 @@
 import { URL_BASE_BACKEND_API } from "@/utils/constants";
-import { getIdToken } from "@/utils/funciones";
-import axios from "axios";
+
+import api from "@/apis/axiosBase";
 
 const URL_ENDPOINT = "recordatorios";
-
-// Crear una instancia de Axios
-const api = axios.create({
-  baseURL: `${URL_BASE_BACKEND_API}/${URL_ENDPOINT}`, // Cambia esto por tu URL base
-});
-
 
 const recordatoriosAPI = {
   // Obtener todos los recordatorios del usuario autenticado
   obtenerMisRecordatorios: async () => {
-    const response = await api.get("/mis-recordatorios",{
-        headers: {
-            "Authorization": `Bearer ${await getIdToken()}`
-        }
-    });
+    const response = await api.get(`${URL_ENDPOINT}/mis-recordatorios`);
     return response.data;
   },
 
   // Obtener un recordatorio por ID
   obtenerRecordatorioPorId: async (id) => {
-    const response = await api.get(`/${id}`,{
-        headers: {
-            "Authorization": `Bearer ${await getIdToken()}`,
-        }
-    });
+    const response = await api.get(`${URL_ENDPOINT}/${id}`);
     return response.data;
   },
 
@@ -51,10 +37,9 @@ const recordatoriosAPI = {
       });
     }
     
-    const response = await api.post("", formData, {
+    const response = await api.post(`${URL_ENDPOINT}`, formData, {
       headers: {
-        "Content-Type": "multipart/form-data",
-        "Authorization": `Bearer ${await getIdToken()}`,
+        "Content-Type": "multipart/form-data"
       },
     });
     return response.data;
@@ -87,10 +72,9 @@ const recordatoriosAPI = {
       });
     }
     
-    const response = await api.put(`/${id}`, formData, {
+    const response = await api.put(`${URL_ENDPOINT}/${id}`, formData, {
       headers: {
-        "Content-Type": "multipart/form-data",
-        "Authorization": `Bearer ${await getIdToken()}`,
+        "Content-Type": "multipart/form-data"
       },
     });
     return response.data;
@@ -98,42 +82,27 @@ const recordatoriosAPI = {
 
   // Eliminar recordatorio (soft delete)
   eliminarRecordatorio: async (id) => {
-    const response = await api.delete(`/${id}`,{
-        headers: {
-            "Authorization": `Bearer ${await getIdToken()}`
-        }
-    });
+    const response = await api.delete(`/${id}`);
     return response.data;
   },
 
   // Eliminar recordatorio permanentemente
   eliminarRecordatorioPermanente: async (id) => {
-    const response = await api.delete(`/${id}/permanente`,{
-        headers: {
-            "Authorization": `Bearer ${await getIdToken()}`
-        }
-    });
+    const response = await api.delete(`${URL_ENDPOINT}/${id}/permanente`);
     return response.data;
   },
 
   // Eliminar imágenes específicas
   eliminarImagenesEspecificas: async (id, urlsAEliminar) => {
-    const response = await api.delete(`/${id}/imagenes`, {
+    const response = await api.delete(`${URL_ENDPOINT}/${id}/imagenes`, {
       data: { urlsAEliminar },
-      headers: {
-        "Authorization": `Bearer ${await getIdToken()}`
-      }
     });
     return response.data;
   },
 
   // Actualizar estado del recordatorio
   actualizarEstadoRecordatorio: async (id, nuevoEstado) => {
-    const response = await api.put(`estado/${id}`, { id_estado: nuevoEstado }, {
-      headers: {
-        "Authorization": `Bearer ${await getIdToken()}`
-      }
-    });
+    const response = await api.put(`${URL_ENDPOINT}/estado/${id}`, { id_estado: nuevoEstado },);
     return response.data;
   }
 

@@ -1,13 +1,6 @@
 // src/pages/Login.jsx
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { auth, db } from "../firebaseConfig";
-import {
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithCustomToken,
-} from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import SuperHeroeAnimado from "@/components/SuperHeroeAnimado";
 import { LogInIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -76,18 +69,14 @@ export const FormLogin = ({redirect=true, afterSubmit = ()=>{}}) => {
       };
 
       const credentials = await login(dataEnviar);
-      const response = await signInWithCustomToken(auth, credentials.data.token);
-      const user = response.user;
-
-      if (!user.emailVerified) {
-        setMensaje(
-          "⚠️ Tu correo aún no está verificado. Por favor revisá tu bandeja de entrada."
-        );
-        return;
-      }
+      //const response = await signInWithCustomToken(auth, credentials.data.token);
+    
+      // guardar el token en Zustand
+      useAuthStore.getState().setTokenJwtUser(credentials.data.token);
 
       // 🔥 Llamar a fetchUser() desde Zustand (trae y guarda el user)
       await useAuthStore.getState().fetchUser();
+      
 
       toast.success("Bienvenido a Cuenta Verificada.");
       if(redirect) navigate(PUBLIC_ROUTES.panel);

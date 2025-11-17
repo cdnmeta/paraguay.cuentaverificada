@@ -129,14 +129,14 @@ export class UsuariosService {
     let codVendedor: string | null = null;
     try {
       // buscar correo en firebase
-      const firebaseUserExists = await this.firebaseService.auth
+      /* const firebaseUserExists = await this.firebaseService.auth
         .getUserByEmail(dto.correo)
         .then((user) => user)
         .catch(() => null);
 
       if (firebaseUserExists) {
         throw new BadRequestException('El correo ya está registrado');
-      }
+      } */
 
       // buscar usuarios existentes
       const userExists = await this.prismaService.usuarios.findFirst({
@@ -157,16 +157,14 @@ export class UsuariosService {
 
       // guardar usuario en firebase para autenticación
       const { cedulaFrente, cedulaReverso, selfie } = files || {};
-      const firebaseUser = await this.firebaseService.createUser({
+      /* const firebaseUser = await this.firebaseService.createUser({
         email: dto.correo,
         password: dto.contrasena,
         displayName: `${dto.nombre} ${dto.apellido}`,
         emailVerified: true,
       });
 
-      uidUserFirebase = firebaseUser.uid;
-
-      console.log('Usuario creado en Firebase con UID:', firebaseUser.uid);
+      uidUserFirebase = firebaseUser.uid; */
 
       // guardar la cedula del ususarios
       const nombre_cedula_frontal =
@@ -219,7 +217,6 @@ export class UsuariosService {
             documento: dto.documento,
             email: dto.correo,
             password: contrasenaEncryptada,
-            uid_firebase: firebaseUser.uid,
             cedula_frente: rutaArchivoFrontal,
             cedula_reverso: rutaArchivoReverso,
             pin: pinHash,
@@ -256,10 +253,6 @@ export class UsuariosService {
       });
       return userNew;
     } catch (error) {
-      if (uidUserFirebase) {
-        // eliminar usuario en firebase
-        await this.firebaseService.auth.deleteUser(uidUserFirebase);
-      }
       throw error;
     }
   }

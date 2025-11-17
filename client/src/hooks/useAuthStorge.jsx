@@ -5,19 +5,20 @@ import {
   getEncrypted,
   removeEncrypted,
 } from "@/utils/secureStorage";
-import axios from "axios";
 import { getUserInfo } from "@/apis/auth.api";
-import { auth } from "@/firebaseConfig";
-import { signOut } from "firebase/auth";
 
 export const useAuthStore = create((set, get) => ({
   user: null,
   timeoutId: null,
   empresaActual: null,
   isHydrated: false, // 👈 agregamos esto
+  tokenJwtUser: null,
   setUser: async (user) => {
     await saveEncrypted("user", user);
     set({ user });
+  },
+  setTokenJwtUser: (token) => {
+    set({ tokenJwtUser: token });
   },
 
   fetchUser: async () => {
@@ -36,7 +37,6 @@ export const useAuthStore = create((set, get) => ({
     removeEncrypted("empresaActual");
     localStorage.removeItem("grupoSeleccionado");
     set({ user: null, timeoutId: null, empresaActual: null });
-    await signOut(auth);
   },
   setHydrated: () => set({ isHydrated: true }),
 
