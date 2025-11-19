@@ -1,9 +1,19 @@
 import { initializeApp } from "firebase/app";
 import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
+import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
+import { registerRoute, NavigationRoute } from 'workbox-routing';
 
 // src/sw.js
-// Service Worker principal con Firebase Messaging integrado
+// Service Worker principal con Firebase Messaging integrado y Workbox
 console.log('[SW] Service Worker cargado');
+
+// Workbox - Precaching de archivos estáticos
+precacheAndRoute(self.__WB_MANIFEST);
+
+// Workbox - Fallback para navegación SPA (todas las rutas van a index.html)
+const handler = createHandlerBoundToURL('/index.html');
+const navigationRoute = new NavigationRoute(handler);
+registerRoute(navigationRoute);
 
 
 // Configuración de Firebase (reemplaza con tus valores reales)
