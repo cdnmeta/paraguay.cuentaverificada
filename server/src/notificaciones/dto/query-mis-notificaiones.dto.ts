@@ -17,5 +17,4 @@ export class QueryMisNotificacionesDto {
     @IsDateString({},{message: 'La fecha_hasta debe ser una fecha válida'})
     @IsOptional()
     fecha_hasta?: Date;
-
 }

@@ -6,7 +6,7 @@ import { CreateEstadosAnimosDto } from './dto/create-estados-animos.dto';
 import { UpdateEstadoAnimoDto } from './dto/update-estado-animo.dto';
 import { DeleteEstadosAnimosDto } from './dto/delete-estados-animos.dto';
 import { GuardarMensajeDiaDto } from './dto/guardar-mesaje-dia.dto';
-import { TiposNotificaciones } from '@/notificaciones/types/tipos-notificaciones';
+import { TiposNotificaciones } from '@/notificaciones/enums/tipos-notificaciones';
 
 @Injectable()
 export class EstadosAnimosService {

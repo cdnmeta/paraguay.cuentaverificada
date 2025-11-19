@@ -121,4 +121,11 @@ export const refreshTokenJwt = async () => {
   return response;
 };
 
+export const logout = async () => {
+  const response = await api.post(`/${URL_ENDPOINT}/logout`, {}, {
+    withCredentials: true, // para enviar cookies
+  });
+  return response;
+}
+
 export default api;

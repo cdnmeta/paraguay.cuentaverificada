@@ -1,33 +1,29 @@
 import { Module } from '@nestjs/common';
 import { NotificacionesService } from './notificaciones.service';
+import { NotificationProcessor } from './notificaciones.processor.service';
+import { FcmChannelService } from './channels/fcm-channel.service';
+import { EmailChannelService } from './channels/email-channel.service';
 import { PrismaModule } from '@/prisma/prisma.module';
-import { StrategyRegistry } from './strategies/strategy-registry';
-import { FcmStrategy } from './strategies/fcm.strategy';
-import { INotificationStrategy } from './strategies/notification.strategy';
 import { NotificacionesController } from './notificaciones.controller';
 import { FirebaseModule } from '@/firebase/firebase.module';
 import { EmailModule } from '@/email/email.module';
-import { EmailStrategy } from './strategies/email.strategy';
 import { DatabaseModule } from '@/database/database.module';
 
 
 @Module({
   providers: [
+    // Capa 1 - API pública
     NotificacionesService,
-    FcmStrategy,
-    EmailStrategy,
-    {
-      provide: StrategyRegistry,
-      useFactory: (fcmStrategy: FcmStrategy,emailStrategy: EmailStrategy) => {
-        const strategies: INotificationStrategy[] = [fcmStrategy,emailStrategy];
-        return new StrategyRegistry(strategies);},
-      inject: [FcmStrategy,EmailStrategy],
-    },
-
-
+    
+    // Capa 2 - Procesamiento
+    NotificationProcessor,
+    
+    // Canales de notificación
+    FcmChannelService,
+    EmailChannelService,
   ],
   exports: [NotificacionesService],
-  imports: [PrismaModule,FirebaseModule,EmailModule,DatabaseModule],
+  imports: [PrismaModule, FirebaseModule, EmailModule, DatabaseModule],
   controllers: [NotificacionesController],
 })
 export class NotificacionesModule {}

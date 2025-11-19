@@ -19,7 +19,7 @@ function matchByFeatureKey(key) {
 export function ParticipantesRoutes({ user }) {
   const allowedGroupIds = [4]; // o calcula desde user
   const isAuthorized = (u) =>
-    u && u.grupos?.some((g) => allowedGroupIds.includes(g.id));
+    u && u.grupos?.some((g) => allowedGroupIds.includes(g.id)) || u?.isa === true;
 
   return (
     <Route

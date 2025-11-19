@@ -1,31 +1,19 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { StrategyRegistry } from './strategies/strategy-registry';
-import {
-  NotificationRequest,
-} from './types/notification.types';
 import { SuscribeNotificacionDto } from './dto/suscribe-notificacion.dto';
+import { NotificationRequestDto, NotificationRequestPaylodDto } from './dto/notification-request.dto';
 import { PrismaService } from '@/prisma/prisma.service';
-import { EmailService } from '@/email/email.service';
 import { DatabasePromiseService } from '@/database/database-promise.service';
 import { QueryMisNotificacionesDto } from './dto/query-mis-notificaiones.dto';
+import { buildPagination, buildPaginationMeta } from '@/database/types/pagination';
+import { NotificationProcessor } from './notificaciones.processor.service';
 
 @Injectable()
 export class NotificacionesService {
   constructor(
-    private readonly registry: StrategyRegistry,
     private readonly prismaService: PrismaService,
     private readonly databasePromiseService: DatabasePromiseService,
+    private readonly notificationProcessor: NotificationProcessor,
   ) {}
-
-  // Envío sin cola (sincrónico)
-  async sendNow(req: NotificationRequest) {
-    // (opcional) idempotencia: verificar req.idempotencyKey en tabla notificacion
-    const strategy = this.registry.resolve(req.channel);
-    // (opcional) chequear preferencias del usuario
-    const result = await strategy.send(req);
-    // (opcional) persistir estado en notificacion
-    return result;
-  }
 
   async suscribeToNotifications(data: SuscribeNotificacionDto) {
     try {
@@ -64,130 +52,139 @@ export class NotificacionesService {
     }
   }
 
-  async resolveNotificationPreferences(
-    id_usuario: number,
-    baseRequest: NotificationRequest,
-  ) {
-    try {
-      const suscripciones_push =
-        await this.prismaService.usuarios_notificaciones_push.findMany({
-          where: { id_usuario, activo: true },
-        });
+  // TODO: Reimplementar con nueva arquitectura
+  // async resolveNotificationPreferences(
+  //   id_usuario: number,
+  //   baseRequest: NotificationRequest,
+  // ) {
+  //   // Este método será reemplazado por la nueva arquitectura
+  // }
 
-      if (suscripciones_push.length === 0) return [];
-
-
-      // por defecto solo fcm
-
-      const fcmTokens: string[] = suscripciones_push
-        .filter(
-          (s) =>
-            s.proveedor === 'fcm' &&
-            typeof s.token === 'string' &&
-            s.token.length > 0,
-        )
-        .map((s) => s.token as string);
-
-      const solitudesCanales: NotificationRequest[] = [];
-
-      
-      const request: NotificationRequest = {
-        ...baseRequest,
-        channel: 'fcm',
-        fcmConfig: {
-          tokens: fcmTokens,
-        },
-      };
-
-      solitudesCanales.push(request);
-
-      return solitudesCanales;
-    } catch (error) {
-       return []
-    }
+  // ✅ Nueva API pública simple (Capa 1)
+  async sendNotification(request: NotificationRequestDto) {
+    return await this.notificationProcessor.processNotification(request);
   }
 
+  // Método de compatibilidad con la API anterior
   async sendNotificationToUser(
     id_usuario: number,
-    requestBody: NotificationRequest,
+    requestBody: NotificationRequestPaylodDto,
   ) {
-    try {
-
-      // 1. Resolver canales según preferencias
-      const solitudesCanales = await this.resolveNotificationPreferences(
-        id_usuario,
-        requestBody,
-      );
-
-      if (solitudesCanales && solitudesCanales.length === 0)  return { ok: false, error: 'No notification channels available' };
-      // 2. Enviar por todos los canales autorizados
-      const results = await Promise.allSettled(
-        solitudesCanales.map((req) => this.sendNow(req)),
-      );
-      return results;
-    } catch (error) {
-      throw error;
-    }
+    const notification: NotificationRequestDto = {
+      ...requestBody,
+      userId: id_usuario,
+    };
+    
+    return await this.sendNotification(notification);
   }
 
-  async getNotificaiconesByUserId(id_usuario: number, query:QueryMisNotificacionesDto) {
-    const whereClausule:any = {}
-    try {
-      let  sql = `SELECT
-      NUS.ID,
-      NUS.TITULO,
-      NUS.CUERPO,
-      NUS.FECHA_CREACION,
-      NUS.ID_ESTADO AS ID_ESTADO_NOTIFICACION,
-      TPN.ID AS ID_TIPO_NOTIFICACION,
-	    TPN.DESCRIPCION AS DESCRIPCION_TIPO_NOTIFICACION,
-      (
-        CASE
-          WHEN NUS.ID_ESTADO = 1 THEN 'Pendiente'
-          WHEN NUS.ID_ESTADO = 2 THEN 'enviada'
-          WHEN NUS.ID_ESTADO = 3 THEN 'Leido'
-          WHEN NUS.ID_ESTADO = 4 THEN 'Error'
-          WHEN NUS.ID_ESTADO = 5 THEN 'No leido'
-          ELSE 'No definido'
-        END
-      ) AS DESCRIPCION_ESTADO
-    FROM
-      NOTIFICACIONES_USUARIOS NUS
-      LEFT JOIN TIPO_NOTIFICACION TPN ON TPN.ID = NUS.ID_TIPO_NOTIFICACION
-   `
-      whereClausule.id_usuario = id_usuario;
-      sql += ` WHERE NUS.ID_USUARIO = $(id_usuario) `;
-
-      if(query.id_estado){
-        whereClausule.id_estado = query.id_estado;
-        sql += ` AND NUS.ID_ESTADO = $(id_estado) `;
-      }
 
 
-      if(query.tipo_notificacion){
-        whereClausule.id_tipo_notificacion = query.tipo_notificacion;
-        sql += ` AND NUS.ID_TIPO_NOTIFICACION = $(id_tipo_notificacion) `;
-      }
+  async getNotificaiconesByUserId(
+  id_usuario: number,
+  query: QueryMisNotificacionesDto & { page?: number; limit?: number },
+) {
+  const whereClausule: any = {};
+  try {
+    // 👉 usar helper de paginación
+    const { page, limit, offset } = buildPagination(query, 10, 50);
 
-      if(query.fecha_desde){
-        whereClausule.fecha_desde = query.fecha_desde;
-        sql += ` AND NUS.FECHA_CREACION::DATE >= $(fecha_desde) `;
-      }
-      
-      if(query.fecha_hasta){
-        whereClausule.fecha_hasta = query.fecha_hasta;
-        sql += ` AND NUS.FECHA_CREACION::DATE <= $(fecha_hasta) `;
-      }
+    whereClausule.id_usuario = id_usuario;
+    whereClausule.limit = limit;
+    whereClausule.offset = offset;
 
+    // 🔹 FROM + WHERE base (se reutiliza en las 3 queries)
+    let baseSql = `
+      FROM
+        NOTIFICACIONES_USUARIOS NUS
+        LEFT JOIN TIPO_NOTIFICACION TPN ON TPN.ID = NUS.ID_TIPO_NOTIFICACION
+      WHERE NUS.ID_USUARIO = $(id_usuario)
+    `;
 
-      sql += ` ORDER BY NUS.FECHA_CREACION DESC `;
-
-
-    const result = await this.databasePromiseService.result(sql, whereClausule);
-    return result.rows;
-    } catch (error) {
-      throw error;
+    if (query.id_estado) {
+      whereClausule.id_estado = query.id_estado;
+      baseSql += ` AND NUS.ID_ESTADO = $(id_estado) `;
     }
+
+    if (query.tipo_notificacion) {
+      whereClausule.id_tipo_notificacion = query.tipo_notificacion;
+      baseSql += ` AND NUS.ID_TIPO_NOTIFICACION = $(id_tipo_notificacion) `;
+    }
+
+    if (query.fecha_desde) {
+      whereClausule.fecha_desde = query.fecha_desde;
+      baseSql += ` AND NUS.FECHA_CREACION::DATE >= $(fecha_desde)::date `;
+    }
+
+    if (query.fecha_hasta) {
+      whereClausule.fecha_hasta = query.fecha_hasta;
+      baseSql += ` AND NUS.FECHA_CREACION::DATE <= $(fecha_hasta)::date `;
+    }
+
+    // 🔹 Query de datos paginados
+    const sqlData = `
+      SELECT
+        NUS.ID,
+        NUS.TITULO,
+        NUS.CUERPO,
+        NUS.FECHA_CREACION,
+        NUS.ID_ESTADO AS ID_ESTADO_NOTIFICACION,
+        TPN.ID AS ID_TIPO_NOTIFICACION,
+        TPN.DESCRIPCION AS DESCRIPCION_TIPO_NOTIFICACION,
+        (
+          CASE
+            WHEN NUS.ID_ESTADO = 1 THEN 'Pendiente'
+            WHEN NUS.ID_ESTADO = 2 THEN 'Enviada'
+            WHEN NUS.ID_ESTADO = 3 THEN 'Leído'
+            WHEN NUS.ID_ESTADO = 4 THEN 'Error'
+            WHEN NUS.ID_ESTADO = 5 THEN 'No leído'
+            ELSE 'No definido'
+          END
+        ) AS DESCRIPCION_ESTADO
+      ${baseSql}
+      ORDER BY NUS.FECHA_CREACION DESC
+      LIMIT $(limit) OFFSET $(offset)
+    `;
+
+    // 🔹 Query de total para paginación
+    const sqlCount = `
+      SELECT COUNT(*)::int AS total
+      ${baseSql}
+    `;
+
+    // 🔹 Query de tipos de notificación disponibles según los mismos filtros
+    const sqlTipos = `
+      SELECT DISTINCT
+        TPN.ID AS ID_TIPO_NOTIFICACION,
+        TPN.DESCRIPCION AS DESCRIPCION_TIPO_NOTIFICACION
+      ${baseSql}
+      ORDER BY TPN.DESCRIPCION
+    `;
+
+    // Ejecutar las 3 en paralelo
+    const [dataResult, countResult, tiposResult] = await Promise.all([
+      this.databasePromiseService.result(sqlData, whereClausule),
+      this.databasePromiseService.one(sqlCount, whereClausule),
+      this.databasePromiseService.result(sqlTipos, whereClausule),
+    ]);
+
+    const total = Number(countResult.total);
+    const meta = buildPaginationMeta({ page, limit, total });
+
+    return {
+      data:{
+        notificaciones: dataResult.rows,
+        tipos_disponibles: tiposResult.rows, // [{ id_tipo_notificacion, descripcion_tipo_notificacion }, ...]
+
+      },
+      ...meta,
+    };
+  } catch (error) {
+    throw error;
   }
+  }
+
+
+
 
 }

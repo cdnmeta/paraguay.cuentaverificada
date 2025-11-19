@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Form,
   FormField,
@@ -10,6 +10,8 @@ import {
 // shadcn/ui
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,13 +20,15 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/hooks/useAuthStorge";
 import { useNavigate } from "react-router-dom";
 import { PUBLIC_ROUTES } from "@/utils/routes.routes";
+import { CANT_MIN_CARACTERES_PIN } from "@/utils/constants";
 const schemaSeguridad = z
   .object({
     password: z.string().min(6, "Mínimo 6 caracteres"),
     confirmPassword: z.string().min(6, "Mínimo 6 caracteres"),
     pin: z
-      .string({ required_error: "Pin requerido" })
-      .nonempty("Pin requerido"),
+      .string({ required_error: "PIN requerido" })
+      .min(CANT_MIN_CARACTERES_PIN, `El PIN debe tener al menos ${CANT_MIN_CARACTERES_PIN} caracteres`)
+      .regex(/^[a-zA-Z0-9]+$/, "El PIN solo puede contener letras y números"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
@@ -33,6 +37,10 @@ const schemaSeguridad = z
 export default function FormCambiarPassword() {
     const {logout} = useAuthStore()
     const navigate = useNavigate();
+    
+    // Estados para mostrar/ocultar contraseñas
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const formSeguridad = useForm({
     resolver: zodResolver(schemaSeguridad),
     defaultValues: {
@@ -76,7 +84,27 @@ export default function FormCambiarPassword() {
               <div className="space-y-1">
                 <FormLabel>Contraseña</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="********" {...field} />
+                  <div className="relative">
+                    <Input 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="********" 
+                      {...field} 
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </Button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </div>
@@ -91,7 +119,27 @@ export default function FormCambiarPassword() {
               <div className="space-y-1">
                 <FormLabel>Confirmar contraseña</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="********" {...field} />
+                  <div className="relative">
+                    <Input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      placeholder="********" 
+                      {...field} 
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </Button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </div>
@@ -104,9 +152,27 @@ export default function FormCambiarPassword() {
           render={({ field }) => (
             <FormItem asChild>
               <div className="space-y-1">
-                <FormLabel>Pin</FormLabel>
+                <FormLabel>PIN</FormLabel>
                 <FormControl>
-                  <Input type="text" placeholder="********" {...field} />
+                  <div className="flex justify-center">
+                    <InputOTP
+                      maxLength={CANT_MIN_CARACTERES_PIN}
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={formSeguridad.formState.isSubmitting}
+                      className="gap-2"
+                    >
+                      <InputOTPGroup className="gap-2">
+                        {Array.from({ length: CANT_MIN_CARACTERES_PIN }, (_, index) => (
+                          <InputOTPSlot 
+                            key={index} 
+                            index={index} 
+                            className="w-12 h-12 text-lg font-semibold border-2 rounded-lg"
+                          />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </div>

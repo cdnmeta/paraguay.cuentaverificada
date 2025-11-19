@@ -16,6 +16,7 @@ import {
   BreadcrumbSeparator 
 } from '@/components/ui/breadcrumb';
 import LogoCuentaVerificada from '@/components/customs/LogoCuentaVerifaca';
+import Navbar from '@/components/navbars/Navbar';
 export default function LayoutSuperAdmin({children}) {
   const user = useAuthStore((state) => state.user);
   
@@ -27,10 +28,8 @@ export default function LayoutSuperAdmin({children}) {
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
-            <Link to="/admin">
-              <LogoCuentaVerificada />
-            </Link>
           </div>
+            <Navbar urlBase="/admin" />
         </header>
 
         {/* Contenido principal */}

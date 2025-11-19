@@ -191,7 +191,6 @@ export class AuthController {
   @IsPublic()
   @Post('logout')
   async logout(@Res() res: Response) {
-    res.clearCookie('access_token');
     res.clearCookie('refresh_token');
     return res
       .status(200)

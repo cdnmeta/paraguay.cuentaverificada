@@ -5,7 +5,7 @@ import {
   getEncrypted,
   removeEncrypted,
 } from "@/utils/secureStorage";
-import { getUserInfo } from "@/apis/auth.api";
+import { getUserInfo,  logout as logoutServer } from "@/apis/auth.api";
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -37,6 +37,7 @@ export const useAuthStore = create((set, get) => ({
     removeEncrypted("empresaActual");
     localStorage.removeItem("grupoSeleccionado");
     set({ user: null, timeoutId: null, empresaActual: null });
+    return logoutServer(); // Llamada a la API de logout
   },
   setHydrated: () => set({ isHydrated: true }),
 

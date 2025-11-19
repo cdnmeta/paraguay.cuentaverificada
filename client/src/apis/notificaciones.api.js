@@ -12,10 +12,9 @@ export const suscribirNotificaciones = async (subscription) => {
   return response;
 };
 
-export const getNotificacionesUsuario = async () => {
-  
+export const getNotificacionesUsuario = async (params = {}) => {
   const response = await api.get(`/${URL_ENDPOINT}/mis-notificaciones`, {
-    
+    params,
     withCredentials: true,
   });
   return response;

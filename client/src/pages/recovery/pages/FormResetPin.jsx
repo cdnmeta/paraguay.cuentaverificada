@@ -1,26 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2, Shield, AlertCircle, RefreshCw, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { Loader2, Shield, AlertCircle, RefreshCw, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { verificarToken, resetPin, refreshToken } from "@/apis/auth.api";
+
+
+// Constante para la cantidad de dígitos del PIN
+const CANT_DIGITOS_PIN = 4;
 
 // Schema de validación
 const resetPinSchema = z.object({
   cedula: z.string().min(1, "La cédula es obligatoria"),
   pin: z.string()
-    .min(4, "El PIN debe tener al menos 4 caracteres")
-    .max(6, "El PIN no puede tener más de 6 caracteres")
-    .regex(/^[0-9]+$/, "El PIN debe contener solo números"),
+    .length(CANT_DIGITOS_PIN, `El PIN debe tener exactamente ${CANT_DIGITOS_PIN} dígitos`),
   repetir_pin: z.string()
-    .min(4, "Confirma tu PIN")
+    .length(CANT_DIGITOS_PIN, `El PIN debe tener exactamente ${CANT_DIGITOS_PIN} dígitos`)
 }).refine((data) => data.pin === data.repetir_pin, {
   message: "Los PINs no coinciden",
   path: ["repetir_pin"],
@@ -35,8 +38,6 @@ const FormResetPin = () => {
   const [tokenValid, setTokenValid] = useState(false);
   const [refreshingToken, setRefreshingToken] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [showPin, setShowPin] = useState(false);
-  const [showRepeatPin, setShowRepeatPin] = useState(false);
 
   // Extraer parámetros de la URL
   const token = searchParams.get("token");
@@ -47,9 +48,15 @@ const FormResetPin = () => {
     handleSubmit,
     formState: { errors },
     setValue,
-    reset
+    reset,
+    control
   } = useForm({
     resolver: zodResolver(resetPinSchema),
+    defaultValues: {
+      cedula: "",
+      pin: "",
+      repetir_pin: ""
+    }
   });
 
   // Validar token al cargar el componente
@@ -253,7 +260,7 @@ const FormResetPin = () => {
               id="cedula"
               type="text"
               {...register("cedula")}
-              className="bg-gray-50"
+              className="opacity-50 cursor-not-allowed"
               disabled={true}
               readOnly
             />
@@ -268,30 +275,36 @@ const FormResetPin = () => {
           {/* Campo PIN */}
           <div className="space-y-2">
             <Label htmlFor="pin">Nuevo PIN</Label>
-            <div className="relative">
-              <Input
-                id="pin"
-                type={showPin ? "text" : "password"}
-                placeholder="Ingresa tu nuevo PIN"
-                {...register("pin")}
-                className={errors.pin ? "border-red-500 pr-10" : "pr-10"}
-                disabled={loading}
-                maxLength={6}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPin(!showPin)}
-                disabled={loading}
-              >
-                {showPin ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
+            <div className="flex justify-center">
+              <Controller
+                name="pin"
+                control={control}
+                render={({ field }) => (
+                  <InputOTP
+                    maxLength={CANT_DIGITOS_PIN}
+                    value={field.value}
+                    onChange={(val) => {
+                      let valAsignar = val
+                      if( typeof valAsignar === "string") {
+                        valAsignar = valAsignar.toLowerCase();
+                      }
+                      field.onChange(valAsignar);
+                    }}
+                    disabled={loading}
+                    className="gap-3"
+                  >
+                    <InputOTPGroup className="gap-3">
+                      {Array.from({ length: CANT_DIGITOS_PIN }, (_, index) => (
+                        <InputOTPSlot 
+                          key={index} 
+                          index={index} 
+                          className="w-14 h-14 text-xl font-semibold border-2 rounded-lg"
+                        />
+                      ))}
+                    </InputOTPGroup>
+                  </InputOTP>
                 )}
-              </Button>
+              />
             </div>
             {errors.pin && (
               <Alert variant="destructive">
@@ -304,30 +317,36 @@ const FormResetPin = () => {
           {/* Campo Repetir PIN */}
           <div className="space-y-2">
             <Label htmlFor="repetir_pin">Confirmar PIN</Label>
-            <div className="relative">
-              <Input
-                id="repetir_pin"
-                type={showRepeatPin ? "text" : "password"}
-                placeholder="Confirma tu nuevo PIN"
-                {...register("repetir_pin")}
-                className={errors.repetir_pin ? "border-red-500 pr-10" : "pr-10"}
-                disabled={loading}
-                maxLength={6}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowRepeatPin(!showRepeatPin)}
-                disabled={loading}
-              >
-                {showRepeatPin ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
+            <div className="flex justify-center">
+              <Controller
+                name="repetir_pin"
+                control={control}
+                render={({ field }) => (
+                  <InputOTP
+                    maxLength={CANT_DIGITOS_PIN}
+                    value={field.value}
+                    onChange={(val) => {
+                      let valAsignar = val
+                      if( typeof valAsignar === "string") {
+                        valAsignar = valAsignar.toLowerCase();
+                      }
+                      field.onChange(valAsignar);
+                    }}
+                    disabled={loading}
+                    className="gap-3"
+                  >
+                    <InputOTPGroup className="gap-3">
+                      {Array.from({ length: CANT_DIGITOS_PIN }, (_, index) => (
+                        <InputOTPSlot 
+                          key={index} 
+                          index={index} 
+                          className="w-14 h-14 text-xl font-semibold border-2 rounded-lg"
+                        />
+                      ))}
+                    </InputOTPGroup>
+                  </InputOTP>
                 )}
-              </Button>
+              />
             </div>
             {errors.repetir_pin && (
               <Alert variant="destructive">

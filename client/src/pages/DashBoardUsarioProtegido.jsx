@@ -104,7 +104,7 @@ export default function DashBoardUsarioProtegido() {
 
   const secciones = [
     {
-      icon: "/icons/2179332.png",
+      icon: "/icons/iconos-svg/cuenta.svg",
       title: "Cuenta",
       onClick: () => navigate(`${PROTECTED_ROUTES.misDatos}`),
       desc: "Datos - Seguridad - Más",
@@ -118,13 +118,13 @@ export default function DashBoardUsarioProtegido() {
       habilitado:true,
     },
     {
-      icon: "/icons/1176025.png",
+      icon: "/icons/iconos-svg/publicar.svg",
       title: "Publicar",
       desc: "Expresa lo que deseas comprar",
       habilitado:true,
     },
     {
-      icon: "/icons/443115.png",
+      icon: "/icons/iconos-svg/semaforo.svg",
       title: "Semáforo Financiero",
       onClick: () => navigate(`/semaforo-financiero`),
       desc: "No permitas que tus finanzas lleguen al rojo",
@@ -138,14 +138,14 @@ export default function DashBoardUsarioProtegido() {
       habilitado:true
     },
     {
-      icon: "/icons/709049.png",
+      icon: "/icons/iconos-svg/wallet.svg",
       title: "Wallet",
       desc: "Depósitos - Pagos - Ganancias",
       onClick: () => navigate(`/${WalletRoutes.index}`),
       habilitado: () => user?.vfd === true,
     },
     {
-      icon: "/icons/709049.png",
+      icon: "/icons/iconos-svg/suscripcion.svg",
       title: "Suscripciones",
       desc: "Planes - Facturas - Historial",
       habilitado:true,

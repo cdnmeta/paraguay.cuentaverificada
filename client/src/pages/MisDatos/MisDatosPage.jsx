@@ -21,7 +21,6 @@ import { getMisDatos } from "@/apis/usuarios.api";
 import { Link, useNavigate } from "react-router-dom";
 import { PUBLIC_ROUTES } from "@/utils/routes.routes";
 import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
-import { useAuthStore } from "@/hooks/useAuthStorge";
 import { solicitarVerificacionCuentausuario } from "@/apis/verificacionCuenta.api";
 import NoImage from "@/components/customs/NoImage";
 import { cargarURL } from "@/utils/funciones";

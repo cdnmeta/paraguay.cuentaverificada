@@ -252,7 +252,7 @@ model suscripciones {
   fecha_vencimiento     DateTime?               @db.Timestamptz(6)
   id_plan               Int
   id_vendedor           Int?
-  estado                Int?                    @default(1)
+  estado                Int?                    @default(1) // 1= pendiente 2= activa
   activo                Boolean?                @default(true)
   fecha_creacion        DateTime?               @default(now()) @db.Timestamptz(6)
   fecha_eliminacion     DateTime?               @db.Timestamptz(6)
