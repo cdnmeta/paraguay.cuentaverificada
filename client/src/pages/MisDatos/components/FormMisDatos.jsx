@@ -69,7 +69,7 @@ export default function FormMisDatos({ user, onSuccess }) {
       // Preparar datos para el backend con dial_code y telefono separados
       const formattedData = {
         direccion: values.direccion,
-        email: values.email,
+        correo: values.email,
         dial_code: values.dial_code,
         telefono: values.telefono
       };
