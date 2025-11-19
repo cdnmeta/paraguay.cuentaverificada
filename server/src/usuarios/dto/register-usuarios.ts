@@ -42,6 +42,10 @@ export class RegisterUsuariosPayloadDto {
   @IsString({ message: 'Telefono debe ser una cadena' })
   @IsNotEmpty({ message: 'El telefono es obligatorio' })
   telefono: string;
+
+  @IsString({ message: 'Pin debe ser una cadena' })
+  @IsNotEmpty({ message: 'El pin es obligatorio' })
+  pin: string;
 }
 
 export class RegisterUsuariosDto extends RegisterUsuariosPayloadDto {

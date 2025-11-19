@@ -21,7 +21,6 @@ import { getMisDatos } from "@/apis/usuarios.api";
 import { Link, useNavigate } from "react-router-dom";
 import { PUBLIC_ROUTES } from "@/utils/routes.routes";
 import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
-import { useAuthStore } from "@/hooks/useAuthStorge";
 import { solicitarVerificacionCuentausuario } from "@/apis/verificacionCuenta.api";
 import NoImage from "@/components/customs/NoImage";
 import { cargarURL } from "@/utils/funciones";
@@ -45,7 +44,7 @@ export default function MisDatosPage() {
   const [loadingImages, setLoadingImages] = useState(false);
   const navigate = useNavigate();
 
-  const { user: userAuth } = useAuthStore(); // Usuario autenticado
+
 
   // const { logout } = useAuthStore(); // Descomentado cuando se necesite
 
@@ -121,7 +120,7 @@ export default function MisDatosPage() {
 
   useEffect(() => {
     loadDatos();
-  }, [loadDatos]);
+  }, []);
 
   // Efecto para manejar el scroll al hash #verificacion
   useEffect(() => {
@@ -345,7 +344,7 @@ export default function MisDatosPage() {
         
 
         {/* Dialog de confirmación de verificación */}
-        <Dialog open={showVerificationDialog} onOpenChange={() => {}}>
+        <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
           <DialogContent
             className="sm:max-w-[425px]"
             onPointerDownOutside={(e) => e.preventDefault()}

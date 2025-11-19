@@ -29,6 +29,9 @@ import { EstadosAnimosModule } from './estados-animos/estados-animos.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { WalletModule } from './wallet/wallet.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { NotificacionesModule } from './notificaciones/notificaciones.module';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+
 
 @Module({
   imports: [
@@ -58,16 +61,17 @@ import { ScheduleModule } from '@nestjs/schedule';
     EstadosAnimosModule,
     TicketsModule,
     WalletModule,
+    NotificacionesModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: FirebaseAuthGuard,
+      useClass: JwtAuthGuard,
     },
     {
       provide: APP_GUARD,
       useClass: GroupsGuard,
     },
-  ]
+  ],
 })
 export class AppModule {}

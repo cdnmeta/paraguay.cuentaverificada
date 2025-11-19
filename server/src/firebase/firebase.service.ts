@@ -1,14 +1,16 @@
 import { HttpException, Inject, Injectable } from '@nestjs/common';
-import { app,auth } from 'firebase-admin';
+import { app,auth,messaging } from 'firebase-admin';
 Injectable();
 export class FirebaseService {
   db: FirebaseFirestore.Firestore;
   storage: any;
   auth: auth.Auth;
+  messaging: messaging.Messaging;
   constructor(@Inject('FIREBASE_APP') private readonly firebaseApp: app.App) {
     this.db = firebaseApp.firestore();
     this.storage = firebaseApp.storage().bucket();
     this.auth = firebaseApp.auth();
+    this.messaging = firebaseApp.messaging();
   }
 
   async subirArchivoPrivado(

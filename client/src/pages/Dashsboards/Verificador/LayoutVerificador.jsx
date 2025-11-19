@@ -8,6 +8,8 @@ import NavBarCustom1 from '@/components/navbars/NavBarCustom1';
 import { AppSidebarVerificador } from './components/sidebar/app-sidebar';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import LogoCuentaVerificada from '@/components/customs/LogoCuentaVerifaca';
+import Navbar from '@/components/navbars/Navbar';
+import {URL_BASE} from '@/pages/Dashsboards/Verificador/config/route'
 export default function LayoutVerificador({children}) {
 
    const user = useAuthStore((state) => state.user);
@@ -19,10 +21,8 @@ export default function LayoutVerificador({children}) {
         <header className="flex bg-green-500 h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
-            <Link to="/verificador">
-              <LogoCuentaVerificada />
-            </Link>
           </div>
+          <Navbar urlBase={`/${URL_BASE}`} />
         </header>
 
         {/* Contenido principal */}

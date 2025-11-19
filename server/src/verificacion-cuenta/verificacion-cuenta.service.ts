@@ -323,10 +323,18 @@ export class VerificacionCuentaService {
             },
           });
           // crear wallet para el usuario
+          const monedaWalletDefault = await this.prismaService.empresa_config.findFirst({
+            select: { id_moneda_wallet: true },
+            where: { id: 1 },
+          });
+
+          if(!monedaWalletDefault?.id_moneda_wallet){
+            throw new BadRequestException('No se ha configurado la moneda por defecto para las wallets');
+          }
           await this.walletService.crearWalletParaUsuario(
             {
               id_usuario: dto.id_usuario_aprobacion,
-              id_moneda: 2, // moneda por defecto es 2 (PYG)
+              id_moneda: monedaWalletDefault.id_moneda_wallet, // moneda por defecto es la configurada en empresa_config
             },
             tx,
           );

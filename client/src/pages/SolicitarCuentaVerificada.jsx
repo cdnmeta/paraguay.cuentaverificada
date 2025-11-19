@@ -44,6 +44,7 @@ import {
 } from "@/apis/verificacionCuenta.api";
 import {
   CANT_MIN_CARACTERES_CONTRASENA,
+  CANT_MIN_CARACTERES_PIN,
   REGEX_CEDULA_IDENTIDAD,
   CODIGO_PAIS_BASE,
 } from "@/utils/constants";
@@ -70,6 +71,13 @@ const schema = z
         `${`La contraseña debe tener al menos ${CANT_MIN_CARACTERES_CONTRASENA} caracteres`}`
       ),
     confirmPassword: z.string(),
+    pin: z
+      .string({ required_error: "PIN es requerido" })
+      .min(CANT_MIN_CARACTERES_PIN, `El PIN debe tener al menos ${CANT_MIN_CARACTERES_PIN} caracteres`)
+      .regex(/^[a-zA-Z0-9]+$/, "El PIN solo puede contener letras y números"),
+    confirmPin: z
+      .string({ required_error: "Confirmar PIN es requerido" })
+      .min(CANT_MIN_CARACTERES_PIN, `Debe tener al menos ${CANT_MIN_CARACTERES_PIN} caracteres`),
     terminos: z.boolean().refine((val) => val === true, {
       message: "Debes aceptar los términos y condiciones",
     }),
@@ -88,6 +96,10 @@ const schema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
     path: ["confirmPassword"],
+  })
+  .refine((data) => data.pin === data.confirmPin, {
+    message: "Los PINs no coinciden",
+    path: ["confirmPin"],
   });
 
 const otpSchema = z.object({
@@ -211,6 +223,8 @@ export default function SolicitarCuentaVerificada() {
       email: "",
       password: "",
       confirmPassword: "",
+      pin: "",
+      confirmPin: "",
       codigo_pais: CODIGO_PAIS_BASE,
       telefono: "",
       terminos: false,
@@ -267,6 +281,7 @@ export default function SolicitarCuentaVerificada() {
       formData.append("contrasena", data.password);
       formData.append("dial_code", String(pais.countryCode));
       formData.append("telefono", data.telefono);
+      formData.append("pin", data.pin);
 
       // Agregar archivos
       if (data?.cedula_frente) {
@@ -346,6 +361,7 @@ export default function SolicitarCuentaVerificada() {
 
       // No resetear el form aquí para mantener los datos si es necesario
     } catch (err) {
+      setOpenConfirm(false)
       console.log(err);
       if ([400].includes(err?.response?.status)) {
         toast.error(err?.response?.data?.message);
@@ -592,6 +608,90 @@ export default function SolicitarCuentaVerificada() {
                       )}
                     />
 
+                    <FormField
+                      name="pin"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>PIN de Seguridad *</FormLabel>
+                          <FormControl>
+                            <div className="flex justify-center">
+                              <InputOTP
+                                maxLength={CANT_MIN_CARACTERES_PIN}
+                                value={field.value}
+                                onChange={(val) => {
+                                  let valAsignar = val
+                                  if( typeof valAsignar === "string") {
+                                    valAsignar = valAsignar.toLowerCase();
+                                  }
+                                  field.onChange(valAsignar);
+                                  
+                                }}
+                                disabled={form.formState.isSubmitting}
+                                className="gap-3"
+                              >
+                                <InputOTPGroup className="gap-3">
+                                  {Array.from({ length: CANT_MIN_CARACTERES_PIN }, (_, index) => (
+                                    <InputOTPSlot 
+                                      key={index} 
+                                      index={index} 
+                                      className="w-12 h-12 text-lg font-semibold border-2 rounded-lg"
+                                    />
+                                  ))}
+                                </InputOTPGroup>
+                              </InputOTP>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                          <p className="text-xs text-gray-500 mt-1 text-center">
+                            Ingresa {CANT_MIN_CARACTERES_PIN} caracteres (letras y números)
+                          </p>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      name="confirmPin"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirmar PIN *</FormLabel>
+                          <FormControl>
+                            <div className="flex justify-center">
+                              <InputOTP
+                                maxLength={CANT_MIN_CARACTERES_PIN}
+                                value={field.value}
+                                onChange={(val) => {
+                                  let valAsignar = val
+                                  if( typeof valAsignar === "string") {
+                                    valAsignar = valAsignar.toLowerCase();
+                                  }
+                                  field.onChange(valAsignar);
+                                  
+                                }}
+                                disabled={form.formState.isSubmitting}
+                                className="gap-3"
+                              >
+                                <InputOTPGroup className="gap-3">
+                                  {Array.from({ length: CANT_MIN_CARACTERES_PIN }, (_, index) => (
+                                    <InputOTPSlot 
+                                      key={index} 
+                                      index={index} 
+                                      className="w-12 h-12 text-lg font-semibold border-2 rounded-lg"
+                                    />
+                                  ))}
+                                </InputOTPGroup>
+                              </InputOTP>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                          <p className="text-xs text-gray-500 mt-1 text-center">
+                            Confirma tu PIN de {CANT_MIN_CARACTERES_PIN} caracteres
+                          </p>
+                        </FormItem>
+                      )}
+                    />
+
                     {/* País + teléfono */}
                     <div className="flex flex-col w-full gap-1 md:col-span-2">
                       <FormLabel
@@ -696,7 +796,7 @@ export default function SolicitarCuentaVerificada() {
                       >
                         {form.formState.isSubmitting
                           ? "Enviando..."
-                          : "Enviar Solicitud"}
+                          : "Crear Cuenta"}
                       </Button>
                       <div className="text-center mt-4">
                         <span className="text-sm text-muted-foreground">

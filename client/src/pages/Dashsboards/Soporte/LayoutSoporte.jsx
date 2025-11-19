@@ -7,6 +7,8 @@ import AlertCambioDeRolEmpresa from "@/components/customs/AlertCambioDeRolEmpres
 import { AppSidebarSoporte } from './components/sidebar/app-sidebar';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import LogoCuentaVerificada from '@/components/customs/LogoCuentaVerifaca';
+import Navbar from '@/components/navbars/Navbar';
+import {URL_BASE} from '@/pages/Dashsboards/Soporte/config/route';
 
 export default function LayoutSoporte({children}) {
    const user = useAuthStore((state) => state.user);
@@ -19,10 +21,8 @@ export default function LayoutSoporte({children}) {
         <header className="flex bg-green-500 h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1 text-white hover:bg-blue-600" />
-            <Link to="/soporte">
-              <LogoCuentaVerificada className="text-white" />
-            </Link>
           </div>
+            <Navbar urlBase={`/${URL_BASE}`} />
         </header>
 
         {/* Contenido principal */}

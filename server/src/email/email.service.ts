@@ -58,7 +58,20 @@ export class EmailService {
     });
     return resultCorreo;
   }
-  catch(error) {
-    throw error;
+
+  async sendMail(data:{to:string| string[]; subject:string; html:string; cc?:string|string[]; bcc?:string|string[]}) : Promise<SentMessageInfo> {
+    try {
+      const resultCorreo = await this.mailerService.sendMail({
+        from: `${process.env.EMAIL_ALIAS} <${process.env.EMAIL_USERNAME}>`,
+        to: data.to,
+        subject: data.subject,
+        html: data.html,
+        cc: data.cc,
+        bcc: data.bcc,
+      });
+      return resultCorreo;
+    } catch (error) {
+      throw error;
+    }
   }
 }
