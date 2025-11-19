@@ -22,11 +22,10 @@ export default defineConfig(({ mode }) => ({
         type: "module", // 👈 IMPORTANTE para poder usar import en el SW en dev
       },
 
-      // Configuración para evitar conflictos con Firebase
+      // Configuración para injectManifest
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        // Asegurar que Firebase puede acceder al SW
-        navigateFallback: null
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 // 5MB
       },
 
       workbox: {

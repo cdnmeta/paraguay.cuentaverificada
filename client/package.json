@@ -54,6 +54,8 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
     "tesseract.js": "^6.0.1",
+    "workbox-precaching": "^7.3.0",
+    "workbox-routing": "^7.3.0",
     "zod": "^3.25.76",
     "zustand": "^5.0.6"
   },
