@@ -27,6 +27,8 @@ import { routes as RecordatoriosUsuariosRoutes } from "@/pages/recordatoriosUsua
 import { routes as FavoritosRoutes } from "@/pages/Favoritos/config/routes";
 import { routes as SoporteAyudaRoutes } from "@/pages/SoporteAyuda/config/routes";
 import {routes as WalletRoutes} from '@/pages/Wallet/config/routes'
+import {routes as SuscripcionesRoutes} from '@/pages/Suscripciones/config/routes'
+
 
 const emociones = [
   { emoji: "😄", label: "Entusiasmado", id:1 },
@@ -104,54 +106,55 @@ export default function DashBoardUsarioProtegido() {
 
   const secciones = [
     {
-      icon: "/icons/iconos-svg/cuenta.svg",
+      icon: "/icons/cuenta.png",
       title: "Cuenta",
       onClick: () => navigate(`${PROTECTED_ROUTES.misDatos}`),
       desc: "Datos - Seguridad - Más",
       habilitado:true,
     },
     {
-      icon: "/icons/1331244-f39d5970.png",
+      icon: "/icons/favorito.png",
       title: "Favoritos",
       desc: "Comercios - Productos - Links",
       onClick: () => navigate(`/${FavoritosRoutes.index}`),
       habilitado:true,
     },
     {
-      icon: "/icons/iconos-svg/publicar.svg",
+      icon: "/icons/publicar.png",
       title: "Publicar",
       desc: "Expresa lo que deseas comprar",
       habilitado:true,
     },
     {
-      icon: "/icons/iconos-svg/semaforo.svg",
+      icon: "/icons/semaforo.png",
       title: "Semáforo Financiero",
       onClick: () => navigate(`/semaforo-financiero`),
       desc: "No permitas que tus finanzas lleguen al rojo",
       habilitado:true
     },
     {
-      icon: "/icons/80957-74a5697e.png",
+      icon: "/icons/donde-guarde.png",
       title: "¿Dónde lo guardé?",
       onClick: () => navigate(`/${RecordatoriosUsuariosRoutes.index}`),
       desc: "Que no se te olvide nada",
       habilitado:true
     },
     {
-      icon: "/icons/iconos-svg/wallet.svg",
+      icon: "/icons/wallet.png",
       title: "Wallet",
       desc: "Depósitos - Pagos - Ganancias",
       onClick: () => navigate(`/${WalletRoutes.index}`),
       habilitado: () => user?.vfd === true,
     },
     {
-      icon: "/icons/iconos-svg/suscripcion.svg",
+      icon: "/icons/suscripcion.png",
       title: "Suscripciones",
       desc: "Planes - Facturas - Historial",
+      onClick: () => navigate(`/${SuscripcionesRoutes.MIS_SUSCRIPCIONES}`),
       habilitado:true,
     },
     {
-      icon: "/icons/709049.png",
+      icon: "/icons/soporte.png",
       title: "Soporte y Ayuda",
       desc: "Autoayuda + asistencia personalizada",
       habilitado:true,
@@ -362,6 +365,7 @@ export default function DashBoardUsarioProtegido() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
     </div>
   );
 }

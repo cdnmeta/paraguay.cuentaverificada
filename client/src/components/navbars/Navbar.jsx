@@ -37,6 +37,18 @@ const IconoCampana = (props) => {
   return <img src="/icons/iconoBell.png" alt="Campana" className={cn("w-auto h-8",props?.className)} {...props} />
 }
 
+const IconoMarketplace = (props) => {
+  return <img src="/icons/market.png" alt="MarketPlace" className={cn("w-auto h-8",props?.className)} {...props} />
+}
+
+const IconoCambioRol = (props) => {
+  return <img src="/icons/cambio-rol.png" alt="Cambiar Rol" className={cn("w-auto h-8",props?.className)} {...props} />
+}
+
+const IconoCerrarSesion = (props) => {
+  return <img src="/icons/logout.png" alt="Cerrar Sesión" className={cn("w-auto h-8",props?.className)} {...props} />
+}
+
 export default function Navbar({ urlBase = "/panel" }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,6 +58,9 @@ export default function Navbar({ urlBase = "/panel" }) {
   const setOpenDialogGruposEmpresa = useGruposEmpresaStore(
     (state) => state.setOpenDialogGruposEmpresa
   );
+  const getGrupoSeleccionado = useGruposEmpresaStore(
+    (state) => state.getGrupoSeleccionado
+  );
 
   const handleLogout = () => {
     logout();
@@ -54,11 +69,11 @@ export default function Navbar({ urlBase = "/panel" }) {
 
   // ===== Menú superior (nav) =====
   const NAV_ITEMS = [
-    { key: "market", label: "MarketPlace", to: "/marketplace", icon: Store },
+    { key: "market", label: "MarketPlace", to: "/marketplace", icon: IconoMarketplace },
     {
       key: "role",
       label: "Cambiar Rol",
-      icon: RefreshCw,
+      icon: IconoCambioRol,
       onClick: () => {
         setOpenDialogGruposEmpresa(true);
       },
@@ -68,6 +83,13 @@ export default function Navbar({ urlBase = "/panel" }) {
       label: "Centro de Mensajes",
       to: UrlBaseCentroMensajes,
       icon: IconoCampana ,
+    },
+    {
+      key:"logout",
+      label: "Cerrar Sesión",
+      to: UrlBaseCentroMensajes,
+      icon: IconoCerrarSesion ,
+      onClick: handleLogout,
     }
   ];
   useEffect(() => {
@@ -80,7 +102,7 @@ export default function Navbar({ urlBase = "/panel" }) {
 
   // ===== Menú de usuario (dropdown) =====
   const USER_MENU_ITEMS = [
-    { key: "perfil", label: "Perfil", to: PROTECTED_ROUTES.perfil, icon: User },
+    { key: "perfil", label: "Perfil", to: PROTECTED_ROUTES.misDatos, icon: User },
     {
       key: "role",
       label: "Cambiar Rol",
@@ -109,10 +131,12 @@ export default function Navbar({ urlBase = "/panel" }) {
       <Link to={`${urlBase}`} className="flex items-center space-x-3">
         <LogoCuentaVerificada className={cn(
           'w-auto transition-all duration-300',
-          // Responsive heights
-          'h-auto xs:h-7 sm:h-9 md:h-10 lg:h-11',
-          // Max width to prevent overflow
-          'max-w-auto xs:max-w-[140px] sm:max-w-[160px] md:max-w-[180px] lg:max-w-[200px]'
+          // Responsive heights - más grande en escritorio, compacto en móvil
+          'h-8 xs:h-9 sm:h-10 md:h-12 lg:h-14 xl:h-16',
+          // Max width responsive - evita overflow en pantallas pequeñas
+          'max-w-[180px] xs:max-w-[140px] sm:max-w-[160px] md:max-w-[200px] lg:max-w-[240px] xl:max-w-[280px]',
+          // Asegura que mantenga proporciones
+          'object-contain'
         )} />
       </Link>
 
@@ -134,11 +158,13 @@ export default function Navbar({ urlBase = "/panel" }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
-            <div className="flex flex-col space-y-1 p-2">
-              <p className="text-sm font-medium leading-none">{user?.nombre}</p>
-              <p className="text-xs leading-none text-muted-foreground">
-                {user?.email}
-              </p>
+            <div className="grid flex-1 text-left text-sm px-2">
+              <span className="truncate font-medium">
+                {user?.nombre || user?.apellido || "Super Admin"}
+              </span>
+              <span className="truncate text-xs text-orange-600">
+               {getGrupoSeleccionado()?.descripcion || "Rol no asignado"}
+              </span>
             </div>
             <DropdownMenuSeparator />
             {USER_MENU_ITEMS.map((item) => {

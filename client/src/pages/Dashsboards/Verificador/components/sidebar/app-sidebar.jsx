@@ -57,9 +57,6 @@ export function AppSidebarVerificador({ ...props }) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <NavVerificador user={user} />
-      </SidebarHeader>
       <SidebarContent>
         <NavMainSuperAdmin items={superAdminData.navigation} />
         <NavSimple items={superAdminData.quickAccess} />

@@ -85,9 +85,6 @@ export function AppSidebar({
   });
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-         <NavUser user={user} />
-      </SidebarHeader>
       <SidebarContent>
         <NavUserProtegido projects={filteredProjects} />
       </SidebarContent>
