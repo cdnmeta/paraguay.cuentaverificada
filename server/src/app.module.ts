@@ -31,6 +31,7 @@ import { WalletModule } from './wallet/wallet.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificacionesModule } from './notificaciones/notificaciones.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { SuscripcionesModule } from './suscripciones/suscripciones.module';
 
 
 @Module({
@@ -62,6 +63,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     TicketsModule,
     WalletModule,
     NotificacionesModule,
+    SuscripcionesModule,
   ],
   providers: [
     {

@@ -15,7 +15,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
-import recordatoriosAPI from "../services/recordatoriosAPI";
+import recordatoriosAPI from "@/apis/recordatorios.api";
 import ImagenesRecordatorioModal from "../components/ImagenesRecordatorioModal";
 import "react-photo-view/dist/react-photo-view.css";
 import { cargarURL, executeWithErrorHandler } from "@/utils/funciones";
@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-const RecordatoriosPage = () => {
+const DondeLoGuarde = () => {
   const [recordatorios, setRecordatorios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [ejecutadoAccion, setEjecutadoAccion] = useState(false);
@@ -49,11 +49,11 @@ const RecordatoriosPage = () => {
   const cargarRecordatorios = async () => {
     try {
       setLoading(true);
-      const data = await recordatoriosAPI.obtenerMisRecordatorios();
-      setRecordatorios(data || []);
+      const response = await recordatoriosAPI.obtenerMisRecordatorios({tipo_recordatorio:1});
+      setRecordatorios(response.data || []);
 
       // Cargar URLs de Firebase para todas las imágenes
-      await cargarTodasLasImagenes(data || []);
+      await cargarTodasLasImagenes(response.data || []);
     } catch (error) {
       console.error("Error cargando recordatorios:", error);
       toast.error("Error al cargar los recordatorios");
@@ -428,4 +428,4 @@ const RecordatoriosPage = () => {
   );
 };
 
-export default RecordatoriosPage;
+export default DondeLoGuarde;

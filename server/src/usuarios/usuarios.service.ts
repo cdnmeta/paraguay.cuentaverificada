@@ -545,14 +545,14 @@ export class UsuariosService {
         throw new NotFoundException('Usuario no encontrado');
       }
 
-      if (dto.documento || dto.correo) {
+      if (dto.documento || dto.correo || dto.telefono) {
         // Verificar que el email y documento no estén siendo usados por otro usuario
         const conflictoUsuario = await this.prismaService.usuarios.findFirst({
           where: {
             AND: [
               { id: { not: id } }, // Excluir el usuario actual
               {
-                OR: [{ email: dto.correo }, { documento: dto.documento }],
+                OR: [{ email: dto.correo }, { documento: dto.documento }, { telefono: dto.telefono }],
               },
             ],
           },
@@ -560,7 +560,7 @@ export class UsuariosService {
 
         if (conflictoUsuario) {
           throw new BadRequestException(
-            'El correo o documento ya están siendo usados por otro usuario',
+            'El correo, documento o teléfono ya están siendo usados por otro usuario',
           );
         }
       }

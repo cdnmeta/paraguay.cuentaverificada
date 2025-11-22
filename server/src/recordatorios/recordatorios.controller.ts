@@ -13,6 +13,7 @@ import {
   Res,
   Req,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
@@ -31,6 +32,7 @@ import { Auth } from 'firebase-admin/lib/auth/auth';
 import { AuthenticatedRequest } from '@/auth/types/AuthenticatedRequest';
 import { plainToInstance } from 'class-transformer';
 import { ResponseRecordatorioDto } from './dto/response-recordatorio.dto';
+import { QueryMisRecordatoriosDto } from './dto/query-recordatorios.dto';
 
 @Controller('recordatorios')
 export class RecordatoriosController {
@@ -128,23 +130,27 @@ export class RecordatoriosController {
   @Get('mis-recordatorios')
   async obtenerMisRecordatorios(
     @Req() req: AuthenticatedRequest,
+    @Query() query: QueryMisRecordatoriosDto,
   ) {
     try {
       const id_usuario = req.user.userId;
-      const recordatorio = await this.recordatoriosService.obtenerRecordatoriosPorUsuario(id_usuario);
-      const recordatorioResponse = plainToInstance(ResponseRecordatorioDto, recordatorio, { excludeExtraneousValues: true });
-      return recordatorioResponse;
+      const recordatorio = await this.recordatoriosService.obtenerRecordatoriosPorUsuario(id_usuario, query);
+      return recordatorio;
     } catch (error) {
       throw error;
     }
   }
 
-  @Get('usuario/:idUsuario')
-  async obtenerRecordatoriosPorUsuario(
-    @Param('idUsuario', ParseIntPipe) idUsuario: number,
+  @Get('mis-recordatorios/hoy')
+  async obtenerMisRecordatoriosProximos(
+    @Req() req: AuthenticatedRequest,
   ) {
-    // Este endpoint podría ser para administradores que pueden ver recordatorios de otros usuarios
-    return this.recordatoriosService.obtenerRecordatoriosPorUsuario(idUsuario);
+    try {
+      const id_usuario = req.user.userId;
+    return this.recordatoriosService.getRecordatoriosHoyPorUsuario(id_usuario);
+    } catch (error) {
+      throw error;
+    }
   }
 
   @Get(':id')

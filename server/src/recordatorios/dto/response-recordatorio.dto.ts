@@ -24,4 +24,7 @@ export class ResponseRecordatorioDto {
 
     @Expose()
     fecha_actualizacion: Date;
+
+    @Expose()
+    fecha_recordatorio: Date;
 }

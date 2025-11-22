@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsBoolean, IsArray, isNotEmpty, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean, IsArray, isNotEmpty, IsNotEmpty, IsDateString } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 // DTO para el payload del cliente (sin id_usuario)
@@ -13,10 +13,19 @@ export class CreateRecordatorioPayloadDto {
   @IsOptional()
   descripcion?: string;
 
-  @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @IsOptional()
   id_estado?: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  tipo_recordatorio?: number;
+
+  @IsDateString()
+  @IsOptional()
+  fecha_recordatorio?: string;
 }
 
 // DTO interno con id_usuario inyectado desde el token
@@ -39,6 +48,15 @@ export class UpdateRecordatorioPayloadDto {
   @Type(() => Number)
   @IsNumber()
   id_estado?: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  tipo_recordatorio?: number;
+
+  @IsDateString()
+  @IsOptional()
+  fecha_recordatorio?: string;
 }
 
 export class UpdateRecordatorioDto extends UpdateRecordatorioPayloadDto {
@@ -56,6 +74,10 @@ export class UpdateEstadoPayloadDto {
   @IsNumber()
   @IsNotEmpty()
   id_estado: number;
+
+  @IsString()
+  @IsOptional()
+  observacion?: string;
 }
 
 export class UpdateEstadoDto extends UpdateEstadoPayloadDto {
