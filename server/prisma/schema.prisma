@@ -438,11 +438,14 @@ model recordatorios {
   titulo              String?   @db.Text
   descripcion         String?   @db.Text
   url_imagen          String[]  @db.Text
-  id_estado           Int       @default(1)
+  id_estado           Int       @default(1) // 1= pendiente 2= completado 3= archivado
+  tipo_recordatorio   Int       @default(1)  // 1= donde lo guarde 2= recordatorio 
   activo              Boolean   @default(true)
+  observacion         String?    @db.Text
   id_usuario          Int
   fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
   fecha_actualizacion DateTime? @db.Timestamptz(6)
+  fecha_recordatorio  DateTime? @db.Timestamptz(6)
   usuarios            usuarios  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_recordatorios")
 }
 

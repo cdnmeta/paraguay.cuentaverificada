@@ -55,6 +55,7 @@ import { useFirebaseMessaging } from "./hooks/useFirebaseMessaging";
 import { suscribirNotificaciones } from "./apis/notificaciones.api";
 import CentroMensajesRoutes from "./pages/CentroMensajes/centroMensajes.routes";
 import SuscripcionesRoutes from "./pages/Suscripciones/suscripciones.route";
+import RecordatoriosRoutes from '@/pages/Recordatorios/recordatorios.route';
 
 export default function App() {
   const { isHydrated, user } = useAuthStore();
@@ -140,6 +141,8 @@ export default function App() {
           {CentroMensajesRoutes()}
 
           {SuscripcionesRoutes()}
+
+          {RecordatoriosRoutes()}
         </Route>
       </Route>
 
