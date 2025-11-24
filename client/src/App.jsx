@@ -42,8 +42,6 @@ import {
 } from "./pages/recovery";
 import SemaforoFinancieroPage from "./pages/SemaforoFinanciero/pages/SemaforoFinancieroPage";
 import SemaforoFinancieroRoutes from "./pages/SemaforoFinanciero";
-import { PlanesPage } from "./pages/Planes";
-import { PlanesRoutes } from "./pages/Planes/config/routes";
 import { ComercioRoutes } from "./pages/Comercio/comercio.routes";
 import FavoritosRoutes from "./pages/Favoritos/favoritos.routes";
 import SoporteAyudaRoute from "./pages/SoporteAyuda/soporteAyuda.route";

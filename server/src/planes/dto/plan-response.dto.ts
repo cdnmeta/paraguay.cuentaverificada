@@ -16,3 +16,15 @@ export class PlanResponseDto {
   @Expose()
   descripcion: string;
 }
+
+export class PlanesResponseAdminDto extends PlanResponseDto {
+  @Expose()
+    activo: boolean;
+  @Expose()
+    fecha_creacion: Date
+  @Expose()
+    fecha_actualizacion: Date
+  @Expose()
+    nombre_usuario_creacion: string
+    
+}

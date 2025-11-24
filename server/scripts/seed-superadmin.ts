@@ -80,6 +80,8 @@ async function main() {
             password: encryptedPassword,
             is_super_admin: true,
             activo: true,
+            verificado: true,
+            estado:4 // Verificado
           },
         });
       });
