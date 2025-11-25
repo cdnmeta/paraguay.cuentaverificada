@@ -1,52 +1,105 @@
-import { auth, storage } from "@/firebaseConfig";
-import { getAuth, signOut } from "firebase/auth";
+import { storage } from "@/firebaseConfig";
 import { useAuthStore } from "@/hooks/useAuthStorge";
 import { getDownloadURL, ref } from "firebase/storage";
 import { TOKEN_CACHE_DURATION } from "./constants";
 import { toast } from "sonner";
+import { refreshTokenJwt } from "@/apis/auth.api";
 
-export const getIdToken = async (forzarRefresh = false) => {
+// Flag para prevenir múltiples refreshes simultáneos
+let isRefreshingToken = false;
+let pendingTokenPromise = null;
+
+export const getIdToken = async () => {
   try {
-    const user = auth.currentUser;
-  if (!user) return null;
-  if(forzarRefresh){
-    return await user?.getIdToken(true);
-  }
+    let tokenJwt = useAuthStore.getState().tokenJwtUser;
+    
+    // Si no hay token, retornar null
+    if (!tokenJwt) {
+      return null;
+    }
 
-  // 🔄 Esto devuelve un idToken nuevo si está cerca de expirar
-  return await user?.getIdToken();
+    // decode token to check expiration
+    const payload = JSON.parse(atob(tokenJwt.split(".")[1]));
+    const exp = payload.exp;
+    const now = Math.floor(Date.now() / 1000);
+    const tokenExpirado = exp <= now;
+
+    // Si el token ya expiró, no intentar refrescarlo desde aquí
+    // Dejar que el interceptor de Axios maneje la renovación
+    if (tokenExpirado) {
+      console.log("Token expirado, será manejado por el interceptor");
+      return tokenJwt; // Retornar el token expirado para que el interceptor lo detecte
+    }
+
+    // Si expira en 5 minutos o menos y no está expirado, refrescar preventivamente
+    if (exp - now <= (60 * 5)) {
+      // Prevenir múltiples refreshes simultáneos
+      if (isRefreshingToken) {
+        // Si ya se está refrescando, esperar a que termine
+        if (pendingTokenPromise) {
+          await pendingTokenPromise;
+          return useAuthStore.getState().tokenJwtUser;
+        }
+        return tokenJwt;
+      }
+
+      isRefreshingToken = true;
+      console.log("Token cerca de expirar, refrescando preventivamente");
+      
+      try {
+        // Crear una promesa para que otros calls puedan esperarla
+        pendingTokenPromise = refreshTokenJwt();
+        const refresh = await pendingTokenPromise;
+        const { token } = refresh.data;
+        
+        useAuthStore.getState().setTokenJwtUser(token);
+        tokenJwt = token;
+        
+        console.log("Token refrescado preventivamente");
+      } catch (refreshError) {
+        console.error("Error al refrescar token preventivamente:", refreshError);
+        // En caso de error, retornar el token actual
+      } finally {
+        isRefreshingToken = false;
+        pendingTokenPromise = null;
+      }
+    }
+
+    return tokenJwt;
   } catch (error) {
     console.error("Error al obtener el idToken:", error);
+    return null;
   }
-};
-
-export const logout = async () => {
-  const auth = getAuth();
-  await signOut(auth);
-  // Aquí podrías agregar lógica adicional para limpiar el estado de la aplicación
 };
 
 export const checkAuthOnStart = async () => {
-  return new Promise((resolve) => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+  const token = useAuthStore.getState().tokenJwtUser;
+  if (token) {
+    try {
+      await useAuthStore.getState().fetchUser();
+    } catch (err) {
+      console.error("❌ Error verificando sesión:", err);
+      useAuthStore.getState().logout();
+    }
+  } else {
+    try {
+      console.log("🔄 No hay token, intentando refresh desde cookie...");
+      const response = await refreshTokenJwt();
+      const newToken = response.data.token;
       
-      if (user) {
-        console.log("Usuario autenticado:", user)
-        try {
-          await useAuthStore.getState().fetchUser(); // obtiene info desde backend
-        } catch (err) {
-          console.error("❌ Error verificando sesión:", err);
-          useAuthStore.getState().logout();
-        }
-      } else {
-        useAuthStore.getState().logout();
-      }
-
-      useAuthStore.getState().setHydrated(); // marcar hidratado
-      unsubscribe();
-      resolve();
-    });
-  });
+      // ✅ Guardar el nuevo token
+      useAuthStore.getState().setTokenJwtUser(newToken);
+      
+      // ✅ IMPORTANTE: Después del refresh, obtener los datos del usuario
+      await useAuthStore.getState().fetchUser();
+      
+      console.log("✅ Sesión restaurada exitosamente");
+    } catch (error) {
+      console.error("❌ Error en refresh token:", error);
+      useAuthStore.getState().logout();
+    }
+  }
+  useAuthStore.getState().setHydrated();
 };
 
 /**

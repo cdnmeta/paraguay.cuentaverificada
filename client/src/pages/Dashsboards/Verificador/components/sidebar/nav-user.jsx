@@ -49,6 +49,9 @@ export function NavVerificador({
       (state) => state.setOpenDialogGruposEmpresa
     );
   
+  const getGrupoSeleccionado = useGruposEmpresaStore(
+    (state) => state.getGrupoSeleccionado
+  );
 
   const renderUserItem = (item) => {
     if (item.type === "separator") {
@@ -121,7 +124,7 @@ export function NavVerificador({
                   {user?.nombre || user?.apellido || 'Super Admin'}
                 </span>
                 <span className="truncate text-xs text-orange-600 font-medium">
-                  Super Administrador
+                  {getGrupoSeleccionado()?.descripcion}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />

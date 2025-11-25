@@ -46,9 +46,6 @@ export function AppSidebarParticipantes({ ...props }) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <NavUserDepartamentoLegal user={user} />
-      </SidebarHeader>
       <SidebarContent>
         <NavMain items={superAdminData.navigation} />
       </SidebarContent>

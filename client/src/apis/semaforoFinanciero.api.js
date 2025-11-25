@@ -1,23 +1,17 @@
-import { URL_BASE_BACKEND_API } from "@/utils/constants";
-import { getIdToken } from "@/utils/funciones";
-import axios from "axios";
+
+import api from "@/apis/axiosBase";
 
 const URL_ENDPOINT = "semaforo-financiero";
-
-// Crear una instancia de Axios
-const api = axios.create({
-  baseURL: `${URL_BASE_BACKEND_API}/${URL_ENDPOINT}`,
-});
 
 /**
  * Obtener el resumen del semáforo financiero del usuario
  * @returns {Promise} - Promesa con los datos del semáforo financiero agrupados por moneda
  */
 export const obtenerSemaforoFinanciero = async (params) => {
-  return await api.get(``, {
-    headers: {
-      'Authorization': `Bearer ${await getIdToken()}`
-    },
+  
+  return await api.get(`/${URL_ENDPOINT}`, {
+    
+    withCredentials: true,
     params
   });
 };
@@ -33,10 +27,10 @@ export const obtenerSemaforoFinanciero = async (params) => {
  * @returns {Promise} - Promesa con los movimientos filtrados
  */
 export const obtenerMovimientosFiltrados = async (filtros = {}) => {
-  return await api.get(`/movimientos`, {
-    headers: {
-      'Authorization': `Bearer ${await getIdToken()}`
-    },
+  
+  return await api.get(`/${URL_ENDPOINT}/movimientos`, {
+    
+    withCredentials: true,
     params: filtros
   });
 };
@@ -54,11 +48,13 @@ export const obtenerMovimientosFiltrados = async (filtros = {}) => {
  * @returns {Promise} - Promesa con el movimiento creado
  */
 export const crearMovimientoSemaforo = async (data) => {
-  return await api.post(``, data, {
+  
+  return await api.post(`/${URL_ENDPOINT}`, data, {
     headers: {
-      'Authorization': `Bearer ${await getIdToken()}`,
+      
       'Content-Type': 'application/json'
     },
+    withCredentials: true
   });
 };
 
@@ -69,11 +65,13 @@ export const crearMovimientoSemaforo = async (data) => {
  * @returns {Promise} - Promesa con el movimiento actualizado
  */
 export const actualizarMovimientoSemaforo = async (id, data) => {
-  return await api.put(`/${id}`, data, {
+  
+  return await api.put(`/${URL_ENDPOINT}/${id}`, data, {
     headers: {
-      'Authorization': `Bearer ${await getIdToken()}`,
+      
       'Content-Type': 'application/json'
     },
+    withCredentials: true
   });
 };
 
@@ -86,27 +84,27 @@ export const actualizarMovimientoSemaforo = async (id, data) => {
  * @returns {Promise} - Promesa con las estadísticas
  */
 export const obtenerEstadisticas = async (filtros = {}) => {
-  return await api.get(`/estadisticas`, {
-    headers: {
-      'Authorization': `Bearer ${await getIdToken()}`
-    },
+  
+  return await api.get(`/${URL_ENDPOINT}/estadisticas`, {
+    
+    withCredentials: true,
     params: filtros
   });
 };
 
 export const eliminarMovimientoSemaforo = async (id) => {
-  return await api.delete(`/${id}`, {
-    headers: {
-      'Authorization': `Bearer ${await getIdToken()}`
-    },
+  
+  return await api.delete(`/${URL_ENDPOINT}/${id}`, {
+    
+    withCredentials: true
   });
 };
 
 export const obtenerMovimientoSemaforo = async (id) => {
-  return await api.get(`/${id}`, {
-    headers: {
-      'Authorization': `Bearer ${await getIdToken()}`
-    },
+  
+  return await api.get(`/${URL_ENDPOINT}/${id}`, {
+    
+    withCredentials: true
   });
 };
 
@@ -120,11 +118,13 @@ export const obtenerMovimientoSemaforo = async (id) => {
  * @returns {Promise} - Promesa con el abono creado
  */
 export const registrarAbonoMovimiento = async (abonoData) => {
-  return await api.post(`/abonos`, abonoData, {
+  
+  return await api.post(`/${URL_ENDPOINT}/abonos`, abonoData, {
     headers: {
-      'Authorization': `Bearer ${await getIdToken()}`,
+      
       'Content-Type': 'application/json'
     },
+    withCredentials: true
   });
 };
 
@@ -134,10 +134,10 @@ export const registrarAbonoMovimiento = async (abonoData) => {
  * @returns {Promise} - Promesa con la lista de abonos
  */
 export const obtenerAbonosMovimiento = async (idMovimiento) => {
-  return await api.get(`/abonos/${idMovimiento}`, {
-    headers: {
-      'Authorization': `Bearer ${await getIdToken()}`
-    },
+  
+  return await api.get(`/${URL_ENDPOINT}/abonos/${idMovimiento}`, {
+    
+    withCredentials: true
   });
 };
 
@@ -147,9 +147,9 @@ export const obtenerAbonosMovimiento = async (idMovimiento) => {
  * @returns {Promise} - Promesa con la respuesta del servidor
  */
 export const eliminarAbono = async (idAbono) => {
-  return await api.delete(`/abonos/${idAbono}`, {
-    headers: {
-      'Authorization': `Bearer ${await getIdToken()}`
-    },
+  
+  return await api.delete(`/${URL_ENDPOINT}/abonos/${idAbono}`, {
+    
+    withCredentials: true
   });
 };

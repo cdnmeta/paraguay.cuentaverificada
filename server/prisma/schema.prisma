@@ -66,20 +66,37 @@ model cotizacion_empresa {
 }
 
 model empresa_config {
-  id                   Int       @id @default(autoincrement())
-  razon_social         String
-  ruc                  String
-  telefono             String?
-  direccion            String?
-  email                String?
-  fecha_creacion       DateTime? @default(now()) @db.Timestamptz(6)
-  fecha_actualizacion  DateTime? @db.Timestamptz(6)
-  nuv_inicio           Int?
-  nuv_actual           Int?
+  id                  Int       @id @default(autoincrement())
+  razon_social        String
+  ruc                 String
+  telefono            String?
+  direccion           String?
+  email               String?
+  fecha_creacion      DateTime? @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  nuv_inicio          Int?
+  nuv_actual          Int?
   nuv_fin             Int?
-  activo               Boolean?  @default(true)
-  id_moneda_base       Int
+  activo              Boolean?  @default(true)
+
+  id_moneda_base       Int?
+  id_moneda_planes     Int?
+  id_moneda_wallet     Int?
+  id_pais_deploy       Int?
   id_plan_verificacion Int
+}
+
+// Tabla de paises
+
+model paises {
+  id                  Int       @id @default(autoincrement())
+  nombre              String
+  codigo_iso_2        String?
+  codigo_iso_3        String?
+  dial_code           String?
+  fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  activo              Boolean   @default(true)
 }
 
 model estados_comercios {
@@ -135,7 +152,7 @@ model grupos {
 model monedas {
   id                                                               Int                           @id @default(autoincrement())
   nombre                                                           String
-  simbolo                                                          String? 
+  simbolo                                                          String?
   sigla_iso                                                        String?
   fecha_creacion                                                   DateTime?                     @default(now()) @db.Timestamptz(6)
   fecha_actualizacion                                              DateTime?                     @db.Timestamptz(6)
@@ -145,33 +162,33 @@ model monedas {
   factura_suscripciones                                            factura_suscripciones[]
   pagos_factura_suscripciones                                      pagos_factura_suscripciones[]
   semaforo_movimientos                                             semaforo_movimientos[]
+  wallet                                                           wallet[]
 }
 
-
 model usuarios_solicitudes_cuenta {
-  id             Int       @id @default(autoincrement())
-  nombre         String
-  apellido       String
-  documento      String
-  correo         String
-  telefono       String
-  codigo_pais    String?
-  dial_code      String?
-  cedula_frontal String?
-  cedula_reverso String?
-  selfie         String?
-  id_estado      Int     @default(1) // 1= pendiente verificar cod 2= pendiente Aprobacion 3= verificado 4= rechazado 5= Codigo Verificado
-  observacion     String?
-  fecha_creacion  DateTime  @default(now()) @db.Timestamptz()
-  fecha_actualizacion DateTime? @db.Timestamptz()
-  fecha_anulacion DateTime? @db.Timestamptz()
-  activo         Boolean   @default(true)
-  codigo_verificacion String?
-  id_verificador  Int?
+  id                       Int       @id @default(autoincrement())
+  nombre                   String
+  apellido                 String
+  documento                String
+  correo                   String
+  telefono                 String
+  codigo_pais              String?
+  dial_code                String?
+  cedula_frontal           String?
+  cedula_reverso           String?
+  selfie                   String?
+  id_estado                Int       @default(1) // 1= pendiente verificar cod 2= pendiente Aprobacion 3= verificado 4= rechazado 5= Codigo Verificado
+  observacion              String?
+  fecha_creacion           DateTime  @default(now()) @db.Timestamptz()
+  fecha_actualizacion      DateTime? @db.Timestamptz()
+  fecha_anulacion          DateTime? @db.Timestamptz()
+  activo                   Boolean   @default(true)
+  codigo_verificacion      String?
+  id_verificador           Int?
   id_usuario_actualizacion Int?
-  id_usuario_anulacion Int?
-  ip_origen     String?
-  dispositivo_origen   String?
+  id_usuario_anulacion     Int?
+  ip_origen                String?
+  dispositivo_origen       String?
 }
 
 model pagos_factura_suscripciones {
@@ -235,7 +252,7 @@ model suscripciones {
   fecha_vencimiento     DateTime?               @db.Timestamptz(6)
   id_plan               Int
   id_vendedor           Int?
-  estado                Int?                    @default(1)
+  estado                Int?                    @default(1) // 1= pendiente 2= activa
   activo                Boolean?                @default(true)
   fecha_creacion        DateTime?               @default(now()) @db.Timestamptz(6)
   fecha_eliminacion     DateTime?               @db.Timestamptz(6)
@@ -247,74 +264,77 @@ model suscripciones {
   usuarios              usuarios?               @relation(fields: [id_vendedor], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-
 model usuario_tokens {
-  id         Int      @id @default(autoincrement())
-  id_usuario Int
-  token_hash      String
-  fecha_creacion DateTime @default(now()) @db.Timestamptz()
-  fecha_vencimiento DateTime? @db.Timestamptz() 
-  tipo_token Int? @default(1) // 1= token validacion, 2=codigo verificacion 
-  activo Boolean? @default(true)
+  id                Int       @id @default(autoincrement())
+  id_usuario        Int
+  token_hash        String
+  fecha_creacion    DateTime  @default(now()) @db.Timestamptz()
+  fecha_vencimiento DateTime? @db.Timestamptz()
+  tipo_token        Int?      @default(1) // 1= token validacion, 2=codigo verificacion 
+  activo            Boolean?  @default(true)
 }
 
 model tokens_usuarios_solicitudes {
-  id         Int      @id @default(autoincrement())
-  token_hash      String
+  id                   Int       @id @default(autoincrement())
+  token_hash           String
   id_usuario_solicitud Int
-  fecha_creacion DateTime @default(now()) @db.Timestamptz()
-  fecha_vencimiento DateTime? @db.Timestamptz() 
-  activo Boolean? @default(true)
+  fecha_creacion       DateTime  @default(now()) @db.Timestamptz()
+  fecha_vencimiento    DateTime? @db.Timestamptz()
+  activo               Boolean?  @default(true)
 }
 
 model usuarios {
-  id                          Int                           @id @default(autoincrement())
-  nombre                      String
-  uid_firebase                String?
-  apellido                    String?
-  documento                   String?
-  email                       String?
-  password                    String?
-  estado                      Int                           @default(1) // 1= pend. activacion, 2= activo, 3= aguardando verificacion,  4= Pendiente Aprovacion, 5= Verificacion Rechazada,
-  activo                      Boolean?                      @default(true)
-  fecha_creacion              DateTime?                     @default(now()) @db.Timestamptz(6)
-  fecha_actualizacion         DateTime?                     @db.Timestamptz(6)
-  is_super_admin              Boolean?                      @default(false)
-  cedula_frente               String?
-  cedula_reverso              String?
-  selfie                      String?
-  fecha_nacimiento            DateTime?                     @db.Date
-  metodo_registro             String?
-  sexo                        Int?
-  pin                         String?
-  codigo_vendedor             String?
-  telefono                    String?
-  direccion                   String?
-  dial_code                   String?
-  porcentaje_comision_primera_venta   Decimal?                      @db.Decimal(10, 2)
-  porcentaje_comision_recurrente      Decimal?                      @db.Decimal(10, 2)
-  saldo                       Decimal?                      @db.Decimal(10, 2) @default(0)
-  id_verificador_asignado     Int?
-  ip_origen                   String?
-  dispositivo_origen          String?
-  verificado                 Boolean?                      @default(false)
-  motivo_rechazo             String?
-  id_usuario_actualizacion     Int?
-  id_usuario_verificacion      Int?
-  id_usuario_eliminacion      Int?
-  fecha_verificacion          DateTime?                     @db.Timestamptz(6)
-  fecha_eliminacion          DateTime?                     @db.Timestamptz(6)
-  comercio                    comercio[]
-  factura_suscripciones       factura_suscripciones[]
-  seguimiento_verificacion    seguimiento_verificacion[]
-  suscripciones               suscripciones[]
-  usuarios_grupos             usuarios_grupos[]
-  pagos_factura_suscripciones pagos_factura_suscripciones[]
-  ganancias_futuras           ganancias_futuras[]
-  recordatorios                recordatorios[]
-  recordatorios_usuarios      direcciones_usuarios[]
-  semaforo_movimientos        semaforo_movimientos[]
-  usuarios_comercios_fav      usuarios_comercios_fav[]
+  id                                Int                           @id @default(autoincrement())
+  nombre                            String
+  uid_firebase                      String?
+  apellido                          String?
+  documento                         String?
+  email                             String?
+  password                          String?
+  estado                            Int                           @default(1) // 1= pend. activacion, 2= activo, 3= aguardando verificacion,  4= Pendiente Aprovacion, 5= Verificacion Rechazada,
+  activo                            Boolean?                      @default(true)
+  fecha_creacion                    DateTime?                     @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion               DateTime?                     @db.Timestamptz(6)
+  is_super_admin                    Boolean?                      @default(false)
+  cedula_frente                     String?
+  cedula_reverso                    String?
+  selfie                            String?
+  fecha_nacimiento                  DateTime?                     @db.Date
+  metodo_registro                   String?
+  sexo                              Int?
+  pin                               String?
+  codigo_vendedor                   String?
+  telefono                          String?
+  direccion                         String?
+  dial_code                         String?
+  porcentaje_comision_primera_venta Decimal?                      @db.Decimal(10, 2)
+  porcentaje_comision_recurrente    Decimal?                      @db.Decimal(10, 2)
+  saldo                             Decimal?                      @default(0) @db.Decimal(10, 2)
+  id_verificador_asignado           Int?
+  ip_origen                         String?
+  dispositivo_origen                String?
+  verificado                        Boolean?                      @default(false)
+  motivo_rechazo                    String?
+  id_usuario_actualizacion          Int?
+  id_usuario_verificacion           Int?
+  id_usuario_eliminacion            Int?
+  fecha_verificacion                DateTime?                     @db.Timestamptz(6)
+  fecha_eliminacion                 DateTime?                     @db.Timestamptz(6)
+  comercio                          comercio[]
+  factura_suscripciones             factura_suscripciones[]
+  seguimiento_verificacion          seguimiento_verificacion[]
+  suscripciones                     suscripciones[]
+  usuarios_grupos                   usuarios_grupos[]
+  pagos_factura_suscripciones       pagos_factura_suscripciones[]
+  ganancias_futuras                 ganancias_futuras[]
+  recordatorios                     recordatorios[]
+  recordatorios_usuarios            direcciones_usuarios[]
+  semaforo_movimientos              semaforo_movimientos[]
+  usuarios_comercios_fav            usuarios_comercios_fav[]
+  wallet                            wallet[]
+  wallet_movimientos_verificador    wallet_movimientos[]          @relation("WalletMovimientosVerificador")
+  notificaciones_usuarios           notificaciones_usuarios[]
+  usuarios_notificaciones_push      usuarios_notificaciones_push[]
 }
 
 model usuarios_grupos {
@@ -336,226 +356,218 @@ model entidades_bancarias {
 
 // tabla de 
 model participacion_empresa {
-  id                      Int       @id @default(autoincrement())
-  total_participacion    Decimal?  @db.Decimal(10, 2) // total de meta que hay
-  total_vendido          Decimal?  @db.Decimal(10, 2) // total de meta que se vendió
-  saldo_participacion    Decimal?  @db.Decimal(10, 2) // saldo de meta que queda
-  total_participacion_global Decimal?  @db.Decimal(10, 2) // total de meta global
-  ganancia_acumulada    Float?  // ganancia acumulada de la empresa
-  precio_meta            Decimal?  @db.Decimal(10, 6) // precio de la meta
-  nombre_meta            String?
-  
-  porcentaje_participantes_primera_venta Decimal?  @db.Decimal(10, 2)
-  porcentaje_participantes_recurrente Decimal?  @db.Decimal(10, 2)
-  
-  porcentaje_empresa_primera_venta     Decimal?  @db.Decimal(10, 2)
-  porcentaje_empresa_recurrente     Decimal?  @db.Decimal(10, 2)
+  id                         Int      @id @default(autoincrement())
+  total_participacion        Decimal? @db.Decimal(10, 2) // total de meta que hay
+  total_vendido              Decimal? @db.Decimal(10, 2) // total de meta que se vendió
+  saldo_participacion        Decimal? @db.Decimal(10, 2) // saldo de meta que queda
+  total_participacion_global Decimal? @db.Decimal(10, 2) // total de meta global
+  ganancia_acumulada         Float? // ganancia acumulada de la empresa
+  precio_meta                Decimal? @db.Decimal(10, 6) // precio de la meta
+  nombre_meta                String?
 
+  porcentaje_participantes_primera_venta Decimal? @db.Decimal(10, 2)
+  porcentaje_participantes_recurrente    Decimal? @db.Decimal(10, 2)
 
-  porcentaje_vendedores_primera_venta   Decimal?  @db.Decimal(10, 2)
-  porcentaje_vendedores_recurrente   Decimal?  @db.Decimal(10, 2)
+  porcentaje_empresa_primera_venta Decimal? @db.Decimal(10, 2)
+  porcentaje_empresa_recurrente    Decimal? @db.Decimal(10, 2)
 
+  porcentaje_vendedores_primera_venta Decimal? @db.Decimal(10, 2)
+  porcentaje_vendedores_recurrente    Decimal? @db.Decimal(10, 2)
 
-  fecha_creacion         DateTime? @default(now()) @db.Timestamptz(6)
-  fecha_actualizacion    DateTime? @db.Timestamptz(6)
-  id_usuario_creacion    Int?
+  fecha_creacion           DateTime? @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion      DateTime? @db.Timestamptz(6)
+  id_usuario_creacion      Int?
   id_usuario_actualizacion Int?
 }
-
 
 // Participaciones
 
 model compras_participantes {
-  id                      Int       @id @default(autoincrement())
-  id_usuario              Int
+  id                       Int                              @id @default(autoincrement())
+  id_usuario               Int
   id_usuario_creacion      Int?
   id_usuario_actualizacion Int?
-  total_meta               Float?  
-  porcentaje_participacion  Float? 
-  activo                   Boolean?  @default(true)
-  detalles_participacion    compras_detalles_participantes[]
-  fecha_creacion            DateTime? @default(now()) @db.Timestamptz(6)
-  fecha_actualizacion       DateTime? @db.Timestamptz(6)
+  total_meta               Float?
+  porcentaje_participacion Float?
+  activo                   Boolean?                         @default(true)
+  detalles_participacion   compras_detalles_participantes[]
+  fecha_creacion           DateTime?                        @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion      DateTime?                        @db.Timestamptz(6)
 }
 
 model compras_detalles_participantes {
-  id                        Int       @id @default(autoincrement())
-  id_compras_participantes  Int
-  monto_meta                Float
-  total_venta               Float
-  precio                    Float
-  id_moneda                 Int
-  fecha_creacion            DateTime? @default(now()) @db.Timestamptz(6)
-  estado                    Int @default(1) // 1 = comprado , 2=anulado
-  activo                    Boolean?  @default(true)
-  fecha_actualizacion       DateTime? @db.Timestamptz(6)
-  id_usuario_creacion       Int?
-  id_usuario_actualizacion  Int?
-  compras_participantes     compras_participantes @relation(fields: [id_compras_participantes], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_compras_participantes_id_compras_detalles_participantes")
-
+  id                       Int                   @id @default(autoincrement())
+  id_compras_participantes Int
+  monto_meta               Float
+  total_venta              Float
+  precio                   Float
+  id_moneda                Int
+  fecha_creacion           DateTime?             @default(now()) @db.Timestamptz(6)
+  estado                   Int                   @default(1) // 1 = comprado , 2=anulado
+  activo                   Boolean?              @default(true)
+  fecha_actualizacion      DateTime?             @db.Timestamptz(6)
+  id_usuario_creacion      Int?
+  id_usuario_actualizacion Int?
+  compras_participantes    compras_participantes @relation(fields: [id_compras_participantes], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_compras_participantes_id_compras_detalles_participantes")
 }
-
 
 // ganacias futuras
 model ganancias_futuras {
-  id                        Int       @id @default(autoincrement())
-  id_factura                Int?
-  id_usuario                Int?
-  monto                     Float   
-  id_estado                 Int      @default(1) // 1=pendiente, 2=pagado, 3=anulado
-  activo                    Boolean?  @default(true)
-  tipo_participante         Int      // 1=participante, 2=vendedor, 3=empresa
-  fecha_creacion            DateTime? @default(now()) @db.Timestamptz(6)
-  fecha_actualizacion       DateTime? @db.Timestamptz(6)
-  id_usuario_creacion       Int?
-  id_usuario_actualizacion  Int?
-  tipo_ganancia             Int?      // 1=venta plan
-  id_moneda                 Int?
-  observacion               String?
+  id                       Int                    @id @default(autoincrement())
+  id_factura               Int?
+  id_usuario               Int?
+  monto                    Float
+  id_estado                Int                    @default(1) // 1=pendiente, 2=pagado, 3=anulado
+  activo                   Boolean?               @default(true)
+  tipo_participante        Int // 1=participante, 2=vendedor, 3=empresa
+  fecha_creacion           DateTime?              @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion      DateTime?              @db.Timestamptz(6)
+  id_usuario_creacion      Int?
+  id_usuario_actualizacion Int?
+  tipo_ganancia            Int? // 1=venta plan
+  id_moneda                Int?
+  observacion              String?
   facturas                 factura_suscripciones? @relation(fields: [id_factura], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_facturas_id_ganancias_futuras")
-  usuarios                 usuarios? @relation(fields: [id_usuario], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_usuarios_id_ganancias_futuras")
+  usuarios                 usuarios?              @relation(fields: [id_usuario], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_usuarios_id_ganancias_futuras")
 }
 
 // table de donde lo guarde
 
 model recordatorios {
-  id          Int       @id @default(autoincrement())
-  titulo      String?    @db.Text 
-  descripcion String?    @db.Text
-  url_imagen  String[]  @db.Text
-  id_estado   Int       @default(1)
-  activo      Boolean   @default(true)
-  id_usuario  Int  
-  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
+  id                  Int       @id @default(autoincrement())
+  titulo              String?   @db.Text
+  descripcion         String?   @db.Text
+  url_imagen          String[]  @db.Text
+  id_estado           Int       @default(1) // 1= pendiente 2= completado 3= archivado
+  tipo_recordatorio   Int       @default(1)  // 1= donde lo guarde 2= recordatorio 
+  activo              Boolean   @default(true)
+  observacion         String?    @db.Text
+  id_usuario          Int
+  fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
   fecha_actualizacion DateTime? @db.Timestamptz(6)
-  usuarios    usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_recordatorios")
-
+  fecha_recordatorio  DateTime? @db.Timestamptz(6)
+  usuarios            usuarios  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_recordatorios")
 }
-
 
 // tabla de direcciones del usuario
 
 model direcciones_usuarios {
-  id          Int       @id @default(autoincrement())
-  titulo      String    @db.Text 
-  direccion   String    @db.Text
-  url_maps    String    @db.Text
-  referencia  String    @db.Text
-  activo      Boolean   @default(true)
-  id_usuario  Int  
-  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
+  id                  Int       @id @default(autoincrement())
+  titulo              String    @db.Text
+  direccion           String    @db.Text
+  url_maps            String    @db.Text
+  referencia          String    @db.Text
+  activo              Boolean   @default(true)
+  id_usuario          Int
+  fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
   fecha_actualizacion DateTime? @db.Timestamptz(6)
-  usuarios    usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_direcciones_usuarios")
-
+  usuarios            usuarios  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_direcciones_usuarios")
 }
 
 // tabla de semaforo financiero
 model semaforo_movimientos {
-  id                   Int      @id @default(autoincrement())
-  titulo               String
-  tipo_movimiento      Int      // 1 = Ingreso fijo 2= Ingreso Ocacional 3 = Egreso Fijo 4 = Egreso Ocacional 5= Por pagar 6= Por Cobrar
-  id_estado            Int      // 1= Pendiente 2= Pagado 3= Cobrado
-  monto                Float
-  id_moneda            Int
-  observacion          String?
-  fecha_creacion       DateTime @default(now()) @db.Timestamptz(6)
-  fecha_actualizacion  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  visible            Boolean  @default(true)
-  fecha_vencimiento  DateTime? @db.Timestamptz(6)
-  activo              Boolean  @default(true)
-  acumulado           Float?    @default(0)
-  saldo               Float?    @default(0)
-  id_usuario           Int 
-  usuarios            usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_semaforo_movimientos")
-  monedas             monedas  @relation(fields: [id_moneda], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_monedas_id_semaforo_movimientos")
+  id                  Int               @id @default(autoincrement())
+  titulo              String
+  tipo_movimiento     Int // 1 = Ingreso fijo 2= Ingreso Ocacional 3 = Egreso Fijo 4 = Egreso Ocacional 5= Por pagar 6= Por Cobrar
+  id_estado           Int // 1= Pendiente 2= Pagado 3= Cobrado
+  monto               Float
+  id_moneda           Int
+  observacion         String?
+  fecha_creacion      DateTime          @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime          @default(now()) @updatedAt @db.Timestamptz(6)
+  visible             Boolean           @default(true)
+  fecha_vencimiento   DateTime?         @db.Timestamptz(6)
+  activo              Boolean           @default(true)
+  acumulado           Float?            @default(0)
+  saldo               Float?            @default(0)
+  id_usuario          Int
+  usuarios            usuarios          @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_semaforo_movimientos")
+  monedas             monedas           @relation(fields: [id_moneda], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_monedas_id_semaforo_movimientos")
   semaforo_abonos     semaforo_abonos[]
 
   @@map("semaforo_movimientos")
 }
 
 model semaforo_abonos {
-  id                   Int      @id @default(autoincrement())
+  id                     Int                  @id @default(autoincrement())
   id_semaforo_movimiento Int
-  monto_abono          Float
-  tipo_abono           Int      // 1= cobro 2= pago
-  id_moneda            Int?
-  observacion          String?
-  fecha_abono          DateTime @default(now()) @db.Timestamptz(6)
-  fecha_creacion       DateTime @default(now()) @db.Timestamptz(6)
-  fecha_actualizacion  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
-  activo              Boolean  @default(true)
-  semaforo_movimientos semaforo_movimientos @relation(fields: [id_semaforo_movimiento], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_semaforo_movimientos_id_semaforo_abonos")
+  monto_abono            Float
+  tipo_abono             Int // 1= cobro 2= pago
+  id_moneda              Int?
+  observacion            String?
+  fecha_abono            DateTime             @default(now()) @db.Timestamptz(6)
+  fecha_creacion         DateTime             @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion    DateTime             @default(now()) @updatedAt @db.Timestamptz(6)
+  activo                 Boolean              @default(true)
+  semaforo_movimientos   semaforo_movimientos @relation(fields: [id_semaforo_movimiento], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_semaforo_movimientos_id_semaforo_abonos")
 
   @@map("semaforo_abonos")
 }
 
-
 model usuarios_comercios_fav {
-  id          Int       @id @default(autoincrement())
-  id_usuario  Int
-  id_comercio Int
+  id             Int      @id @default(autoincrement())
+  id_usuario     Int
+  id_comercio    Int
   fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
-  usuarios    usuarios  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_usuarios_fav_comercios")
-  comercio    comercio  @relation(fields: [id_comercio], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_comercios_id_usuarios_fav_comercios")
+  usuarios       usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_usuarios_fav_comercios")
+  comercio       comercio @relation(fields: [id_comercio], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_comercios_id_usuarios_fav_comercios")
 
   @@unique([id_usuario, id_comercio], name: "idx_usuario_comercio_fav")
 }
 
-
 model estados_animos {
-  id          Int       @id @default(autoincrement())
-  mensaje     String
-  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
-  fecha_actualizacion DateTime? @db.Timestamptz(6)
-  fecha_eliminacion DateTime? @db.Timestamptz(6)
-  id_tipo_animo    Int // 1= Entusiasmado 2=Contento 3=Pensativo 4=Decepcionado 5=Triste 6=Sorprendeme
-  activo      Boolean   @default(true)
-  id_usuario_creacion  Int?
+  id                       Int               @id @default(autoincrement())
+  mensaje                  String
+  fecha_creacion           DateTime          @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion      DateTime?         @db.Timestamptz(6)
+  fecha_eliminacion        DateTime?         @db.Timestamptz(6)
+  id_tipo_animo            Int // 1= Entusiasmado 2=Contento 3=Pensativo 4=Decepcionado 5=Triste 6=Sorprendeme
+  activo                   Boolean           @default(true)
+  id_usuario_creacion      Int?
   id_usuario_actualizacion Int?
-  id_usuario_eliminacion Int?
-  tipo_estado_animo tipo_estado_animo @relation(fields: [id_tipo_animo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tipo_estado_animo_id_estados_animos")
+  id_usuario_eliminacion   Int?
+  tipo_estado_animo        tipo_estado_animo @relation(fields: [id_tipo_animo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tipo_estado_animo_id_estados_animos")
 }
 
 model tipo_estado_animo {
-  id          Int       @id @default(autoincrement())
-  descripcion String
-  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
-  fecha_actualizacion DateTime? @updatedAt() @db.Timestamptz(6) 
-  activo      Boolean   @default(true)
-  estados_animos estados_animos[]
+  id                  Int              @id @default(autoincrement())
+  descripcion         String
+  fecha_creacion      DateTime         @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime?        @updatedAt() @db.Timestamptz(6)
+  activo              Boolean          @default(true)
+  estados_animos      estados_animos[]
 }
-
 
 // Tablas de Tickets
 model tipo_ticket {
-  id             Int       @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   descripcion    String
-  fecha_creacion DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
 
-  tickets        ticket[]
+  tickets ticket[]
 
   @@map("tipo_ticket")
 }
 
 model ticket {
-  id                  Int       @id @default(autoincrement())
-  asunto              String
-  id_reportante       Int?
-  id_asignado         Int?
-  id_tipo_ticket      Int?
-  prioridad           Int?      @default(3) // 1=Alta, 2=Media, 3=Baja
-  id_estado           Int       @default(1) // 1=nuevo, 2=abierto, 3=pendiente cliente, 4=pendiente soporte, 5=en espera, 6=resuelto, 7=cerrado
-  fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
-  fecha_actualizacion DateTime  @updatedAt @db.Timestamptz(6)
-  ultimo_mensaje_at   DateTime? @db.Timestamptz(6)
-  activo              Boolean   @default(true)
-  id_usuario_cierre    Int?
-  motivo_cierre       String?
+  id                    Int       @id @default(autoincrement())
+  asunto                String
+  id_reportante         Int?
+  id_asignado           Int?
+  id_tipo_ticket        Int?
+  prioridad             Int?      @default(3) // 1=Alta, 2=Media, 3=Baja
+  id_estado             Int       @default(1) // 1=nuevo, 2=abierto, 3=pendiente cliente, 4=pendiente soporte, 5=en espera, 6=resuelto, 7=cerrado
+  fecha_creacion        DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion   DateTime  @updatedAt @db.Timestamptz(6)
+  ultimo_mensaje_at     DateTime? @db.Timestamptz(6)
+  activo                Boolean   @default(true)
+  id_usuario_cierre     Int?
+  motivo_cierre         String?
   id_usuario_completado Int?
 
   // Relaciones
-  tipo_ticket         tipo_ticket? @relation(fields: [id_tipo_ticket], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  mensajes            ticket_mensaje[]
+  tipo_ticket tipo_ticket?     @relation(fields: [id_tipo_ticket], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  mensajes    ticket_mensaje[]
 
   @@index([id_estado])
   @@index([id_asignado])
@@ -563,19 +575,133 @@ model ticket {
 }
 
 model ticket_mensaje {
-  id             Int       @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   id_ticket      Int
-  url_archivo    String[]  @db.Text            // Postgres text[]
+  url_archivo    String[] @db.Text // Postgres text[]
   id_autor       Int
-  rol_autor      Int                              // 1=cliente, 2=soporte, 3=sistema
+  rol_autor      Int // 1=cliente, 2=soporte, 3=sistema
   mensaje        String
-  es_interno     Boolean   @default(false)
-  fecha_creacion DateTime  @default(now()) @db.Timestamptz(6)
-  activo         Boolean   @default(true)
+  es_interno     Boolean  @default(false)
+  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
+  activo         Boolean  @default(true)
 
   // Relaciones
-  ticket         ticket    @relation(fields: [id_ticket], references: [id], onDelete: Cascade)
+  ticket ticket @relation(fields: [id_ticket], references: [id], onDelete: Cascade)
 
   @@index([id_ticket, fecha_creacion])
   @@map("ticket_mensaje")
+}
+
+// Tabla de movimientos de la wallet
+
+model wallet {
+  id                  Int       @id @default(autoincrement())
+  id_usuario          Int
+  id_estado           Int?
+  activo              Boolean   @default(true)
+  id_moneda           Int?
+  fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  saldo               Float     @default(0)
+
+  // Relaciones
+  usuario            usuarios             @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  moneda             monedas?             @relation(fields: [id_moneda], references: [id], onDelete: SetNull)
+  wallet_movimientos wallet_movimientos[]
+
+  @@map("wallet")
+}
+
+model wallet_movimientos {
+  id                     Int       @id @default(autoincrement())
+  id_wallet              Int
+  id_tipo_movimiento     Int
+  id_estado              Int? // 1=pendiente, 2=verificado, 3=rechazado, 4=anulado
+  monto                  Float?
+  url_imagen             String?
+  observacion            String?
+  motivo_rechazo         String?
+  id_usuario_verificador Int?
+  fecha_creacion         DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion    DateTime? @db.Timestamptz(6)
+  fecha_verificacion     DateTime? @db.Timestamptz(6)
+  fecha_rechazo          DateTime? @db.Timestamptz(6)
+  fecha_anulacion        DateTime? @db.Timestamptz(6)
+  id_usuario_rechazo     Int?
+  id_usuario_anulacion   Int?
+  activo                 Boolean   @default(true)
+
+  // Relaciones
+  wallet              wallet                 @relation(fields: [id_wallet], references: [id], onDelete: Cascade)
+  tipo_movimiento     tipo_movimiento_wallet @relation(fields: [id_tipo_movimiento], references: [id], onDelete: Restrict)
+  usuario_verificador usuarios?              @relation("WalletMovimientosVerificador", fields: [id_usuario_verificador], references: [id], onDelete: SetNull)
+
+  @@map("wallet_movimientos")
+}
+
+model tipo_movimiento_wallet {
+  id                  Int       @id @default(autoincrement())
+  descripcion         String
+  tipo_movimiento     Int?
+  fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+
+  // Relaciones
+  wallet_movimientos wallet_movimientos[]
+
+  @@map("tipo_movimiento_wallet")
+}
+
+// Tabla para guardar las notificacion por usuario
+
+model tipo_notificacion {
+  id                  Int       @id @default(autoincrement())
+  descripcion         String
+  fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  activo              Boolean   @default(true)
+
+  notificaciones_usuarios notificaciones_usuarios[]
+}
+
+model notificaciones_usuarios {
+  id                   BigInt    @id @default(autoincrement())
+  id_usuario           Int
+  titulo               String?
+  id_tipo_notificacion Int
+  cuerpo               String?
+  icono                String?
+  datos                Json?
+  prioridad            Int       @default(3) // 1=alta,2=media,3=baja
+  id_estado            Int       @default(1) // 1=pendiente,2=enviada,3=leida,4=error,5 no leidas
+  fecha_creacion       DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_envio          DateTime? @db.Timestamptz(6)
+  fecha_actualizacion  DateTime? @db.Timestamptz(6)
+
+  tipo_notificacion tipo_notificacion @relation(fields: [id_tipo_notificacion], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_tipo_notificacion_id_notificaciones_usuarios")
+  usuarios          usuarios          @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_notificaciones_usuarios")
+}
+
+model usuarios_notificaciones_push {
+  id             Int       @id @default(autoincrement())
+  id_usuario     Int
+  proveedor      String
+  token          String?
+  subscriptionJson Json?
+
+
+  // metadata de dispositivo
+  plataforma       String?
+  user_agent        String?
+  modelo_dispositivo String?
+  so_version        String?
+  app_version       String?
+  idioma           String?
+  region           String?
+  ip_origen        String?
+
+  fecha_creacion DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  activo         Boolean   @default(true)
+  usuarios       usuarios  @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "fk_usuarios_id_usuarios_notificaciones_push")
 }

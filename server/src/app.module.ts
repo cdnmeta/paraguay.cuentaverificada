@@ -27,11 +27,18 @@ import { EmailModule } from './email/email.module';
 import { SemaforoFinancieroModule } from './semaforo_financiero/semaforo_financiero.module';
 import { EstadosAnimosModule } from './estados-animos/estados-animos.module';
 import { TicketsModule } from './tickets/tickets.module';
+import { WalletModule } from './wallet/wallet.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { NotificacionesModule } from './notificaciones/notificaciones.module';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { SuscripcionesModule } from './suscripciones/suscripciones.module';
+
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
      WinstonModule.forRoot(winstonOptions),
+     ScheduleModule.forRoot(),
     UsuariosModule,
     AuthModule,
     PrismaModule,
@@ -54,16 +61,19 @@ import { TicketsModule } from './tickets/tickets.module';
     SemaforoFinancieroModule,
     EstadosAnimosModule,
     TicketsModule,
+    WalletModule,
+    NotificacionesModule,
+    SuscripcionesModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: FirebaseAuthGuard,
+      useClass: JwtAuthGuard,
     },
     {
       provide: APP_GUARD,
       useClass: GroupsGuard,
     },
-  ]
+  ],
 })
 export class AppModule {}

@@ -68,9 +68,6 @@ export function AppSidebarDepartamentoLegal({ ...props }) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <NavUserSuperAdmin user={user} />
-      </SidebarHeader>
       <SidebarContent>
         <NavMainSuperAdmin items={items.navigation} />
         <NavSingleDepartamentoLegal items={items.quiclyAccess} />

@@ -17,203 +17,330 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/hooks/useAuthStorge";
 import { getMensajeDelDia } from "@/apis/estados-animos.api";
 import { PROTECTED_ROUTES } from "@/utils/routes.routes";
-import { CheckCircle2Icon, Smile, X, Loader2 } from "lucide-react";
+import {
+  CheckCircle2Icon,
+  Smile,
+  X,
+  Loader2,
+  Clock,
+  Calendar,
+  AlertTriangle,
+  NotebookIcon,
+} from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { routes as RecordatoriosUsuariosRoutes } from "@/pages/recordatoriosUsuarios/config/routes";
 import { routes as FavoritosRoutes } from "@/pages/Favoritos/config/routes";
 import { routes as SoporteAyudaRoutes } from "@/pages/SoporteAyuda/config/routes";
+import { routes as WalletRoutes } from "@/pages/Wallet/config/routes";
+import { routes as SuscripcionesRoutes } from "@/pages/Suscripciones/config/routes";
+import { routes as RecordatoriosRoutes } from "@/pages/Recordatorios/config/routes";
+import recordatoriosAPI from "@/apis/recordatorios.api";
+import { EstadosRecordatorios } from "./Recordatorios/types/EstadosRecordatorios";
 
+// Schema de validación para archivar recordatorios
+const completionSchema = z.object({
+  motivo: z
+    .string()
+    .min(3, "El motivo debe tener al menos 3 caracteres")
+    .max(200, "El motivo no puede exceder 200 caracteres"),
+});
 
-// Constantes para el localStorage del mensaje del día
-const STORAGE_KEY_ULTIMO_MENSAJE = 'ultimo_mensaje_del_dia'
-const STORAGE_KEY_FECHA_ULTIMO_MENSAJE = 'fecha_ultimo_mensaje_del_dia'
-
-// Funciones para manejar localStorage del mensaje del día
-const obtenerUltimoMensajeVisto = () => {
-  try {
-    const ultimoId = localStorage.getItem(STORAGE_KEY_ULTIMO_MENSAJE)
-    const fechaUltimo = localStorage.getItem(STORAGE_KEY_FECHA_ULTIMO_MENSAJE)
-    const hoy = new Date().toDateString()
-    
-    // Si la fecha es diferente a hoy, permitir ver un nuevo mensaje
-    if (fechaUltimo !== hoy) {
-      return null
-    }
-    
-    return ultimoId ? parseInt(ultimoId) : null
-  } catch (error) {
-    console.error('Error al obtener último mensaje del localStorage:', error)
-    return null
-  }
-}
-
-const guardarMensajeVisto = (idMensaje) => {
-  try {
-    const hoy = new Date().toDateString()
-    localStorage.setItem(STORAGE_KEY_ULTIMO_MENSAJE, idMensaje.toString())
-    localStorage.setItem(STORAGE_KEY_FECHA_ULTIMO_MENSAJE, hoy)
-  } catch (error) {
-    console.error('Error al guardar mensaje en localStorage:', error)
-  }
-}
+// Función para formatear fecha
+const formatDate = (isoDate) => {
+  const date = new Date(isoDate);
+  return format(date, "dd/MM/yyyy HH:mm", { locale: es });
+};
 
 const emociones = [
-  { emoji: "😄", label: "Entusiasmado", id:1 },
-  { emoji: "😊", label: "Contento", id:2 },
-  { emoji: "😐", label: "Pensativo", id:3 },
-  { emoji: "😟", label: "Decepcionado", id:4 },
-  { emoji: "😢", label: "Triste", id:5 },
-  { emoji: "😇", label: "Sorpréndeme", id:6 },
+  { emoji: "😄", label: "Entusiasmado", id: 1 },
+  { emoji: "😊", label: "Contento", id: 2 },
+  { emoji: "😐", label: "Pensativo", id: 3 },
+  { emoji: "😟", label: "Decepcionado", id: 4 },
+  { emoji: "😢", label: "Triste", id: 5 },
+  { emoji: "😇", label: "Sorpréndeme", id: 6 },
 ];
 
 export default function DashBoardUsarioProtegido() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  
-  // Estados para el mensaje del día
-  const [mensajeDelDia, setMensajeDelDia] = useState(null)
-  const [mostrarMensaje, setMostrarMensaje] = useState(false)
-  const [cargandoMensaje, setCargandoMensaje] = useState(false)
-  const [mostrarEmociones, setMostrarEmociones] = useState(true)
 
-  // Verificar al cargar si ya se vio un mensaje hoy
-  useEffect(() => {
-    const ultimoIdVisto = obtenerUltimoMensajeVisto()
-    if (ultimoIdVisto) {
-      // Ya se vio un mensaje hoy, ocultar emociones
-      setMostrarEmociones(false)
-      console.log('📝 Mensaje ya visto hoy, ocultando emociones')
+  // Estados para el mensaje del día
+  const [mensajeDelDia, setMensajeDelDia] = useState(null);
+  const [mostrarMensaje, setMostrarMensaje] = useState(false);
+  const [cargandoMensaje, setCargandoMensaje] = useState(false);
+  const [recordatoriosHoy, setRecordatoriosHoy] = useState([]);
+  const [mostrarEmociones, setMostrarEmociones] = useState(
+    user?.estado_del_dia ? false : true
+  );
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedReminder, setSelectedReminder] = useState(null);
+  const [completedReminders, setCompletedReminders] = useState(new Set());
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setFocus,
+  } = useForm({
+    resolver: zodResolver(completionSchema),
+    defaultValues: {
+      motivo: "",
+    },
+  });
+
+  const loadREcordatoriosHoy = async () => {
+    try {
+      const response = await recordatoriosAPI.obtenerMisRecordatoriosHoy();
+      setRecordatoriosHoy(response.data || []);
+    } catch {
+      setRecordatoriosHoy([]);
     }
-  }, [])
+  };
+
+  useEffect(() => {
+    loadREcordatoriosHoy();
+  }, []);
 
   // Obtener mensaje del día
   const fetchMensajeDelDia = async (id_emocion) => {
     try {
-      setCargandoMensaje(true)
-      
-      // Obtener el último ID de mensaje visto
-      const ultimoIdVisto = obtenerUltimoMensajeVisto()
-      
+      setCargandoMensaje(true);
+
       // Preparar parámetros según el DTO
       const params = {
-        id_tipo_mensaje: id_emocion  // Tipo de mensaje para ánimo/motivación (requerido)
-      }
-      
-      // Si hay un mensaje anterior visto hoy, incluir el ID para evitar repetición
-      if (ultimoIdVisto) {
-        params.id_mensaje_ant = ultimoIdVisto
-      }
-      
-      const response = await getMensajeDelDia(params)
-      
+        id_tipo_mensaje: id_emocion, // Tipo de mensaje para ánimo/motivación (requerido)
+      };
+
+      const response = await getMensajeDelDia(params);
+
       // Solo mostrar si hay un mensaje válido y es status 200
       if (response.status === 200 && response.data && response.data.mensaje) {
-        setMensajeDelDia(response.data)
-        setMostrarMensaje(true)
-        
-        console.log('📝 Mensaje del día obtenido:', {
+        setMensajeDelDia(response.data);
+        setMostrarMensaje(true);
+
+        console.log("📝 Mensaje del día obtenido:", {
           mensaje: response.data.mensaje,
           tipo: response.data.descripcion_tipo_mesaje,
-          id_tipo_animo: response.data.id_tipo_animo
-        })
+          id_tipo_animo: response.data.id_tipo_animo,
+        });
       } else {
-        console.log('📝 No hay mensaje nuevo para mostrar hoy')
+        console.log("📝 No hay mensaje nuevo para mostrar hoy");
       }
     } catch (error) {
-      console.error('Error al obtener mensaje del día:', error)
+      console.error("Error al obtener mensaje del día:", error);
       // No mostrar error al usuario, el mensaje del día es opcional
     } finally {
-      setCargandoMensaje(false)
+      setCargandoMensaje(false);
     }
-  }
+  };
 
   // Cerrar mensaje del día y guardarlo como visto
   const cerrarMensajeDelDia = () => {
-    if (mensajeDelDia) {
-      // Guardar el ID del tipo de ánimo como mensaje visto
-      const idParaGuardar = mensajeDelDia.id_tipo_animo
-      if (idParaGuardar) {
-        guardarMensajeVisto(idParaGuardar)
-        console.log('💾 Mensaje guardado como visto:', idParaGuardar)
-      }
-    }
-    
     // Cerrar el dialog y ocultar emociones
-    setMostrarMensaje(false)
-    setMensajeDelDia(null)
-    setMostrarEmociones(false) // Ocultar las emociones después de ver el mensaje
-  }
+    setMostrarMensaje(false);
+    setMensajeDelDia(null);
+    setMostrarEmociones(false); // Ocultar las emociones después de ver el mensaje
+  };
 
   // Manejar selección de emoción - cargar mensaje del día
   const handleEmotionClick = async (emocion) => {
-    console.log('👤 Usuario se siente:', emocion.label)
-    
-    // Verificar si ya se vio un mensaje hoy
-    const ultimoIdVisto = obtenerUltimoMensajeVisto()
-    if (ultimoIdVisto) {
-      console.log('📝 Ya se vio un mensaje hoy')
-      setMostrarEmociones(false) // Ocultar emociones si ya se vio mensaje
-      return
-    }
-    
+    console.log("👤 Usuario se siente:", emocion.label);
+
     // Cargar mensaje del día basado en la emoción seleccionada
-    await fetchMensajeDelDia(emocion.id)
-  }
+    await fetchMensajeDelDia(emocion.id);
+  };
+
+  // Manejar clic en cerrar recordatorio
+  const handleCloseReminder = (reminder) => {
+    setSelectedReminder(reminder);
+    setDialogOpen(true);
+  };
+
+  // Manejar apertura del dialog
+  useEffect(() => {
+    if (dialogOpen) {
+      setTimeout(() => {
+        setFocus("motivo");
+      }, 100);
+    }
+  }, [dialogOpen, setFocus]);
+
+  // Manejar cancelación del dialog
+  const handleCancel = () => {
+    setDialogOpen(false);
+    setSelectedReminder(null);
+    reset();
+  };
+
+  // Manejar confirmación de archivado
+  const handleConfirmComplete = async (data) => {
+    if (!selectedReminder) return;
+
+    try {
+      const key = `${selectedReminder.titulo}-${selectedReminder.fecha_recordatorio}`;
+
+      // Marcar como archivado localmente
+      setCompletedReminders(prev => new Set([...prev, key]));
+
+      console.log("📝 Recordatorio archivado:", {
+        titulo: selectedReminder.titulo,
+        motivo: data.motivo,
+        fecha_archivado: new Date().toISOString(),
+      });
+
+      // Aquí puedes llamar a tu API para marcar como completado
+      await recordatoriosAPI.actualizarEstadoRecordatorio(selectedReminder.id, {
+        id_estado: EstadosRecordatorios.ARCHIVADO,
+        observacion: data.motivo,
+      });
+
+      // Cerrar dialog y limpiar
+      setDialogOpen(false);
+      setSelectedReminder(null);
+      reset();
+    } catch (error) {
+      console.error("Error al completar recordatorio:", error);
+    }
+  };
+
+  // Filtrar recordatorios visibles
+  const recordatoriosVisibles = recordatoriosHoy.filter((reminder) => {
+    const key = `${reminder.titulo}-${reminder.fecha_recordatorio}`;
+    return !completedReminders.has(key);
+  });
 
   const secciones = [
     {
-      icon: "/icons/2179332.png",
+      icon: "/icons/cuenta.png",
       title: "Cuenta",
       onClick: () => navigate(`${PROTECTED_ROUTES.misDatos}`),
       desc: "Datos - Seguridad - Más",
+      habilitado: true,
     },
     {
-      icon: "/icons/1331244-f39d5970.png",
+      icon: "/icons/favorito.png",
       title: "Favoritos",
       desc: "Comercios - Productos - Links",
       onClick: () => navigate(`/${FavoritosRoutes.index}`),
+      habilitado: true,
     },
     {
-      icon: "/icons/1176025.png",
+      icon: "/icons/publicar.png",
       title: "Publicar",
       desc: "Expresa lo que deseas comprar",
+      habilitado: true,
     },
     {
-      icon: "/icons/443115.png",
+      icon: "/icons/semaforo.png",
       title: "Semáforo Financiero",
       onClick: () => navigate(`/semaforo-financiero`),
       desc: "No permitas que tus finanzas lleguen al rojo",
+      habilitado: true,
     },
     {
-      icon: "/icons/80957-74a5697e.png",
+      icon: "/icons/donde-guarde.png",
       title: "¿Dónde lo guardé?",
       onClick: () => navigate(`/${RecordatoriosUsuariosRoutes.index}`),
       desc: "Que no se te olvide nada",
+      habilitado: true,
     },
     {
-      icon: "/icons/709049.png",
+      icon: "/icons/wallet.png",
       title: "Wallet",
       desc: "Depósitos - Pagos - Ganancias",
+      onClick: () => navigate(`/${WalletRoutes.index}`),
+      habilitado: () => user?.vfd === true,
     },
     {
-      icon: "/icons/709049.png",
+      icon: "/icons/suscripcion.png",
       title: "Suscripciones",
       desc: "Planes - Facturas - Historial",
+      onClick: () => navigate(`/${SuscripcionesRoutes.MIS_SUSCRIPCIONES}`),
+      habilitado: true,
     },
     {
-      icon: "/icons/709049.png",
+      icon: "/icons/soporte.png",
       title: "Soporte y Ayuda",
       desc: "Autoayuda + asistencia personalizada",
+      habilitado: true,
       onClick: () => navigate(`/${SoporteAyudaRoutes.index}`),
     },
+    {
+      icon: "/icons/recordatorios.png",
+      title: "Recordatorios",
+      desc: "Administra tus recordatorios",
+      habilitado: true,
+      onClick: () => navigate(`/${RecordatoriosRoutes.index}`),
+    },
   ];
+
+  const seccionesFiltradas = secciones.filter(
+    (item) =>
+      item.habilitado === true ||
+      (typeof item.habilitado === "function" && item.habilitado())
+  );
   return (
     <div className="min-h-screen text-white">
-      <div className="w-full flex flex-col md:flex-row lg:flex-row gap-2 mb-6 px-2">
+      {/* Recordatorios del día */}
+        {recordatoriosVisibles.length > 0 && (
+          <div className="w-full mx-auto mt-6 p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                Recordatorios de Hoy
+              </h3>
+              <Badge variant="secondary" className="w-fit">
+                {recordatoriosVisibles.length} pendiente
+                {recordatoriosVisibles.length !== 1 ? "s" : ""}
+              </Badge>
+            </div>
+
+            <ScrollArea className="w-full max-h-96">
+              <div className="space-y-3 pr-4">
+                {recordatoriosVisibles.map((recordatorio, index) => (
+                  <Alert key={index} className="relative border-l-4 border-l-yellow-500 bg-yellow-50 hover:bg-yellow-100 transition-colors duration-200">
+                    <NotebookIcon className="text-yellow-600" />
+                    <div className="flex-1 pr-8">
+                      <AlertTitle className="text-start text-yellow-900 font-semibold">{recordatorio?.titulo}</AlertTitle>
+                      {recordatorio?.descripcion && (
+                        <AlertDescription className="text-start text-yellow-800 mt-1">
+                          {recordatorio?.descripcion}
+                        </AlertDescription>
+                      )}
+                      <div className="flex items-center gap-2 text-xs text-yellow-700 mt-2">
+                        <Calendar className="h-3 w-3" />
+                        <span>Recordatorio: {formatDate(recordatorio.fecha_recordatorio)}</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-yellow-600"
+                      onClick={() => handleCloseReminder(recordatorio)}
+                      aria-label={`Cerrar recordatorio: ${recordatorio.titulo}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </Alert>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
+      <div className="w-full flex flex-col md:flex-row lg:flex-row gap-2  mb-6 px-2">
         {user?.vfd == false && (
           <Alert className="">
             <CheckCircle2Icon />
@@ -232,27 +359,25 @@ export default function DashBoardUsarioProtegido() {
             </AlertDescription>
           </Alert>
         )}
-        {
-          user?.vfd == true && (
-            <Alert className="">
-          <CheckCircle2Icon />
-          <AlertTitle>Hola, {`${user?.nombre} ${user?.apellido}`}</AlertTitle>
-          <AlertDescription>
-            <div className="flex gap-2 ">
-              <p>
-                Te gustaría <b>Verificar un comercio</b>
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => navigate(PROTECTED_ROUTES.verificacionComercio)}
-            >
-              Verificar
-            </Button>
-          </AlertDescription>
-        </Alert>
-          )
-        }
+        {user?.vfd == true && (
+          <Alert className="">
+            <CheckCircle2Icon />
+            <AlertTitle>Hola, {`${user?.nombre} ${user?.apellido}`}</AlertTitle>
+            <AlertDescription>
+              <div className="flex gap-2 ">
+                <p>
+                  Te gustaría <b>Verificar un comercio</b>
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => navigate(PROTECTED_ROUTES.verificacionComercio)}
+              >
+                Verificar
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto text-center space-y-4">
@@ -315,15 +440,18 @@ export default function DashBoardUsarioProtegido() {
                 ¡Mensaje del día!
               </h2>
               <p className="text-muted-foreground text-center max-w-md">
-                Ya has recibido tu mensaje inspirador de hoy. Vuelve mañana para descubrir un nuevo mensaje.
+                Ya has recibido tu mensaje inspirador de hoy. Vuelve mañana para
+                descubrir un nuevo mensaje.
               </p>
             </div>
           </Card>
         )}
 
+        
+
         {/* Secciones */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
-          {secciones.map((item, i) => (
+          {seccionesFiltradas.map((item, i) => (
             <Card
               key={i}
               className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 group"
@@ -351,9 +479,63 @@ export default function DashBoardUsarioProtegido() {
         </div>
       </div>
 
+      {/* Dialog de confirmación de recordatorio */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              <DialogTitle>Archivar Recordatorio</DialogTitle>
+            </div>
+            <DialogDescription className="text-sm text-gray-600">
+              Al cerrar, este recordatorio se marcará como archivado.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={handleSubmit(handleConfirmComplete)}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="motivo" className="text-sm font-medium">
+                Motivo de archivado *
+              </Label>
+              <Textarea
+                id="motivo"
+                placeholder="Describe brevemente por qué archivaste este recordatorio..."
+                className="min-h-[80px] resize-none"
+                {...register("motivo")}
+              />
+              {errors.motivo && (
+                <p className="text-sm text-red-600">{errors.motivo.message}</p>
+              )}
+            </div>
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                className="w-full sm:w-auto"
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="w-full sm:w-auto"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Procesando..." : "Marcar como archivado"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog del Mensaje del Día */}
       <Dialog open={mostrarMensaje} onOpenChange={() => {}}>
-        <DialogContent 
+        <DialogContent
           className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto"
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
@@ -375,11 +557,11 @@ export default function DashBoardUsarioProtegido() {
             <div className="space-y-4">
               {/* Estado de ánimo */}
               <div className="flex items-center gap-2">
-                <Badge 
-                  variant="secondary" 
+                <Badge
+                  variant="secondary"
                   className="bg-primary/10 text-primary border-primary/20"
                 >
-                  {mensajeDelDia.descripcion_tipo_mesaje || 'Motivacional'}
+                  {mensajeDelDia.descripcion_tipo_mesaje || "Motivacional"}
                 </Badge>
               </div>
 
@@ -396,7 +578,7 @@ export default function DashBoardUsarioProtegido() {
           )}
 
           <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button 
+            <Button
               onClick={cerrarMensajeDelDia}
               className="w-full sm:w-auto"
               disabled={cargandoMensaje}
@@ -407,7 +589,7 @@ export default function DashBoardUsarioProtegido() {
                   Cerrando...
                 </>
               ) : (
-                'Cerrar'
+                "Cerrar"
               )}
             </Button>
           </DialogFooter>

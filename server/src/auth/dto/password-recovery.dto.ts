@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Max, Min, Length } from 'class-validator';
 
 export class InicializarPasswordPinPayloadByToken {
     @IsNotEmpty({ message: 'El token no puede estar vacío.' })
@@ -53,8 +53,7 @@ export class RecoveryPinDto {
 
     @IsNotEmpty({ message: 'El PIN no puede estar vacío.' })
     @IsString({ message: 'El PIN debe ser una cadena de texto.' })
-    @Min(4, { message: 'El PIN debe tener al menos 4 caracteres.' })
-    @Max(4, { message: 'El PIN no puede tener más de 4 caracteres.' })
+    @Length(4, 4, { message: 'El PIN debe tener exactamente 4 caracteres.' })
     pin: string;
 }
 

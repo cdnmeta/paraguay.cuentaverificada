@@ -8,7 +8,8 @@ import {
   TrendingUp,
   UserCheck,
   Store,
-  BadgeCheck
+  BadgeCheck,
+  WalletMinimal
 } from "lucide-react";
 
 export const seccionesFeatures = [
@@ -67,5 +68,13 @@ export const seccionesFeatures = [
     icon: CheckCircle,
     path: `${ROUTE_BASE}/estados-animos`,
     variant: "default"
+  },
+  {
+    title:"Solicitudes Recargar Wallet",
+    desc:"Gestionar solicitudes de recarga de wallets",
+    icon: WalletMinimal,
+    path: `${ROUTE_BASE}/solicitudes-recargas-wallet`,
+    variant: "default"
   }
+  
 ];

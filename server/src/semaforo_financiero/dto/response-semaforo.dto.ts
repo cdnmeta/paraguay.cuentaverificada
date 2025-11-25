@@ -21,4 +21,7 @@ export class ResponseSemaforoFinancieroDto {
 
     @Expose()
     fecha_vencimiento: Date;
+
+    @Expose({name: 'fecha_creacion'})
+    fecha: Date;
 }

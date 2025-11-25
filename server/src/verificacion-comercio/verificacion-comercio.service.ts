@@ -187,7 +187,7 @@ export class VerificacionComercioService {
           // crear factura
 
           const monedaBase = await prisma.empresa_config.findFirst({
-            select: { id_moneda_base: true },
+            select: { id_moneda_base: true,id_moneda_planes:true },
             where: { id: 1 },
           });
 
@@ -195,12 +195,16 @@ export class VerificacionComercioService {
             planVerificacionData.precio,
             planVerificacionData.tipo_iva,
           );
+
+          if(!monedaBase?.id_moneda_planes){
+            throw new BadRequestException('No se ha configurado la moneda para los planes en la empresa');
+          }
           await prisma.factura_suscripciones.create({
             data: {
               monto: planVerificacionData.precio,
               estado: 1, // pendiente
               id_suscripcion: suscripcionCreada.id,
-              id_moneda: monedaBase?.id_moneda_base,
+              id_moneda: monedaBase?.id_moneda_planes, // moneda base de la empresa configurada para los planes
               total_factura: totalesFactura.total_factura, 
               total_grav_5: totalesFactura.total_grav_5,
               total_grav_10: totalesFactura.total_grav_10,

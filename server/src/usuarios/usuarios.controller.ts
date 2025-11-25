@@ -50,10 +50,15 @@ import { FavoritosService } from './favoritos/favoritos.service';
 import { UsuarioAgregarFavoritoDto } from './dto/favorito.dto';
 import { RequireGroupIdsAll } from '@/auth/decorators/groups.decorator';
 import { DeleteUserDto } from './dto/delete-user.dto';
+import { NotificacionesService } from '@/notificaciones/notificaciones.service';
+import { NotificationRequest } from '@/notificaciones/types/notification.types';
+import { NotificationCode } from '@/notificaciones/enums/notification-code.enum';
+import { NotificationRequestPaylodDto } from '@/notificaciones/dto/notification-request.dto';
+import { TiposNotificaciones } from '@/notificaciones/enums/tipos-notificaciones';
 
 @Controller('usuarios')
 export class UsuariosController {
-  constructor(private readonly usuariosService: UsuariosService, private readonly favoritosService: FavoritosService) {}
+  constructor(private readonly usuariosService: UsuariosService, private readonly favoritosService: FavoritosService, private readonly notificacionesService: NotificacionesService) {}
 
   // NOTA: Las rutas específicas van ANTES que las dinámicas
 
@@ -308,6 +313,18 @@ export class UsuariosController {
         req.user.userId,
         dataEnviar,
         {},
+      );
+      // notificar de cambio de contraseña si es necesario
+      const notificacionHacer: NotificationRequestPaylodDto = {
+        title: 'Cambio de contraseña',
+        description:'Tu contraseña ha sido cambiada exitosamente. Si no fuiste tú, por favor contacta al soporte inmediatamente.',
+        code: NotificationCode.CAMBIO_CONTRASENA,
+        tipo_notificacion: TiposNotificaciones.SISTEMA, // Asignar el tipo de notificación correspondiente
+
+      }
+      await this.notificacionesService.sendNotificationToUser(
+        req.user.userId,
+        notificacionHacer
       );
       return { message: 'Contraseña cambiada exitosamente' };
     } catch (error) {

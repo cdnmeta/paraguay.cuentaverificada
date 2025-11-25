@@ -54,12 +54,8 @@ const soporteData = {
 
 export function AppSidebarSoporte({ ...props }) {
   const user = useAuthStore((state) => state.user);
-
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-         <NavUser user={user} />
-      </SidebarHeader>
       <SidebarContent>
         <NavMainSoporte items={soporteData.navigation} />
         <NavSimple items={soporteData.quickAccess} />

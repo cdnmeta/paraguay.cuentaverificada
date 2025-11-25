@@ -117,9 +117,6 @@ export function AppSidebarSuperAdmin({ ...props }) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <NavUserSuperAdmin user={user} />
-      </SidebarHeader>
       <SidebarContent>
         <NavMainSuperAdmin items={superAdminData.navigation} />
         <NavProjectsSuperAdmin projects={superAdminData.quickAccess} />

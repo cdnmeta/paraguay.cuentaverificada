@@ -8,12 +8,13 @@ import { VendedoresController } from './vendedores-empresa/vendedores-empresa.co
 import { VendedoresEmpresaService } from './vendedores-empresa/vendedores-empresa.service';
 import { FavoritosService } from './favoritos/favoritos.service';
 import { SoporteService } from './soporte/soporte.service';
+import { NotificacionesModule } from '@/notificaciones/notificaciones.module';
 
 
 @Module({
   controllers: [UsuariosController, VendedoresController],
   providers: [UsuariosService, VendedoresEmpresaService, FavoritosService, SoporteService],
-  imports: [PrismaModule, FirebaseModule, DatabaseModule],
+  imports: [PrismaModule, FirebaseModule, DatabaseModule, NotificacionesModule ],
   exports: [UsuariosService],
 })
 export class UsuariosModule {}
