@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -19,6 +20,7 @@ import { Response } from 'express';
 import { OnlyAdminGuard } from '@/auth/guards/onlyAdmin.guard';
 import { IsOnlyAdmin } from '@/auth/decorators/onlyAdmin.decorator';
 import { UpdatePlanDto, UpdatePlanPayloadDto } from './dto/update-plan.dto';
+import { DeletePlanDto } from './dto/delete-plan.dto';
 
 @UseGuards(OnlyAdminGuard)
 @Controller('planes')
@@ -95,4 +97,23 @@ export class PlanesController {
       throw error;
     }
   }
+
+  @IsOnlyAdmin()
+  @Delete(':id')
+  async eliminarPlan(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const dataEnviar: DeletePlanDto = {
+        id_usuario_eliminacion: req.user.userId,
+      }
+      await this.planesService.deletePlan(id, dataEnviar);
+      return res.status(200).json({ message: 'Plan eliminado exitosamente' });
+    } catch (error) {
+      throw error;
+    }
+  }
+  
 }

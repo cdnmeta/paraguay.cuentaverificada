@@ -1,5 +1,5 @@
-import React from "react";
-import { Edit, Trash2, MoreHorizontal } from "lucide-react";
+import React, { useState } from "react";
+import { Edit, Trash2, MoreHorizontal, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,6 +9,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-tables/data-table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { deletePlan } from "@/apis/planes.api";
+import { toast } from "sonner";
 
 const ListadoPlanes = ({ 
   data = [], 
@@ -17,6 +29,46 @@ const ListadoPlanes = ({
   onEdit,
   onDelete
 }) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteClick = (plan) => {
+    setPlanToDelete(plan);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!planToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      await deletePlan(planToDelete.id);
+      
+      toast.success(`Plan "${planToDelete.nombre}" eliminado exitosamente`);
+      
+      // Llamar al callback después de la eliminación exitosa
+      onDelete?.(planToDelete);
+      
+    } catch (error) {
+      console.error("Error al eliminar el plan:", error);
+      const errorMessage = error.response?.data?.message || "Error al eliminar el plan";
+      toast.error(errorMessage);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+      setPlanToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    if (isDeleting) return; // Prevenir cancelar mientras se está eliminando
+    setShowDeleteDialog(false);
+    setPlanToDelete(null);
+  };
+
+  
+
   // Función para formatear moneda según sigla ISO
   const formatearMoneda = (cantidad, siglaIso) => {
     if (!cantidad || !siglaIso) return '---';
@@ -194,7 +246,7 @@ const ListadoPlanes = ({
               )}
               {opcionesHabilitadas.eliminar && (
                 <DropdownMenuItem
-                  onClick={() => onDelete?.(plan)}
+                  onClick={() => handleDeleteClick(plan)}
                   className="cursor-pointer text-red-600 focus:text-red-600"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -216,6 +268,46 @@ const ListadoPlanes = ({
         searchKey="nombre"
         searchPlaceholder="Buscar planes..."
       />
+      
+      <AlertDialog open={showDeleteDialog} onOpenChange={!isDeleting ? setShowDeleteDialog : undefined}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Confirmar eliminación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar el plan <strong>"{planToDelete?.nombre}"</strong>?
+              <br />
+              Esta acción no se puede deshacer.
+              {isDeleting && (
+                <div className="mt-2 text-sm text-muted-foreground">
+                  Eliminando plan, por favor espere...
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={handleCancelDelete}
+              disabled={isDeleting}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 disabled:opacity-50"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                "Eliminar"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

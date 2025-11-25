@@ -61,8 +61,8 @@ const PlanesListadoPage = () => {
   // Manejar eliminación de plan
   const handleDelete = (plan) => {
     console.log("Eliminar plan:", plan);
-    // Aquí puedes agregar la lógica para eliminar
-    toast.error(`¿Estás seguro de eliminar: ${plan.nombre}?`);
+    // Recargar la lista de planes después de la eliminación
+    cargarPlanes();
   };
 
   // Manejar creación de nuevo plan
