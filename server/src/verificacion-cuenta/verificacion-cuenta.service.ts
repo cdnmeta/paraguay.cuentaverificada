@@ -13,6 +13,7 @@ import {
 } from './dto/update-verificacion-cuenta.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import { ImagenesVerificacionCuenta } from './types/imagenes-verificacion';
+import { OpcionesVerificacionUsuario } from './types/opcionesVerificacionUsuario';
 import {
   crearNombreArchivoDesdeMulterFile,
   generarCodigoNumericoAleatorio,

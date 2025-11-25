@@ -18,6 +18,8 @@ let url_backend_api = import.meta.env.VITE_BACKEND_URL_API;
   url_backend_api = "http://localhost:3000/api";
 } */
 
+
+
 export const NOMBRE_APP = "Cuenta Verificada";
 
 export const TIPO_IMAGENES_PERMITIDAS = ['image/jpeg', 'image/png', 'image/jpg'];

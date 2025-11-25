@@ -82,10 +82,10 @@ export default function ListadoComercioPages() {
   }, []);
 
   return (
-    <div className="container mx-auto p-6 rounded-lg shadow-md">
-      <h1 className="text-xl font-bold">Filtro de Comercios</h1>
+    <div className="container mx-auto">
 
-      <div className="space-y-4 mt-4">
+      <div className="space-y-4 p-6 mt-2 border border-primary rounded-md ">
+        <h1 className="text-xl font-bold">Filtro de Comercios</h1>
         <FormFiltradoComercios
           onResults={setComercios}
           onLoadingChange={setLoading}

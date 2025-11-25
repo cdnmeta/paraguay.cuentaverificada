@@ -1,6 +1,7 @@
 // Exportaciones principales del módulo de Planes
 export { default as PlanesPage } from './pages/PlanesPage.jsx';
 export { default as PlanCard } from './components/PlanCard.jsx';
+export { default as PlanForm } from './components/PlanForm.jsx';
 export { useCotizacionesMoneda } from './hooks/useCotizacionesMoneda.js';
 
 
