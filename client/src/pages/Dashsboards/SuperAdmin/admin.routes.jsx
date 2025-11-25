@@ -2,7 +2,7 @@
 import React, { lazy, Suspense } from "react";
 import { Form, Route } from "react-router-dom";
 import AdminLayout from "./LayoutSuperAdmin";
-import { ROUTE_BASE } from "./config/routes";
+import { ROUTE_BASE, routes } from "./config/routes";
 import Spinner from "@/components/customs/loaders/LoadingSpinner"; // cualquier loader visual
 import ProtectedRoute from "@/utils/ProtectedRoute";
 import AgregarParticipantePage from "./pages/AgregarParticipantePage";
@@ -11,14 +11,35 @@ import AprobacionPagosComercio from "@/pages/AprobacionPagosComercio";
 import AprobarcionComerciosPage from "@/pages/AprobarcionComerciosPage";
 import ListadoSolicitudesCuentasPage from "@/pages/SolicitudesCuentas/ListadoSolicitudesCuentasPage";
 import ListadoParticipantesPage from "@/pages/Participantes/ListadoParticipantesPage";
-import { UsuariosRoutes } from "@/pages/Usuarios/usuarios.routes";
+// Usuarios components
+import FormUsuario from "@/pages/Usuarios/components/FormUsuarios";
+import ListadoUsuariosPages from "@/pages/Usuarios/pages/ListadoUsuariosPages";
+// FacturaPlanes components
+import FacturaPlanesPage from "@/pages/FacturaPlanes/pages/FacturaPlanesPage";
+import GananciasFacturaPage from "@/pages/FacturaPlanes/pages/GananciasFacturaPage";
+// EstadosAnimos components
+import EstadosAnimosPage from "@/pages/EstadosAnimos/pages/EstadosAnimosPage";
+// Wallet components
+import SolicitudesRecargasPage from "@/pages/Wallet/pages/SolicitudesRecargasPage";
+// Cotización empresa
 import FormCotizacion from "@/pages/cotizacionesEmpresa/components/FormCotizacion";
 import CotizacionEmpresaPage from "@/pages/cotizacionesEmpresa/page/CotizacionEmpresaPage";
-import { FacturasPlanesRoutes } from "@/pages/FacturaPlanes/facturasPlanes.routes";
-import EstadosAnimosRoutes from "@/pages/EstadosAnimos/estados-animos.routes";
 import { Wallet } from "lucide-react";
-import OperacionesWalletRoute from "@/pages/Wallet/operaciones-wallet.route";
+// Para usuarios - wrapper component
+import { useParams } from "react-router-dom";
+import PlanesListadoPage from "./pages/PlanesListadoPage";
+import PlanesFormPage from "./pages/PlanesFormPage";
 const DashBoardSuperAdmin = lazy(() => import("./DashBoardSuperAdmin"));
+
+// Componente wrapper para capturar el ID de la ruta de usuarios
+function EditarUsuarioWrapper() {
+  const { id } = useParams();
+  return (
+    <Suspense fallback={<Spinner />}>
+      <FormUsuario idUsuario={id} />
+    </Suspense>
+  );
+}
 
 export function SuperAdminRoutes({ user }) {
   const isAuthorized = (u) => u?.isa === true;
@@ -37,16 +58,15 @@ export function SuperAdminRoutes({ user }) {
 
   return (
     <Route
-      path={ROUTE_BASE}
       element={
         <ProtectedRoute isAuthorized={isAuthorized(user)} redirectPath="/">
-            <AdminLayout />
+          <AdminLayout />
         </ProtectedRoute>
       }
     >
       {/* index/dashboard */}
       <Route
-        index
+        path={ROUTE_BASE}
         element={
           <Suspense fallback={<Spinner />}>
             <DashBoardSuperAdmin />
@@ -58,39 +78,77 @@ export function SuperAdminRoutes({ user }) {
 
       {/* Gestión de Participantes */}
       <Route
-        path="participantes/listado"
+        path={routes.listadoParticipantes}
         element={
           <Suspense fallback={<Spinner />}>
             <ListadoParticipantesPage />
           </Suspense>
         }
       />
-      <Route path="participantes" element={<AgregarParticipantePage />} />
-      <Route path="comercios/listado" element={<ListadoComercioPages />} />
-      <Route path="solicitudes-pago" element={<AprobacionPagosComercio />} />
       <Route
-        path="aprobacion-comercios"
+        path={routes.registrarParticipante}
+        element={<AgregarParticipantePage />}
+      />
+      <Route
+        path={routes.listadoComercios}
+        element={<ListadoComercioPages />}
+      />
+      <Route
+        path={routes.aprobacionPagosComercio}
+        element={<AprobacionPagosComercio />}
+      />
+      <Route
+        path={routes.aprobacionComercios}
         element={<AprobarcionComerciosPage />}
       />
       <Route
-        path="solicitudes-cuentas"
+        path={routes.listadoSolicitudesCuentas}
         element={
           <ListadoSolicitudesCuentasPage
             opcionesPage={opcionesPageListaSolicitudes}
           />
         }
       />
-      <Route path="cotizacion-empresa" element={<CotizacionEmpresaPage />} />
+      <Route
+        path={routes.cotizacionEmpresa}
+        element={<CotizacionEmpresaPage />}
+      />
+
+      {/*
+      Planes Routes */}
+
+      <Route path={routes.listadoPlanes} element={<PlanesListadoPage />} />
+
+      <Route path={routes.crearPlan} element={<PlanesFormPage />} />
+
+      <Route path={routes.editarPlan(":id")} element={<PlanesFormPage />} />
 
       {/* Rutas de Facturas Planes */}
-      {FacturasPlanesRoutes()}
+      <Route path={routes.facturarPlanes} element={<FacturaPlanesPage />} />
 
-      {/*usuarios rutas*/}
-      {UsuariosRoutes({ user })}
+      <Route
+        path={routes.gananciasFacturas}
+        element={<GananciasFacturaPage />}
+      />
 
-      {EstadosAnimosRoutes()}
-      {/*Rutas Wallets*/}
-      {OperacionesWalletRoute({ user })}
+      {/* Rutas de Usuarios */}
+      <Route path={routes.registrarUsuarios} element={<FormUsuario />} />
+      
+      <Route path={routes.listadoUsuarios} element={<ListadoUsuariosPages />} />
+
+      <Route
+        path={routes.editarUsuario(":id")}
+        element={<EditarUsuarioWrapper />}
+      />
+
+      {/* Estados de Ánimo */}
+      <Route path={routes.estadosAnimos} element={<EstadosAnimosPage />} />
+
+      {/* Wallet - Solicitudes Recargas */}
+      <Route
+        path={routes.solicitudesRecargasWallet}
+        element={<SolicitudesRecargasPage />}
+      />
     </Route>
   );
 }

@@ -228,6 +228,11 @@ model planes {
   fecha_actualizacion DateTime?       @db.Timestamptz(6)
   activo              Boolean?        @default(true)
   tipo_iva            Int?
+  id_usuario_creacion Int?
+  id_usuario_actualizacion Int?
+  id_usuario_eliminacion Int?
+              
+
   suscripciones       suscripciones[]
 }
 
