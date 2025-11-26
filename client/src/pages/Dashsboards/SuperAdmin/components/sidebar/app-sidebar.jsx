@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/hooks/useAuthStorge";
 
+import {routes} from '@/pages/Dashsboards/SuperAdmin/config/routes'
+
 // Datos específicos para SuperAdmin
 const superAdminData = {
   navigation: [
@@ -37,11 +39,11 @@ const superAdminData = {
       items: [
         {
           title: "Todos los Usuarios",
-          url: "/admin/usuarios/listado",
+          url: routes.listadoUsuarios,
         },
         {
           title: "Registrar Usuario",
-          url: "/admin/usuarios/registrar",
+          url: routes.registrarUsuarios,
         },
       ],
     },
