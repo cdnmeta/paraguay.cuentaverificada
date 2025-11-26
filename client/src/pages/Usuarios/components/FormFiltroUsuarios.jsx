@@ -80,9 +80,6 @@ export default function FormFiltroUsuarios({ onResults, onLoadingChange }) {
 
   console.log(watch())
 
-  const handleAgregarUsuarios = () =>
-    navigate("../registrar", { relative: "path" });
-
   return (
     <form
       onSubmit={handleSubmit(handleOnSubmit)}
@@ -148,10 +145,6 @@ export default function FormFiltroUsuarios({ onResults, onLoadingChange }) {
         <Button type="button" variant="outline" onClick={handleLimpiar}>
           <Trash className="mr-2 h-4 w-4" />
           Limpiar
-        </Button>
-        <Button type="button" variant="outline" onClick={handleAgregarUsuarios}>
-          <Plus className="mr-2 h-4 w-4" />
-          Agregar usuarios
         </Button>
       </div>
     </form>

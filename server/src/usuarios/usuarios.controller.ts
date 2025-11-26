@@ -73,17 +73,7 @@ export class UsuariosController {
     }
   }
 
-  @Get('grupos/:id_usuario')
-  async getGruposByUsuarioId(
-    @Param('id_usuario', ParseIntPipe) id_usuario: number,
-  ) {
-    try {
-      const grupos = await this.usuariosService.getGruposByUsuario(id_usuario);
-      return grupos;
-    } catch (error) {
-      throw error;
-    }
-  }
+  
 
   @Post('agregar-grupo')
   async agregarUsuarioGrupo(
@@ -192,73 +182,7 @@ export class UsuariosController {
     }
   }
 
-  @Put('actualizar-usuario/:id')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'cedula_frontal', maxCount: 1 },
-      { name: 'cedula_reverso', maxCount: 1 },
-      { name: 'selfie', maxCount: 1 },
-    ]),
-  )
-  @IsOnlyAdmin()
-  async actualizarUsuario(
-    @Req() req: AuthenticatedRequest,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: ActualizarUsuarioDTO,
-    @Res() res: Response,
-    @UploadedFiles()
-    files: {
-      cedula_frontal: Express.Multer.File[];
-      cedula_reverso: Express.Multer.File[];
-      selfie: Express.Multer.File[];
-    },
-  ) {
-    try {
-      const frontal = files.cedula_frontal?.[0];
-      const reverso = files.cedula_reverso?.[0];
-      const selfie = files.selfie?.[0];
-
-      // Validar imágenes solo si se proporcionan (para actualización son opcionales)
-      if (frontal) {
-        validateImageOrThrow(frontal, {
-          required: false,
-          maxSizeMB: 2,
-          requiredErrorMessage: 'Imagen de la cédula frontal no válida',
-        });
-      }
-
-      if (reverso) {
-        validateImageOrThrow(reverso, {
-          required: false,
-          maxSizeMB: 2,
-          requiredErrorMessage: 'Imagen de la cédula reverso no válida',
-        });
-      }
-
-      if (selfie) {
-        validateImageOrThrow(selfie, {
-          required: false,
-          maxSizeMB: 2,
-          requiredErrorMessage: 'Imagen de la selfie no válida',
-        });
-      }
-
-      const filesUser: UsuariosArchivos = {
-        cedulaFrente: frontal,
-        cedulaReverso: reverso,
-        selfie: selfie,
-      };
-
-      body.id_usuario_actualizacion = req.user.userId;
-      await this.usuariosService.actualizarUsuario(id, body, filesUser);
-
-      return res.status(200).json({
-        message: 'Usuario actualizado exitosamente',
-      });
-    } catch (error) {
-      throw error;
-    }
-  }
+  
 
   @Get('filtros')
   async getFiltrosUsuarios() {
@@ -394,6 +318,90 @@ export class UsuariosController {
 
   // ⚠️ IMPORTANTE: Esta ruta dinámica debe ir AL FINAL
   // para evitar conflictos con rutas específicas
+
+@Put('actualizar-usuario/:id')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'cedula_frontal', maxCount: 1 },
+      { name: 'cedula_reverso', maxCount: 1 },
+      { name: 'selfie', maxCount: 1 },
+    ]),
+  )
+  @IsOnlyAdmin()
+  async actualizarUsuario(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: ActualizarUsuarioDTO,
+    @Res() res: Response,
+    @UploadedFiles()
+    files: {
+      cedula_frontal: Express.Multer.File[];
+      cedula_reverso: Express.Multer.File[];
+      selfie: Express.Multer.File[];
+    },
+  ) {
+    try {
+      const frontal = files.cedula_frontal?.[0];
+      const reverso = files.cedula_reverso?.[0];
+      const selfie = files.selfie?.[0];
+
+      // Validar imágenes solo si se proporcionan (para actualización son opcionales)
+      if (frontal) {
+        validateImageOrThrow(frontal, {
+          required: false,
+          maxSizeMB: 2,
+          requiredErrorMessage: 'Imagen de la cédula frontal no válida',
+        });
+      }
+
+      if (reverso) {
+        validateImageOrThrow(reverso, {
+          required: false,
+          maxSizeMB: 2,
+          requiredErrorMessage: 'Imagen de la cédula reverso no válida',
+        });
+      }
+
+      if (selfie) {
+        validateImageOrThrow(selfie, {
+          required: false,
+          maxSizeMB: 2,
+          requiredErrorMessage: 'Imagen de la selfie no válida',
+        });
+      }
+
+      const filesUser: UsuariosArchivos = {
+        cedulaFrente: frontal,
+        cedulaReverso: reverso,
+        selfie: selfie,
+      };
+
+      body.id_usuario_actualizacion = req.user.userId;
+      await this.usuariosService.actualizarUsuario(id, body, filesUser);
+
+      return res.status(200).json({
+        message: 'Usuario actualizado exitosamente',
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('grupos/:id_usuario')
+  async getGruposByUsuarioId(
+    @Param('id_usuario', ParseIntPipe) id_usuario: number,
+  ) {
+    try {
+      const grupos = await this.usuariosService.getGruposByUsuario(id_usuario);
+      return grupos;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+
+
+
   @Get(':id')
   async getUsuarioById(@Param('id', ParseIntPipe) id: number) {
     try {
