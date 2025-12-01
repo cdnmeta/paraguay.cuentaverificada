@@ -556,12 +556,6 @@ export class UsuariosService {
         const { cedulaFrente, cedulaReverso, selfie } = files || {};
 
         if (cedulaFrente) {
-          const { crearNombreArchivoDesdeMulterFile } = await import(
-            '@/utils/funciones'
-          );
-          const { FIREBASE_STORAGE_FOLDERS } = await import(
-            '@/firebase/constantsFirebase'
-          );
 
           const nombreArchivo = usuarioExistente.cedula_frente
             ? usuarioExistente.cedula_frente
@@ -576,12 +570,7 @@ export class UsuariosService {
         }
 
         if (cedulaReverso) {
-          const { crearNombreArchivoDesdeMulterFile } = await import(
-            '@/utils/funciones'
-          );
-          const { FIREBASE_STORAGE_FOLDERS } = await import(
-            '@/firebase/constantsFirebase'
-          );
+        
 
           const nombreArchivo = usuarioExistente.cedula_reverso
             ? usuarioExistente.cedula_reverso
@@ -596,13 +585,6 @@ export class UsuariosService {
         }
 
         if (selfie) {
-          const { crearNombreArchivoDesdeMulterFile } = await import(
-            '@/utils/funciones'
-          );
-          const { FIREBASE_STORAGE_FOLDERS } = await import(
-            '@/firebase/constantsFirebase'
-          );
-
           const nombreArchivo = usuarioExistente.selfie
             ? usuarioExistente.selfie
             : crearNombreArchivoDesdeMulterFile(selfie);
