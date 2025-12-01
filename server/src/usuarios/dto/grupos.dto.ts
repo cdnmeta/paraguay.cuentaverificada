@@ -2,7 +2,7 @@ import { Type } from "class-transformer";
 import { IsNotEmpty, IsNumber, IsOptional, Max, Min } from "class-validator";
 
 export class VendedorDataDto{
-    @Type(() => Number)
+    /* @Type(() => Number)
     @IsNumber({}, { message: 'El porcentaje de primera venta debe ser un número' })
     @IsNotEmpty({ message: 'El porcentaje de primera venta no puede estar vacío' })
     @Min(0, { message: 'El porcentaje de primera venta debe ser mayor o igual a 0' })
@@ -14,7 +14,7 @@ export class VendedorDataDto{
     @IsNotEmpty({ message: 'El porcentaje de venta recurrente no puede estar vacío' })
     @Min(0, { message: 'El porcentaje de venta recurrente debe ser mayor o igual a 0' })
     @Max(100, { message: 'El porcentaje de venta recurrente debe ser menor o igual a 100' })
-    porcentaje_vendedor_venta_recurrente?: number;
+    porcentaje_vendedor_venta_recurrente?: number; */
 
     @IsNumber({}, { message: 'El codigo del vendedor debe ser un número' })
     @IsNotEmpty({ message: 'El codigo del vendedor no puede estar vacío' })

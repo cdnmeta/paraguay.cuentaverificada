@@ -156,7 +156,7 @@ export default function SemaforoFinancieroPage() {
             Semáforo Financiero
           </h1>
           <p className="text-muted-foreground">
-            Controla tus finanzas como un profesional
+            Controla tus finanzas como un profesional.
           </p>
         </div>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -197,7 +197,7 @@ export default function SemaforoFinancieroPage() {
             Semáforo Financiero
           </h1>
           <p className="text-muted-foreground">
-            Controla tus finanzas como un profesional
+            Controla tus finanzas como un profesional.
           </p>
         </div>
       </div>

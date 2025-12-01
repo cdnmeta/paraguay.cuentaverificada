@@ -1,17 +1,17 @@
 import { z } from "zod";
 
 export const comercioSchema = z.object({
-  razonSocial: z.string().min(3, "Debe tener al menos 3 caracteres").trim(),
+  razonSocial: z.string().trim().min(3, "Debe tener al menos 3 caracteres"),
   ruc: z
     .string()
+    .trim()
     .regex(/^[0-9]+-[0-9]$/, "Formato inválido. Ejemplo: 978783-8")
-    .nonempty("El R.U.C. es obligatorio")
-    .trim(),
+    .nonempty("El R.U.C. es obligatorio"),
   telefono: z
     .string()
+    .trim()
     .min(7, "El teléfono debe tener al menos 7 dígitos")
-    .regex(/^0[0-9]{6,11}$/, "Formato de teléfono inválido. Ej: 0983123456")
-    .trim(),
+    .regex(/^0[0-9]{6,11}$/, "Formato de teléfono inválido. Ej: 0983123456"),
   comprobantePago: z
     .instanceof(File, { message: "El archivo es obligatorio" })
     .refine((f) => f.size <= 5 * 1024 * 1024, "Máx. 5MB")

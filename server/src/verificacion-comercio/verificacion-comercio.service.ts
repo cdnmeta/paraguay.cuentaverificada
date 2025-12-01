@@ -30,6 +30,10 @@ import { DatabasePromiseService } from '@/database/database-promise.service';
 import { info } from 'console';
 import { ParticipantesService } from '@/participantes/participantes.service';
 import { OpcionesRepartirParticipantesDto } from '@/participantes/dto/repartir-participantes';
+import { verbose } from 'winston';
+import { NotificacionesService } from '@/notificaciones/notificaciones.service';
+import { TiposNotificaciones } from '@/notificaciones/enums/tipos-notificaciones';
+import { NotificationCode } from '@/notificaciones/enums/notification-code.enum';
 
 interface FileSolicitudVerificacion {
   comprobantePago: Express.Multer.File;
@@ -54,6 +58,7 @@ export class VerificacionComercioService {
     private readonly dbService: DatabaseService,
     private readonly dbPromiseService: DatabasePromiseService,
     private readonly participantesService: ParticipantesService,
+    private readonly notificacionesService: NotificacionesService,
   ) {}
   // Registro de la solicitud de la verificacion
   async solicitarVerificacion(
@@ -95,6 +100,7 @@ export class VerificacionComercioService {
       const comercio_creado = await this.prismaService.$transaction(
         async (prisma) => {
           let id_vendedor: number | null = null;
+          let id_embajador: number | null = null;
 
           // Buscar el vendedor por código
           if (createComercioDto.codigoVendedor) {
@@ -104,6 +110,9 @@ export class VerificacionComercioService {
                 activo: true,
               },
             });
+            id_embajador = vendedor?.id_embajador
+              ? vendedor.id_embajador
+              : null;
             if (!vendedor) {
               throw new BadRequestException(
                 'El código de vendedor no es válido',
@@ -122,7 +131,7 @@ export class VerificacionComercioService {
           });
 
           if (slugExistente) {
-            slugComercio = crearSlug(createComercioDto.razonSocial,{
+            slugComercio = crearSlug(createComercioDto.razonSocial, {
               agregarDigito: true,
             });
           }
@@ -180,6 +189,7 @@ export class VerificacionComercioService {
               id_plan: planVerificacionData.id, // ID del plan de verificación
               monto: planVerificacionData.precio,
               estado: 1, // pendiente
+              id_embajador: id_embajador,
               activo: true,
             },
           });
@@ -187,7 +197,7 @@ export class VerificacionComercioService {
           // crear factura
 
           const monedaBase = await prisma.empresa_config.findFirst({
-            select: { id_moneda_base: true,id_moneda_planes:true },
+            select: { id_moneda_base: true, id_moneda_planes: true },
             where: { id: 1 },
           });
 
@@ -196,8 +206,10 @@ export class VerificacionComercioService {
             planVerificacionData.tipo_iva,
           );
 
-          if(!monedaBase?.id_moneda_planes){
-            throw new BadRequestException('No se ha configurado la moneda para los planes en la empresa');
+          if (!monedaBase?.id_moneda_planes) {
+            throw new BadRequestException(
+              'No se ha configurado la moneda para los planes en la empresa',
+            );
           }
           await prisma.factura_suscripciones.create({
             data: {
@@ -205,7 +217,7 @@ export class VerificacionComercioService {
               estado: 1, // pendiente
               id_suscripcion: suscripcionCreada.id,
               id_moneda: monedaBase?.id_moneda_planes, // moneda base de la empresa configurada para los planes
-              total_factura: totalesFactura.total_factura, 
+              total_factura: totalesFactura.total_factura,
               total_grav_5: totalesFactura.total_grav_5,
               total_grav_10: totalesFactura.total_grav_10,
               total_iva_5: totalesFactura.total_iva_5,
@@ -272,7 +284,7 @@ export class VerificacionComercioService {
       const fecha = new Date();
 
       await this.prismaService.$transaction(async (prisma) => {
-        await prisma.comercio.update({
+       const comercio = await prisma.comercio.update({
           where: { id: rechazoSeguimiento.id_comercio },
           data: {
             estado: id_estado_rechazo,
@@ -290,6 +302,18 @@ export class VerificacionComercioService {
             id_usuario: rechazoSeguimiento.id_usuario_seguimiento,
           },
         });
+
+         await this.notificacionesService.sendNotificationToUser(
+        comercio.id_usuario,
+        {
+          code: NotificationCode.PAGO_VERIFICACION_RECHAZADO,
+          title: 'Pago de Verificación Rechazado',
+          tipo_notificacion: TiposNotificaciones.VERIFICACION_COMERCIO,
+          description:
+            'Tu pago para la verificación de comercio ha sido rechazado, verifique los datos y vuelva a intentarlo.',
+        },
+      );
+
       });
       return { message: 'Solicitud rechazada correctamente' };
     } catch (error) {
@@ -306,7 +330,6 @@ export class VerificacionComercioService {
         where: { id },
       });
 
-
       if (!comercio) throw new NotFoundException('Comercio no encontrado');
 
       await this.prismaService.comercio.update({
@@ -321,6 +344,17 @@ export class VerificacionComercioService {
           id_usuario: dataAprobacion.id_usuario,
         },
       });
+
+      await this.notificacionesService.sendNotificationToUser(
+        dataAprobacion.id_usuario,
+        {
+          code: NotificationCode.PAGO_VERIFICACION_APROBADO,
+          title: 'Pago de Verificación Aprobado',
+          tipo_notificacion: TiposNotificaciones.SISTEMA,
+          description:
+            'Tu pago para la verificación de comercio ha sido aprobado exitosamente.',
+        },
+      );
 
       return { message: 'Solicitud aprobada correctamente' };
     } catch (error) {
@@ -495,10 +529,7 @@ export class VerificacionComercioService {
       const id_estado_asignar = 3;
       const comercio = await this.prismaService.comercio.findFirst({
         where: {
-          AND: [
-            { id: id },
-            { activo: true },
-          ],
+          AND: [{ id: id }, { activo: true }],
         },
       });
 
@@ -513,7 +544,9 @@ export class VerificacionComercioService {
       const pathImagenes: Record<string, string> = {};
       const nombreFotoInterior = path.basename(comercio.foto_interior || '');
       const nombreFotoExterior = path.basename(comercio.foto_exterior || '');
-      const nombrefacturaServicio = path.basename(comercio.imagen_factura_servicio || '');
+      const nombrefacturaServicio = path.basename(
+        comercio.imagen_factura_servicio || '',
+      );
       const nombreCedulaFrontal = path.basename(comercio.cedula_frontal || '');
       const nombreCedulaReverso = path.basename(comercio.cedula_reverso || '');
       await Promise.all(
@@ -596,7 +629,7 @@ export class VerificacionComercioService {
     try {
       let sql = sqlLisatdoComerciosAprobar;
       let parametros: any = {};
-      console.log("query es",query)
+      console.log('query es', query);
       if (query.estado) {
         sql += ` and com.estado = $(estado)`;
         parametros.estado = query.estado;
@@ -607,7 +640,10 @@ export class VerificacionComercioService {
         parametros.ruc = query.ruc;
       }
 
-      const comerciosAprobar = await this.dbPromiseService.result(sql, parametros);
+      const comerciosAprobar = await this.dbPromiseService.result(
+        sql,
+        parametros,
+      );
       return comerciosAprobar.rows;
     } catch (error) {
       console.error('Error al obtener comercios a aprobar:', error);
@@ -644,7 +680,7 @@ export class VerificacionComercioService {
               id_usuario_actualizacion: id_usuario_seguimiento,
               fecha_actualizacion_estado: fecha_actualizacion,
               fecha_actualizacion: fecha_actualizacion,
-              verificado:false,
+              verificado: false,
             },
           });
 
@@ -669,8 +705,7 @@ export class VerificacionComercioService {
     }
   }
 
-
-  async verificarComercio(data:VerificarComercioDto) {
+  async verificarComercio(data: VerificarComercioDto) {
     try {
       const { id_comercio, id_usuario_seguimiento } = data;
       const id_estado_asignar = 4;
@@ -680,21 +715,31 @@ export class VerificacionComercioService {
 
       if (!comercio) throw new NotFoundException('Comercio no encontrado');
 
-      if(comercio.verificado) throw new BadRequestException('El comercio ya ha sido verificado');
+      if (comercio.verificado)
+        throw new BadRequestException('El comercio ya ha sido verificado');
 
-      if(comercio.estado != 3) throw new BadRequestException('El comercio no está en estado de pendiente de verificación');
+      if (comercio.estado != 3)
+        throw new BadRequestException(
+          'El comercio no está en estado de pendiente de verificación',
+        );
 
       const comercioActualizado = await this.prismaService.$transaction(
         async (prisma) => {
           const fecha_actualizacion = new Date();
-          const numero_nuv_actual =  await prisma.empresa_config.findFirst({
-            select: { nuv_actual: true,nuv_fin:true },
+          const numero_nuv_actual = await prisma.empresa_config.findFirst({
+            select: { nuv_actual: true, nuv_fin: true },
             where: { id: 1 },
           });
 
-          if (!numero_nuv_actual?.nuv_actual) throw new BadRequestException('No se ha configurado el número NUV en la empresa');
+          if (!numero_nuv_actual?.nuv_actual)
+            throw new BadRequestException(
+              'No se ha configurado el número NUV en la empresa',
+            );
 
-          if(numero_nuv_actual?.nuv_fin ==  numero_nuv_actual?.nuv_actual) throw new BadRequestException('No hay más NUV disponibles, contactar con el administrador');
+          if (numero_nuv_actual?.nuv_fin == numero_nuv_actual?.nuv_actual)
+            throw new BadRequestException(
+              'No hay más NUV disponibles, contactar con el administrador',
+            );
 
           const comercio = await prisma.comercio.update({
             where: { id: id_comercio },
@@ -703,7 +748,7 @@ export class VerificacionComercioService {
               id_usuario_actualizacion: id_usuario_seguimiento,
               fecha_actualizacion: fecha_actualizacion,
               fecha_actualizacion_estado: fecha_actualizacion,
-              verificado:true,
+              verificado: true,
               codigo_nuv: String(numero_nuv_actual!.nuv_actual),
             },
           });
@@ -729,15 +774,19 @@ export class VerificacionComercioService {
           // activar suscripcion de comercio
           // Obtener el ID del plan de verificación desde la configuración
 
-          const sqlplanVerificacion = `select id as id_plan_verificacion, renovacion_plan, renovacion_valor from planes where activo = true and id = (select id_plan_verificacion from empresa_config where id = 1)`
-          const resultPlanVerificacion = await this.dbService.query(sqlplanVerificacion);
+          const sqlplanVerificacion = `select id as id_plan_verificacion, renovacion_plan, renovacion_valor from planes where activo = true and id = (select id_plan_verificacion from empresa_config where id = 1)`;
+          const resultPlanVerificacion =
+            await this.dbService.query(sqlplanVerificacion);
 
-          if(resultPlanVerificacion.rowCount === 0) throw new BadRequestException('Plan de verificación no encontrado');
+          if (resultPlanVerificacion.rowCount === 0)
+            throw new BadRequestException('Plan de verificación no encontrado');
 
           const planVerificacionConfig = resultPlanVerificacion.rows[0];
 
           if (!planVerificacionConfig?.id_plan_verificacion) {
-            throw new BadRequestException('Plan de verificación no configurado');
+            throw new BadRequestException(
+              'Plan de verificación no configurado',
+            );
           }
 
           // activar y actualizar la fecha de vecimiento
@@ -747,20 +796,27 @@ export class VerificacionComercioService {
             valor: planVerificacionConfig.renovacion_valor,
           });
 
-          const suscripcionActualizada = await prisma.suscripciones.updateManyAndReturn({
-            data: { estado: 2, fecha_vencimiento: fechaVencimiento, fecha_actualizacion: new Date() }, // activo
-            where: {
-              AND: [
-                { id_comercio: id_comercio },
-                { id_plan: planVerificacionConfig.id_plan_verificacion }, // Plan de verificación dinámico
-                { activo: true },
-                { estado: 1 },
-              ]
-            },
-          });
+          const suscripcionActualizada =
+            await prisma.suscripciones.updateManyAndReturn({
+              data: {
+                estado: 2,
+                fecha_vencimiento: fechaVencimiento,
+                fecha_actualizacion: new Date(),
+              }, // activo
+              where: {
+                AND: [
+                  { id_comercio: id_comercio },
+                  { id_plan: planVerificacionConfig.id_plan_verificacion }, // Plan de verificación dinámico
+                  { activo: true },
+                  { estado: 1 },
+                ],
+              },
+            });
 
           if (suscripcionActualizada.length === 0) {
-            throw new BadRequestException('No se encontró suscripción para activar');
+            throw new BadRequestException(
+              'No se encontró suscripción para activar',
+            );
           }
 
           // obtener factura pagada de la suscripcion
@@ -768,21 +824,27 @@ export class VerificacionComercioService {
             where: { id_suscripcion: suscripcionActualizada[0].id, estado: 2 },
           });
 
-          
-          
-          
           if (!facturaPagada) {
-            throw new BadRequestException('No se encontró factura pagada para registrar ganancias');
+            throw new BadRequestException(
+              'No se encontró factura pagada para registrar ganancias',
+            );
           }
-          
 
           await this.participantesService.repartirGananciasDeVentaPlan(
             facturaPagada.id,
-            {primera_venta:true} as OpcionesRepartirParticipantesDto,
-            prisma
+            { primera_venta: true } as OpcionesRepartirParticipantesDto,
+            prisma,
           );
-          
 
+          await this.notificacionesService.sendNotificationToUser(
+            comercio.id_usuario,
+            {
+              code: NotificationCode.COMERCIO_VERIFICADO,
+              title: 'Comercio Verificado',
+              tipo_notificacion: TiposNotificaciones.VERIFICACION_COMERCIO,
+              description:`El comercio ${comercio.razon_social}, ha sido verificado exitosamente.`,
+            },
+          );
 
           return comercio;
         },
@@ -794,6 +856,4 @@ export class VerificacionComercioService {
       throw error;
     }
   }
-
-  
 }

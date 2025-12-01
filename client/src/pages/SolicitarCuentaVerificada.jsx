@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ComboBox } from "@/components/customs/comboBoxShadcn/ComboBox1";
+import { DatePicker } from "@/components/date-picker1";
 import paisesCode from "@/utils/paises-flag.json";
 import {
   AlertDialog,
@@ -82,7 +83,7 @@ const schema = z
       message: "Debes aceptar los términos y condiciones",
     }),
     documento: z
-      .string()
+      .string().trim()
       .regex(REGEX_CEDULA_IDENTIDAD, "Cédula de identidad inválida"),
     codigo_pais: z
       .string({
@@ -92,6 +93,26 @@ const schema = z
       .trim()
       .min(1, "Selecciona un código"),
     telefono: z.string().trim().min(6, "Teléfono inválido"),
+    fecha_nacimiento: z.date({
+      required_error: "Fecha de nacimiento es requerida",
+      invalid_type_error: "Fecha de nacimiento inválida",
+    })
+      .refine((val) => {
+        const fecha = new Date(val);
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        return fecha < hoy;
+      }, {
+        message: "La fecha de nacimiento debe ser anterior a hoy",
+      })
+      .refine((val) => {
+        const fecha = new Date(val);
+        const fechaMinima = new Date();
+        fechaMinima.setFullYear(fechaMinima.getFullYear() - 100);
+        return fecha > fechaMinima;
+      }, {
+        message: "Fecha de nacimiento no válida",
+      }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
@@ -100,7 +121,9 @@ const schema = z
   .refine((data) => data.pin === data.confirmPin, {
     message: "Los PINs no coinciden",
     path: ["confirmPin"],
-  });
+  })
+  
+  ;
 
 const otpSchema = z.object({
   codigo_verificacion: z
@@ -227,6 +250,7 @@ export default function SolicitarCuentaVerificada() {
       confirmPin: "",
       codigo_pais: CODIGO_PAIS_BASE,
       telefono: "",
+      fecha_nacimiento: null,
       terminos: false,
       cedula_frente: null,
       cedula_trasera: null,
@@ -281,6 +305,7 @@ export default function SolicitarCuentaVerificada() {
       formData.append("contrasena", data.password);
       formData.append("dial_code", String(pais.countryCode));
       formData.append("telefono", data.telefono);
+      formData.append("fecha_nacimiento", data.fecha_nacimiento ? data.fecha_nacimiento.toISOString() : null);
       formData.append("pin", data.pin);
 
       // Agregar archivos
@@ -321,6 +346,7 @@ export default function SolicitarCuentaVerificada() {
             setIdUsuario(null);
             navigate(PUBLIC_ROUTES.login);
             setOpenConfirm(false);
+            setMostrarVerificacion(true);
           },
         });
         return;
@@ -328,9 +354,6 @@ export default function SolicitarCuentaVerificada() {
       
       setUserData(user);
       setOpenConfirm(false);
-      setTimeout(() => {
-        setMostrarVerificacion(true);
-      }, 6000);
 
       showAlert({
         title: (
@@ -688,6 +711,25 @@ export default function SolicitarCuentaVerificada() {
                           <p className="text-xs text-gray-500 mt-1 text-center">
                             Confirma tu PIN de {CANT_MIN_CARACTERES_PIN} caracteres
                           </p>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      name="fecha_nacimiento"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Fecha de Nacimiento</FormLabel>
+                          <FormControl>
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Selecciona tu fecha de nacimiento"
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />

@@ -1,0 +1,8 @@
+export const GruposSistema = {
+  DEPARTAMENTO_LEGAL: 1,
+  VERIFICADOR: 2,
+  VENDEDOR: 3,
+  PARTICIPANTE: 4,
+  AGENTE_SOPORTE: 5,
+  EMBAJADOR: 6,
+};

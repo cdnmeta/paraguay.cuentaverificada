@@ -27,3 +27,8 @@ export const getPlanById = async (id) => {
   const response = await api.get(`/${URL_ENDPOINT}/${id}`);
   return response;
 }
+
+export const getPlanesTiposRepartir = async () => {
+  const response = await api.get(`/${URL_ENDPOINT}/tipos-porcentajes-repartir`);
+  return response;
+}

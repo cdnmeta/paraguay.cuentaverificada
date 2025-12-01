@@ -46,25 +46,7 @@ export default function ListadoComercioPages() {
     {
       accessorKey: "descripcion_estado",
       header: "Estado",
-    },
-    {
-      header: "Acciones",
-      cell: ({ row }) => {
-        const userId = row.original.id;
-        return (
-          <div className="flex gap-2">
-            <Button
-              onClick={() => onclickEditUser(userId)}
-              variant="outline"
-              size="icon"
-              title="Editar Usuario"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
-    },
+    }
   ];
 
   const onclickEditUser = (id) => navigate("/admin/usuarios/" + id);
