@@ -227,7 +227,7 @@ export class AuthService {
     try {
       const { documento, password } = loginDTO;
       const userAutenticar = await this.prismaService.usuarios.findFirst({
-        where: { documento, activo: true },
+        where: { documento, activo: true, estado: 2 },
       });
       if (!userAutenticar) {
         throw new BadRequestException('Usuario no Encontrado');
