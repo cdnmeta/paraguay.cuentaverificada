@@ -54,10 +54,11 @@ import {
   MAXIMO_PESO_IMAGENES_BYTES,
   REGEX_CEDULA_IDENTIDAD,
 } from "@/utils/constants";
-import { actualizarUsuario, crearUsuario, getUsuarioById } from "@/apis/usuarios.api";
+import { actualizarUsuario, crearUsuario, getUsersByQuery, getUsuarioById } from "@/apis/usuarios.api";
 import { toast } from "sonner";
 import { useAlertDialogStore } from "@/store/useAlertDialogStore";
 import { cargarURL } from "@/utils/funciones";
+import { GruposSistema } from "../types/GruposSistema";
 
 /**
  * Props:
@@ -84,16 +85,6 @@ export default function FormUsuario({
     []
   );
 
-  // Helpers de esquema
-  const percentageField = z
-    .union([z.string(), z.number()])
-    .optional()
-    .transform((v) => {
-      if (v === undefined || v === null || v === '') return null;
-      const n = typeof v === 'number' ? v : Number(v);
-      return Number.isNaN(n) ? null : n;
-    });
-
   const baseShape = {
     nombre: z
       .string({ required_error: 'El nombre es obligatorio' })
@@ -114,9 +105,9 @@ export default function FormUsuario({
     cedula_frontal: z.any().optional().nullable(),
     cedula_reverso: z.any().optional().nullable(),
     selfie: z.any().optional().nullable(),
-    porcentaje_vendedor_primera_venta: percentageField,
-    porcentaje_vendedor_venta_recurrente: percentageField,
+    id_usuario_embajador: z.coerce.number({invalid_type_error:"el embajador debe ser un numero"}).optional().nullable(),
   };
+
 
   const schemaCreate = z
     .object({
@@ -136,20 +127,6 @@ export default function FormUsuario({
       }
       if (val.contrasena !== val.repetir_contrasena) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Las contraseñas no coinciden', path: ['repetir_contrasena'] });
-      }
-      if (val.grupos && val.grupos.includes(3)) {
-        if (val.porcentaje_vendedor_primera_venta == null) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje del vendedor en la primera venta es obligatorio', path: ['porcentaje_vendedor_primera_venta'] });
-        }
-        if (val.porcentaje_vendedor_venta_recurrente == null) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje del vendedor en ventas recurrentes es obligatorio', path: ['porcentaje_vendedor_venta_recurrente'] });
-        }
-        if (val.porcentaje_vendedor_primera_venta != null && (val.porcentaje_vendedor_primera_venta < 0 || val.porcentaje_vendedor_primera_venta > 100)) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje de venta debe estar entre 0 y 100', path: ['porcentaje_vendedor_primera_venta'] });
-        }
-        if (val.porcentaje_vendedor_venta_recurrente != null && (val.porcentaje_vendedor_venta_recurrente < 0 || val.porcentaje_vendedor_venta_recurrente > 100)) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje de venta debe estar entre 0 y 100', path: ['porcentaje_vendedor_venta_recurrente'] });
-        }
       }
       // En creación, pedimos imágenes obligatorias
       if (!val.selfie) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La selfie es obligatoria', path: ['selfie'] });
@@ -178,20 +155,6 @@ export default function FormUsuario({
           ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Las contraseñas no coinciden', path: ['repetir_contrasena'] });
         }
       }
-      if (val.grupos && val.grupos.includes(3)) {
-        if (val.porcentaje_vendedor_primera_venta == null) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje del vendedor en la primera venta es obligatorio', path: ['porcentaje_vendedor_primera_venta'] });
-        }
-        if (val.porcentaje_vendedor_venta_recurrente == null) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje del vendedor en ventas recurrentes es obligatorio', path: ['porcentaje_vendedor_venta_recurrente'] });
-        }
-        if (val.porcentaje_vendedor_primera_venta != null && (val.porcentaje_vendedor_primera_venta < 0 || val.porcentaje_vendedor_primera_venta > 100)) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje de venta debe estar entre 0 y 100', path: ['porcentaje_vendedor_primera_venta'] });
-        }
-        if (val.porcentaje_vendedor_venta_recurrente != null && (val.porcentaje_vendedor_venta_recurrente < 0 || val.porcentaje_vendedor_venta_recurrente > 100)) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El porcentaje de venta debe estar entre 0 y 100', path: ['porcentaje_vendedor_venta_recurrente'] });
-        }
-      }
       // En edición NO exigimos imágenes
     });
 
@@ -216,9 +179,8 @@ export default function FormUsuario({
       correo: "",
       codigo_pais: "",
       telefono: "",
-     porcentaje_vendedor_primera_venta: "",
-     porcentaje_vendedor_venta_recurrente: "",
       grupos: [],
+      id_usuario_embajador: null,
     },
   });
 
@@ -237,30 +199,42 @@ export default function FormUsuario({
   // Grupos
   const [optionsGrupos, setOptionsGrupos] = useState([]);
 
+  // Embajadores
+  const [optionsEmbajadores, setOptionsEmbajadores] = useState([]);
+
   const showAlert = useAlertDialogStore((state) => state.showAlert);
 
-  // Carga de grupos
+  // Carga de grupos y embajadores
   useEffect(() => {
     let active = true;
-    async function loadGrupos() {
+    async function loadGruposYEmbajadores() {
       try {
         let opts = [];
-        const [respDisponibles] = await Promise.all([
+        const queryEmbajadores = { id_grupo: GruposSistema.EMBAJADOR }; // ID del grupo "Embajador"
+        const [respDisponibles, respEmbajadores] = await Promise.all([
           getGruposHabilitados(),
-          //getGruposByUsuarioId(id), // si tu API no requiere id, deja getGruposByUsuario()
+          getUsersByQuery(queryEmbajadores),
         ]);
         const gruposDisponibles = respDisponibles?.data ?? [];
+        const embajadoresData = respEmbajadores?.data ?? [];
         opts = gruposDisponibles?.map((g) => ({
           value: String(g.id),
           label: g.descripcion,
         }));
+        
+        const optsEmbajadores = embajadoresData?.map((e) => ({
+          value: e.id,
+          label: `${e.nombre} ${e.apellido || ''} - ${e.documento}`.trim(),
+        })) || [];
+        
         if (!active) return;
         setOptionsGrupos(opts);
+        setOptionsEmbajadores(optsEmbajadores);
       } catch (e) {
-        console.error("Error cargando grupos", e);
+        console.error("Error cargando grupos y embajadores", e);
       }
     }
-    loadGrupos();
+    loadGruposYEmbajadores();
     return () => {
       active = false;
     };
@@ -288,8 +262,7 @@ export default function FormUsuario({
                 .map((g) => Number(g?.id ?? g?.id_grupo ?? g))
                 .filter(Boolean)
             : [],
-          porcentaje_vendedor_primera_venta: u?.porcentaje_comision_primera_venta ?? "",
-          porcentaje_vendedor_venta_recurrente: u?.porcentaje_comision_recurrente ?? "",
+          id_usuario_embajador: u?.id_embajador || null,
         });
         // previews desde paths existentes (si tu API devuelve URLs)
         const imagePromises = [
@@ -353,19 +326,9 @@ export default function FormUsuario({
     const grupos = (values.grupos ?? []).filter(Boolean).map(Number);
     if (grupos.length) formData.append("grupos", JSON.stringify(grupos));
 
-    // porcentaje vendedores
-
-  if (Array.isArray(values?.grupos) && values.grupos.includes(3)) {
-      if (values.porcentaje_vendedor_primera_venta)
-        formData.append(
-          "porcentaje_vendedor_primera_venta",
-          values.porcentaje_vendedor_primera_venta
-        );
-      if (values.porcentaje_vendedor_venta_recurrente)
-        formData.append(
-          "porcentaje_vendedor_venta_recurrente",
-          values.porcentaje_vendedor_venta_recurrente
-        );
+    // embajador para vendedores
+    if (Array.isArray(values?.grupos) && values.grupos.includes(3) && values.id_usuario_embajador) {
+      formData.append("id_usuario_embajador", values.id_usuario_embajador);
     }
 
     // archivos
@@ -632,35 +595,26 @@ export default function FormUsuario({
 
               {includeGrupo(3) && (
                 <div className="flex flex-col gap-2">
-                  <Label>Imágenes (Porcentajes vendedores)</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-2">
-                      <Label>Primera Venta</Label>
-                      <Input
-                        type="number"
-                        placeholder="Porcentaje"
-                        {...register("porcentaje_vendedor_primera_venta")}
+                  <Label>Embajador Asignado (opcional)</Label>
+                  <Controller
+                    control={control}
+                    name="id_usuario_embajador"
+                    render={({ field }) => (
+                      <ComboBox
+                        value={field.value}
+                        items={optionsEmbajadores}
+                        onChange={field.onChange}
+                        placeholder="Seleccionar embajador"
+                        error={!!errors.id_usuario_embajador}
+                        clearable={true}
                       />
-                      {errors.porcentaje_vendedor_primera_venta && (
-                        <p className="text-sm text-red-500">
-                          {errors.porcentaje_vendedor_primera_venta.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Venta Recurrente</Label>
-                      <Input
-                        type="number"
-                        placeholder="Porcentaje"
-                        {...register("porcentaje_vendedor_venta_recurrente")}
-                      />
-                      {errors.porcentaje_vendedor_venta_recurrente && (
-                        <p className="text-sm text-red-500">
-                          {errors.porcentaje_vendedor_venta_recurrente.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                    )}
+                  />
+                  {errors.id_usuario_embajador && (
+                    <p className="text-sm text-red-500">
+                      {errors.id_usuario_embajador.message}
+                    </p>
+                  )}
                 </div>
               )}
 

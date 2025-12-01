@@ -4,13 +4,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { NumericFormat } from "react-number-format";
 import { toast } from "sonner";
-import { Loader2, Save, Edit3 } from "lucide-react";
+import { Loader2, Save, Edit3, Plus, Trash2, AlertCircle, Info } from "lucide-react";
 
 // shadcn/ui components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -28,7 +29,7 @@ import {
 } from "@/components/ui/select";
 
 // APIs
-import { getPlanById, createPlan, updatePlan } from "@/apis/planes.api";
+import { getPlanById, createPlan, updatePlan, getPlanesTiposRepartir } from "@/apis/planes.api";
 
 // Schema de validación Zod basado en el DTO CreatePlanPayloadDto
 const planSchema = z.object({
@@ -62,6 +63,63 @@ const planSchema = z.object({
       message: "El tipo de IVA debe ser un número válido",
     })
     .transform((val) => Number(val)),
+  precio_oferta: z.coerce
+    .number({
+      invalid_type_error: "El precio de oferta debe ser un número",
+      required_error: "El precio de oferta es obligatorio",
+    })
+    .min(0, "El precio de oferta debe ser mayor o igual a 0"),
+  porcentajes_repartir: z
+    .array(
+      z.object({
+        id_tipo: z.coerce.number({
+          required_error: "El tipo de reparto es obligatorio",
+          invalid_type_error: "El tipo de reparto debe ser un número",
+        }),
+        porcentaje_primera_venta: z.coerce
+          .number({
+            required_error: "El porcentaje es obligatorio",
+            invalid_type_error: "El porcentaje debe ser un número",
+          })
+          .min(0, "El porcentaje debe ser al menos 0")
+          .max(100, "El porcentaje no puede ser mayor a 100"),
+        porcentaje_venta_recurrente: z.coerce
+          .number({
+            required_error: "El porcentaje es obligatorio",
+            invalid_type_error: "El porcentaje debe ser un número",
+          })
+          .min(0, "El porcentaje debe ser al menos 0")
+          .max(100, "El porcentaje no puede ser mayor a 100"),
+      })
+    )
+    .min(1, "Debe haber al menos un tipo de reparto")
+    .refine(
+      (data) => {
+        const tipos = data.map((item) => item.id_tipo);
+        return new Set(tipos).size === tipos.length;
+      },
+      {
+        message: "No puede haber tipos de reparto duplicados",
+      }
+    )
+    .refine(
+      (data) => {
+        const suma_primera_venta = data.reduce((sum, item) => sum + item.porcentaje_primera_venta, 0);
+        return suma_primera_venta === 100;
+      },
+      {
+        message: "La suma de porcentajes de primera venta debe ser exactamente 100%",
+      }
+    )
+    .refine(
+      (data) => {
+        const suma_venta_recurrente = data.reduce((sum, item) => sum + item.porcentaje_venta_recurrente, 0);
+        return suma_venta_recurrente === 100;
+      },
+      {
+        message: "La suma de porcentajes de venta recurrente debe ser exactamente 100%",
+      }
+    ),
 });
 
 /**
@@ -73,7 +131,16 @@ const planSchema = z.object({
 export default function PlanForm({ id, onSuccess, className = "" }) {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
+  const [tiposReparto, setTiposReparto] = useState([]);
+  const [loadingTipos, setLoadingTipos] = useState(true);
   const isEditMode = Boolean(id);
+
+  // Estado para el formulario de agregar tipo de reparto
+  const [nuevoTipo, setNuevoTipo] = useState({
+    id_tipo: "",
+    porcentaje_primera_venta: "",
+    porcentaje_venta_recurrente: ""
+  });
 
   // Configuración del formulario
   const form = useForm({
@@ -86,8 +153,29 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
       renovacion_plan: "mes",
       renovacion_valor: 1,
       tipo_iva: "3",
+      precio_oferta: 0,
+      porcentajes_repartir: [],
     },
   });
+
+  // Cargar tipos de reparto desde la API
+  const loadTiposReparto = useCallback(async () => {
+    try {
+      setLoadingTipos(true);
+      const response = await getPlanesTiposRepartir();
+    
+        // Filtrar solo tipos activos
+        const tiposFiltrados = response.data
+        setTiposReparto(tiposFiltrados);
+     
+    } catch (error) {
+      console.error("Error loading tipos reparto:", error);
+      toast.error("Error al cargar los tipos de reparto");
+      setTiposReparto([]);
+    } finally {
+      setLoadingTipos(false);
+    }
+  }, []);
 
   // Cargar datos del plan cuando esté en modo edición
 
@@ -100,6 +188,18 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
 
       if (response.status === 200) {
         const planData = response.data;
+        
+        // Convertir planes_descuentos a porcentajes_repartir
+        let porcentajes_repartir = [];
+        if (planData.porcentajes_reparto && Array.isArray(planData.porcentajes_reparto)) {
+          porcentajes_repartir = planData.porcentajes_reparto
+            .map(descuento => ({
+              id_tipo: descuento.id_tipo,
+              porcentaje_primera_venta: descuento.porcentaje_primera_venta,
+              porcentaje_venta_recurrente: descuento.porcentaje_venta_recurrente
+            }));
+        }
+
         form.reset({
           descripcion: planData.descripcion || "",
           nombre: planData.nombre || "",
@@ -107,7 +207,9 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
           precio_sin_iva: planData.precio_sin_iva || 0,
           renovacion_plan: planData.renovacion_plan || "mes",
           renovacion_valor: planData.renovacion_valor || 1,
-          tipo_iva: planData.tipo_iva?.toString() || "10",
+          tipo_iva: planData.tipo_iva?.toString() || "3",
+          precio_oferta: planData.precio_oferta || 0,
+          porcentajes_repartir: porcentajes_repartir,
         });
       } else {
         toast.error("Error al cargar los datos del plan");
@@ -120,6 +222,10 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
     }
   }, [id, form]);
   useEffect(() => {
+    loadTiposReparto();
+  }, [loadTiposReparto]);
+
+  useEffect(() => {
     if (isEditMode) {
       loadPlanData();
     }
@@ -131,10 +237,65 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
     { label: "10%", id: 3, valor: 10 },
   ];
 
+  // Funciones helper para porcentajes
+  const calcularPorcentajesTotales = (porcentajes) => {
+    const totalPrimera = porcentajes.reduce((sum, p) => sum + (Number(p.porcentaje_primera_venta) || 0), 0);
+    const totalRecurrente = porcentajes.reduce((sum, p) => sum + (Number(p.porcentaje_venta_recurrente) || 0), 0);
+    return { totalPrimera, totalRecurrente };
+  };
+
+  const agregarTipoReparto = () => {
+    if (!nuevoTipo.id_tipo) {
+      toast.error("Debe seleccionar un tipo de reparto");
+      return;
+    }
+
+    const currentValues = form.getValues("porcentajes_repartir");
+    const tiposUsados = currentValues.map(p => p.id_tipo);
+    
+    if (tiposUsados.includes(parseInt(nuevoTipo.id_tipo))) {
+      toast.error("Este tipo de reparto ya está agregado");
+      return;
+    }
+
+    form.setValue("porcentajes_repartir", [
+      ...currentValues,
+      {
+        id_tipo: parseInt(nuevoTipo.id_tipo),
+        porcentaje_primera_venta: parseFloat(nuevoTipo.porcentaje_primera_venta) || 0,
+        porcentaje_venta_recurrente: parseFloat(nuevoTipo.porcentaje_venta_recurrente) || 0,
+      }
+    ]);
+
+    // Limpiar el formulario
+    setNuevoTipo({
+      id_tipo: "",
+      porcentaje_primera_venta: "",
+      porcentaje_venta_recurrente: ""
+    });
+
+    toast.success("Tipo de reparto agregado exitosamente");
+  };
+
+  const eliminarTipoReparto = (index) => {
+    const currentValues = form.getValues("porcentajes_repartir");
+    const newValues = currentValues.filter((_, i) => i !== index);
+    form.setValue("porcentajes_repartir", newValues);
+    toast.success("Tipo de reparto eliminado");
+  };
+
+  // Watch para obtener los porcentajes actuales y recalcular tipos disponibles
+  const currentPorcentajes = form.watch("porcentajes_repartir");
+  
+  // Obtener tipos disponibles para el select (reactivo)
+  const getTiposDisponibles = () => {
+    const tiposUsados = currentPorcentajes.map(p => p.id_tipo);
+    return tiposReparto.filter(t => !tiposUsados.includes(t.id));
+  };
+
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-      let response;
 
       if (isEditMode) {
         await updatePlan(id, data);
@@ -156,13 +317,15 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
     }
   };
 
-  if (loadingData) {
+  if (loadingData || loadingTipos) {
     return (
       <Card className={className}>
         <CardContent className="flex items-center justify-center py-8">
           <div className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Cargando datos del plan...</span>
+            <span>
+              {loadingData ? "Cargando datos del plan..." : "Cargando tipos de reparto..."}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -288,6 +451,7 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
                           field.onChange(precioSinIva);
                           console.log("precio con iva", precioConIva);
                           form.setValue("precio", precioConIva,{ shouldValidate: true});
+                          form.setValue("precio_oferta",precioConIva,{ shouldValidate: true});
                         }}
                         thousandSeparator="."
                         decimalSeparator=","
@@ -378,6 +542,207 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Precio de Oferta */}
+            <div className="space-y-2">
+              <FormField
+                control={form.control}
+                name="precio_oferta"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Precio de Oferta *</FormLabel>
+                    <FormControl>
+                      <NumericFormat
+                        customInput={Input}
+                        value={field.value}
+                        onValueChange={(values) => {
+                          field.onChange(values.floatValue || 0);
+                        }}
+                        thousandSeparator="."
+                        decimalSeparator=","
+                        decimalScale={2}
+                        fixedDecimalScale
+                        allowNegative={false}
+                        placeholder="0,00"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Gestión de Porcentajes de Reparto */}
+            <div className="space-y-6">
+              <div className="border-t pt-6">
+                <h3 className="text-lg text-foreground font-semibold mb-4">Tipos de Reparto y Porcentajes</h3>
+                
+                {/* Formulario para agregar nuevo tipo */}
+                <div className="border rounded-lg p-4 space-y-4 mb-6">
+                  <h4 className="font-medium">Agregar Tipo de Reparto</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    {/* Select de tipo */}
+                    <div className="space-y-2 mt-2">
+                      <label className="text-sm font-medium">Tipo de Reparto</label>
+                      <Select 
+                        value={nuevoTipo.id_tipo} 
+                        onValueChange={(value) => setNuevoTipo({...nuevoTipo, id_tipo: value})}
+                      >
+                        <SelectTrigger className={'w-full'}>
+                          <SelectValue placeholder="Seleccionar tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getTiposDisponibles().map((tipo) => (
+                            <SelectItem key={tipo.id} value={tipo.id.toString()}>
+                              {tipo.descripcion}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Input porcentaje primera venta */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Primera Venta (%)</label>
+                      <NumericFormat
+                        customInput={Input}
+                        value={nuevoTipo.porcentaje_primera_venta}
+                        onValueChange={(values) => {
+                          setNuevoTipo({...nuevoTipo, porcentaje_primera_venta: values.value || ""});
+                        }}
+                        decimalScale={2}
+                        fixedDecimalScale
+                        allowNegative={false}
+                        max={100}
+                        placeholder="0,00"
+                        suffix="%"
+                      />
+                    </div>
+
+                    {/* Input porcentaje venta recurrente */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Venta Recurrente (%)</label>
+                      <NumericFormat
+                        customInput={Input}
+                        value={nuevoTipo.porcentaje_venta_recurrente}
+                        onValueChange={(values) => {
+                          setNuevoTipo({...nuevoTipo, porcentaje_venta_recurrente: values.value || ""});
+                        }}
+                        decimalScale={2}
+                        fixedDecimalScale
+                        allowNegative={false}
+                        max={100}
+                        placeholder="0,00"
+                        suffix="%"
+                      />
+                    </div>
+
+                    {/* Botón agregar */}
+                    <Button
+                      type="button"
+                      onClick={agregarTipoReparto}
+                      className="flex items-center gap-2"
+                      disabled={getTiposDisponibles().length === 0}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Agregar
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Alert informativo */}
+                <Alert className="mb-4">
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    Los porcentajes deben sumar exactamente 100% tanto para primera venta como para ventas recurrentes. 
+                    Configure todos los tipos de reparto necesarios incluyendo el porcentaje para la empresa.
+                  </AlertDescription>
+                </Alert>
+
+                {/* Lista de tipos de reparto */}
+                <FormField
+                  control={form.control}
+                  name="porcentajes_repartir"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="space-y-3">
+                        {field.value.map((porcentaje, index) => {
+                          const tipoLabel = tiposReparto.find(t => t.id === porcentaje.id_tipo)?.descripcion || `Tipo ${porcentaje.id_tipo}`;
+                          
+                          return (
+                            <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                              <div className="flex items-center gap-4">
+                                <div className="font-medium text-gray-900">
+                                  {tipoLabel}
+                                </div>
+                                <div className="flex gap-4 text-sm text-gray-600">
+                                  <span>Primera Venta: <strong>{porcentaje.porcentaje_primera_venta}%</strong></span>
+                                  <span>Recurrente: <strong>{porcentaje.porcentaje_venta_recurrente}%</strong></span>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => eliminarTipoReparto(index)}
+                                className="text-red-600 hover:text-red-800 hover:bg-red-100"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          );
+                        })}
+                        
+                        {field.value.length === 0 && (
+                          <div className="text-center py-6 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+                            <p>No hay tipos de reparto configurados.</p>
+                            <p className="text-sm">Use el formulario superior para agregar tipos.</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Mostrar totales */}
+                      {field.value.length > 0 && (
+                        <div className="mt-4 p-3 rounded-lg border">
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="font-medium">Total Primera Venta: </span>
+                              <span className={`${calcularPorcentajesTotales(field.value).totalPrimera !== 100 ? 'text-red-600 font-bold' : 'text-green-600 font-semibold'}`}>
+                                {calcularPorcentajesTotales(field.value).totalPrimera}%
+                              </span>
+                              {calcularPorcentajesTotales(field.value).totalPrimera !== 100 && (
+                                <span className="text-red-500 text-xs ml-2">
+                                  (Falta: {100 - calcularPorcentajesTotales(field.value).totalPrimera}%)
+                                </span>
+                              )}
+                            </div>
+                            <div>
+                              <span className="font-medium">Total Recurrente: </span>
+                              <span className={`${calcularPorcentajesTotales(field.value).totalRecurrente !== 100 ? 'text-red-600 font-bold' : 'text-green-600 font-semibold'}`}>
+                                {calcularPorcentajesTotales(field.value).totalRecurrente}%
+                              </span>
+                              {calcularPorcentajesTotales(field.value).totalRecurrente !== 100 && (
+                                <span className="text-red-500 text-xs ml-2">
+                                  (Falta: {100 - calcularPorcentajesTotales(field.value).totalRecurrente}%)
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {(calcularPorcentajesTotales(field.value).totalPrimera !== 100 || calcularPorcentajesTotales(field.value).totalRecurrente !== 100) && (
+                            <div className="mt-2 text-xs text-red-600 flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              Los porcentajes deben sumar exactamente 100% para cada tipo de venta.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             {/* Botones de acción */}

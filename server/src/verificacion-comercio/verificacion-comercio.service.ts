@@ -30,6 +30,7 @@ import { DatabasePromiseService } from '@/database/database-promise.service';
 import { info } from 'console';
 import { ParticipantesService } from '@/participantes/participantes.service';
 import { OpcionesRepartirParticipantesDto } from '@/participantes/dto/repartir-participantes';
+import { verbose } from 'winston';
 
 interface FileSolicitudVerificacion {
   comprobantePago: Express.Multer.File;
@@ -95,6 +96,7 @@ export class VerificacionComercioService {
       const comercio_creado = await this.prismaService.$transaction(
         async (prisma) => {
           let id_vendedor: number | null = null;
+          let id_embajador: number | null = null;
 
           // Buscar el vendedor por código
           if (createComercioDto.codigoVendedor) {
@@ -104,6 +106,7 @@ export class VerificacionComercioService {
                 activo: true,
               },
             });
+            id_embajador = vendedor?.id_embajador ? vendedor.id_embajador : null;
             if (!vendedor) {
               throw new BadRequestException(
                 'El código de vendedor no es válido',
@@ -180,6 +183,7 @@ export class VerificacionComercioService {
               id_plan: planVerificacionData.id, // ID del plan de verificación
               monto: planVerificacionData.precio,
               estado: 1, // pendiente
+              id_embajador: id_embajador,
               activo: true,
             },
           });

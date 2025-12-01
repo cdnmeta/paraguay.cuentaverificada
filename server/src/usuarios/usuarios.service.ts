@@ -4,32 +4,28 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SolicitudCuentaDto } from '../verificacion-cuenta/dto/solicitud-cuenta.dto';
 import { crearNombreArchivoDesdeMulterFile } from '@/utils/funciones';
 import { FIREBASE_STORAGE_FOLDERS } from '@/firebase/constantsFirebase';
 import { FirebaseService } from '@/firebase/firebase.service';
-import {
-  ArchivosSolicitudCuenta,
-  UsuariosArchivos,
-} from './types/archivos-solicitud';
+import { UsuariosArchivos } from './types/archivos-solicitud';
 import { DatabaseService } from '@/database/database.service';
 import { userInfoSql } from './sql/consultas';
 import {
   AgregarGrupoUsuario,
   CrearUsuarioDTO,
-  RegisterUsuariosDto,
 } from './dto/register-usuarios';
-import { encrypt, generarUUIDHASH } from '@/utils/security';
+import { encrypt } from '@/utils/security';
 import { UserByQueryDto, UsersForQueryManyDto } from './dto/usuarios-query.dto';
 import { DatabasePromiseService } from '@/database/database-promise.service';
 import { Prisma } from '@prisma/client';
-import { AsignarGruposDto, VendedorDataDto } from './dto/grupos.dto';
+import { AsignarGruposDto } from './dto/grupos.dto';
 import { ActualizarUsuarioDTO } from './dto/actualizar-usuario.dto';
 import {
   ActualizarDireccionUsuarioDTO,
   CrearDireccionUsuarioDTO,
 } from './dto/direciones-usuario.dto';
 import { DeleteUserDto } from './dto/delete-user.dto';
+import { GruposSistema } from '@/utils/constants';
 
 @Injectable()
 export class UsuariosService {
@@ -76,6 +72,47 @@ export class UsuariosService {
   async generarCodigoVendedor(): Promise<string> {
     const codigo = await this.generarCodigoVendedorUnico();
     return codigo.toString();
+  }
+
+  /**
+   * Valida si el embajador asignado existe y tiene el rol correcto
+   */
+  private async validarEmbajadorExiste(id_usuario_embajador?: number | null): Promise<void> {
+    if (!id_usuario_embajador) return;
+
+    const embajadorExist = await this.prismaService.usuarios_grupos.findFirst({
+      where: { id_usuario: id_usuario_embajador, id_grupo: GruposSistema.EMBAJADOR },
+    });
+    
+    if (!embajadorExist) {
+      throw new NotFoundException('El embajador asignado no existe o no es válido');
+    }
+  }
+
+  /**
+   * Maneja la asignación de código de vendedor solo si no existe previamente
+   */
+  private async manejarCodigoVendedor(
+    grupos: number[], 
+    usuarioId: number, 
+    tx: Prisma.TransactionClient
+  ): Promise<void> {
+    if (!grupos.includes(GruposSistema.VENDEDOR)) return;
+
+    // Verificar si el usuario ya tiene código de vendedor
+    const usuarioActual = await tx.usuarios.findFirst({
+      where: { id: usuarioId },
+      select: { codigo_vendedor: true },
+    });
+
+    // Solo generar código si no existe
+    if (!usuarioActual?.codigo_vendedor) {
+      const codigoNumerico = await this.generarCodigoVendedorUnico();
+      await tx.usuarios.update({
+        where: { id: usuarioId },
+        data: { codigo_vendedor: String(codigoNumerico) },
+      });
+    }
   }
 
   async getUserInfoJwt(id: number) {
@@ -125,18 +162,9 @@ export class UsuariosService {
   }
 
   async crearUsuario(dto: CrearUsuarioDTO, files?: UsuariosArchivos | any) {
-    let uidUserFirebase = '';
-    let codVendedor: string | null = null;
     try {
-      // buscar correo en firebase
-      /* const firebaseUserExists = await this.firebaseService.auth
-        .getUserByEmail(dto.correo)
-        .then((user) => user)
-        .catch(() => null);
-
-      if (firebaseUserExists) {
-        throw new BadRequestException('El correo ya está registrado');
-      } */
+      // Validar embajador si se proporciona
+      await this.validarEmbajadorExiste(dto.id_usuario_embajador);
 
       // buscar usuarios existentes
       const userExists = await this.prismaService.usuarios.findFirst({
@@ -225,28 +253,17 @@ export class UsuariosService {
             selfie: rutaArchivoSelfie,
             estado: dto.id_estado || 1,
             ip_origen: dto.ip_origen || null,
-            dispositivo_origen: dto.dispositivo_origen || null,
+            dispositivo_origen: dto.dispositivo_origen || null,    
+            id_embajador: dto.id_usuario_embajador || null,      
           },
         });
 
-        // si viene el id del usuario que registra, actualizar el campo
+        // Asignar grupos si se proporcionan
         if (dto.grupos && dto.grupos.length > 0) {
-          const dataGruposAsiganar: AsignarGruposDto = {
+          await this.asignarGrupos({
             id_usuario: newUser.id,
             grupos: dto.grupos,
-          };
-
-          if (dto.grupos.includes(3)) {
-            const dataVendedor: VendedorDataDto = {
-              porcentaje_vendedor_primera_venta:
-                dto.porcentaje_vendedor_primera_venta || 0,
-              porcentaje_vendedor_venta_recurrente:
-                dto.porcentaje_vendedor_venta_recurrente || 0,
-            };
-            dataGruposAsiganar.vendedorData = dataVendedor;
-          }
-
-          await this.asignarGrupos(dataGruposAsiganar, tx);
+          }, tx);
         }
 
         return newUser;
@@ -432,75 +449,8 @@ export class UsuariosService {
           },
         });
       }
-      // si es vendedor (grupo 3) validar porcentaje de comisiones
-      // --- Reglas por rol ---
-      // Vendedor = 3 → requiere dataExtra de tipo VendedorDataDto
-      if (data.grupos?.includes(3)) {
-        const vendedorData = data?.vendedorData;
-        if (Object.keys(vendedorData || {}).length === 0) {
-          throw new BadRequestException(
-            'Se requiere la información de porcentajes para el grupo Vendedor',
-          );
-        }
-
-        const infoPorcentajes = await client.participacion_empresa.findFirst({
-          orderBy: { id: 'desc' },
-        });
-
-        if (
-          !infoPorcentajes?.porcentaje_empresa_primera_venta ||
-          !infoPorcentajes?.porcentaje_empresa_recurrente ||
-          !infoPorcentajes?.porcentaje_participantes_primera_venta ||
-          !infoPorcentajes?.porcentaje_participantes_recurrente
-        ) {
-          throw new BadRequestException(
-            'No se han configurado los porcentajes de comisiones en la empresa. Contacte con el administrador.',
-          );
-        }
-
-        const suma_info_primera_venta =
-          Number(infoPorcentajes.porcentaje_participantes_primera_venta) +
-          Number(infoPorcentajes.porcentaje_empresa_primera_venta);
-
-        const suma_info_venta_recurrente =
-          Number(infoPorcentajes.porcentaje_participantes_recurrente) +
-          Number(infoPorcentajes.porcentaje_empresa_recurrente);
-
-        const suma_primer_vendedor =
-          Number(vendedorData?.porcentaje_vendedor_primera_venta ?? 0) +
-          suma_info_primera_venta;
-
-        const suma_recurrente_vendedor =
-          Number(vendedorData?.porcentaje_vendedor_venta_recurrente ?? 0) +
-          suma_info_venta_recurrente;
-
-        if (suma_primer_vendedor > 100) {
-          throw new BadRequestException(
-            `El porcentaje de comisión por primera venta es inválido. Ajuste el máximo a ${100 - suma_info_primera_venta}%.`,
-          );
-        }
-
-        if (suma_recurrente_vendedor > 100) {
-          throw new BadRequestException(
-            `El porcentaje de comisión por venta recurrente es inválido. Ajuste el máximo a ${100 - suma_info_venta_recurrente}%.`,
-          );
-        }
-
-        // Si además quieres **persistir** algo del vendedor (p. ej. código), hazlo aquí:
-        // generar codigo de vendedor de 3 digitos numericos (1-999)
-        const codigoNumerico = await this.generarCodigoVendedorUnico();
-        let codVendedor = codigoNumerico.toString();
-        await client.usuarios.update({
-          where: { id: data.id_usuario },
-          data: {
-            porcentaje_comision_primera_venta:
-              vendedorData!.porcentaje_vendedor_primera_venta ?? null,
-            porcentaje_comision_recurrente:
-              vendedorData!.porcentaje_vendedor_venta_recurrente ?? null,
-            codigo_vendedor: codVendedor,
-          },
-        });
-      }
+      // Manejar código de vendedor si es necesario
+      await this.manejarCodigoVendedor(data.grupos, data.id_usuario, client);
 
       return { message: 'Grupos actualizados correctamente' };
     });
@@ -541,6 +491,9 @@ export class UsuariosService {
         },
       });
 
+      // Validar embajador si se proporciona
+      await this.validarEmbajadorExiste(dto.id_usuario_embajador);
+
       if (!usuarioExistente) {
         throw new NotFoundException('Usuario no encontrado');
       }
@@ -577,6 +530,7 @@ export class UsuariosService {
           dial_code: dto.dial_code,
           telefono: dto.telefono,
           direccion: dto.direccion,
+          id_embajador: dto.id_usuario_embajador || null,
         };
 
         // Actualizar contraseña si se proporciona
@@ -669,19 +623,10 @@ export class UsuariosService {
 
         // Actualizar grupos si se proporcionan
         if (dto.grupos && Array.isArray(dto.grupos)) {
-          await this.asignarGrupos(
-            {
-              id_usuario: id,
-              grupos: dto.grupos,
-              vendedorData: {
-                porcentaje_vendedor_primera_venta:
-                  dto.porcentaje_vendedor_primera_venta ?? undefined,
-                porcentaje_vendedor_venta_recurrente:
-                  dto.porcentaje_vendedor_venta_recurrente ?? undefined,
-              },
-            },
-            tx,
-          );
+          await this.asignarGrupos({
+            id_usuario: id,
+            grupos: dto.grupos,
+          }, tx);
         }
 
         // Actualizar información en Firebase si es necesario

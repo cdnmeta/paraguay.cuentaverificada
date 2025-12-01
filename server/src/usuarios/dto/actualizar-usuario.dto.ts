@@ -85,7 +85,12 @@ export class ActualizarUsuarioDTO {
   @IsOptional()
   id_usuario_actualizacion?: number;
 
-  // Porcentajes de comisión (para vendedores)
+  @Type(() => Number)
+  @IsNumber({}, { message: 'ID del broker debe ser un número' })
+  @IsOptional()
+  id_usuario_embajador?: number;
+
+  /* // Porcentajes de comisión (para vendedores)
   @IsOptional()
   @Type(() => Number)
   @IsNumber({}, { message: 'Porcentaje primera venta debe ser un número' })
@@ -98,7 +103,7 @@ export class ActualizarUsuarioDTO {
   @IsNumber({}, { message: 'Porcentaje venta recurrente debe ser un número' })
   @Min(0, { message: 'El porcentaje no puede ser negativo' })
   @Max(100, { message: 'El porcentaje no puede ser mayor a 100' })
-  porcentaje_vendedor_venta_recurrente?: number | null;
+  porcentaje_vendedor_venta_recurrente?: number | null; */
 }
 
 
