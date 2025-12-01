@@ -52,10 +52,7 @@ export class UserResponseViewData {
   dial_code: string;
 
   @Expose()
-  porcentaje_comision_primera_venta?: number;
-
-  @Expose()
-  porcentaje_comision_recurrente?: number;
+  id_embajador: number | null;
 }
 
 

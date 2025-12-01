@@ -5,4 +5,5 @@ export enum TiposNotificaciones {
     PEDIDOS = 4,
     SOPORTE_AYUDA = 5,
     FAVORITOS = 6,
+    VERIFICACION_COMERCIO = 7,
 }

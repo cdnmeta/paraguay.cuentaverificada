@@ -1,20 +1,20 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Wallet, Plus, ArrowRight, RefreshCw } from 'lucide-react';
-import { obtenerWalletsDelUsuario } from '@/apis/wallets.api';
-import { toast } from 'sonner';
-import { routes } from '../config/routes';
-import LoadingSpinner from '@/components/customs/loaders/LoadingSpinner';
+import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Wallet, Plus, ArrowRight, RefreshCw } from "lucide-react";
+import { obtenerWalletsDelUsuario } from "@/apis/wallets.api";
+import { toast } from "sonner";
+import { routes } from "../config/routes";
+import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
 
 const WalletSelectionPage = () => {
   const navigate = useNavigate();
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const formatMoney = (amount, currency = 'PYG') => {
-    return `${amount.toLocaleString('es-PY')} ${currency}`;
+  const formatMoney = (amount, currency = "PYG") => {
+    return `${amount.toLocaleString("es-PY")} ${currency}`;
   };
 
   const loadWallets = useCallback(async () => {
@@ -22,7 +22,7 @@ const WalletSelectionPage = () => {
       setLoading(true);
       const response = await obtenerWalletsDelUsuario();
       const walletsData = response.data;
-      
+
       // Si no hay wallets, quedarse en la página para mostrar opción de recarga
       if (!walletsData || walletsData.length === 0) {
         setWallets([]);
@@ -38,8 +38,8 @@ const WalletSelectionPage = () => {
       // Si hay múltiples wallets, mostrarlas para selección
       setWallets(walletsData);
     } catch (error) {
-      console.error('Error al cargar wallets:', error);
-      toast.error('Error al cargar las billeteras');
+      console.error("Error al cargar wallets:", error);
+      toast.error("Error al cargar las billeteras");
     } finally {
       setLoading(false);
     }
@@ -69,18 +69,18 @@ const WalletSelectionPage = () => {
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
-        <div className="mb-8 text-foreground text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-4 rounded-full">
-              <Wallet className="h-10 w-10 text-green-600" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Wallet className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Wallet (Interna)</h1>
+              <p>
+                Controla tus depósitos, pagos y ganancias.
+              </p>
             </div>
           </div>
-          <h1 className="text-3xl font-bold mb-2">
-            Mis Billeteras
-          </h1>
-          <p>
-            Selecciona una billetera para ver su dashboard
-          </p>
         </div>
 
         {/* Wallets List */}
@@ -108,7 +108,7 @@ const WalletSelectionPage = () => {
                         {formatMoney(wallet.saldo, wallet.sigla_iso)}
                       </p>
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 bg-yellow-50 rounded">
                         <p className="text-xs text-yellow-600">Pendientes</p>
@@ -156,7 +156,6 @@ const WalletSelectionPage = () => {
             </Card>
           </div>
         )}
-
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { es } from "date-fns/locale";
 
 export const DatePicker = React.forwardRef(
   (
@@ -23,6 +24,7 @@ export const DatePicker = React.forwardRef(
       mode = "single",
       captionLayout = "dropdown",
       diasableDate = {},
+      locale = es,
       ...props
     },
     ref
@@ -64,6 +66,7 @@ export const DatePicker = React.forwardRef(
                 onChange?.(date);
                 setOpen(false);
               }}
+              locale={locale}
               disabled={diasableDate}
               {...props}
             />

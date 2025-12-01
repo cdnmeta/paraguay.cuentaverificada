@@ -150,6 +150,7 @@ export class AuthService {
         dispositivo_origen: registerDto.dispositivo_origen,
         id_estado: 1, // activo por defecto
         pin: registerDto.pin,
+        fecha_nacimiento: registerDto.fecha_nacimiento,
       };
 
       let userNew = await this.usuariosService.crearUsuario(dataUsuarioNuevo, {

@@ -24,6 +24,7 @@ import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
 import { solicitarVerificacionCuentausuario } from "@/apis/verificacionCuenta.api";
 import NoImage from "@/components/customs/NoImage";
 import { cargarURL } from "@/utils/funciones";
+import { User } from "lucide-react";
 // import { useAuthStore } from "@/hooks/useAuthStorge"; // Descomentado cuando se necesite
 
 /**
@@ -39,30 +40,28 @@ export default function MisDatosPage() {
   const [imageUrls, setImageUrls] = useState({
     selfie: null,
     cedulaFrente: null,
-    cedulaReverso: null
+    cedulaReverso: null,
   });
   const [loadingImages, setLoadingImages] = useState(false);
   const navigate = useNavigate();
-
-
 
   // const { logout } = useAuthStore(); // Descomentado cuando se necesite
 
   const loadImages = useCallback(async (userData) => {
     if (!userData) return;
-    
+
     setLoadingImages(true);
     try {
       const promises = [];
       const newImageUrls = {
         selfie: null,
         cedulaFrente: null,
-        cedulaReverso: null
+        cedulaReverso: null,
       };
 
       if (userData.selfie) {
         promises.push(
-          cargarURL(userData.selfie).then(url => {
+          cargarURL(userData.selfie).then((url) => {
             newImageUrls.selfie = url;
           })
         );
@@ -70,7 +69,7 @@ export default function MisDatosPage() {
 
       if (userData.cedula_frente) {
         promises.push(
-          cargarURL(userData.cedula_frente).then(url => {
+          cargarURL(userData.cedula_frente).then((url) => {
             newImageUrls.cedulaFrente = url;
           })
         );
@@ -78,7 +77,7 @@ export default function MisDatosPage() {
 
       if (userData.cedula_reverso) {
         promises.push(
-          cargarURL(userData.cedula_reverso).then(url => {
+          cargarURL(userData.cedula_reverso).then((url) => {
             newImageUrls.cedulaReverso = url;
           })
         );
@@ -104,11 +103,11 @@ export default function MisDatosPage() {
       } else if (user.estado === 3) {
         setSolicitudVerificacion(2);
       }
-      if(user.vfd == true){
+      if (user.vfd == true) {
         setSolicitudVerificacion(3);
       }
       setUser(res.data);
-      
+
       // Cargar las imágenes después de obtener los datos del usuario
       await loadImages(res.data);
     } catch (error) {
@@ -194,7 +193,8 @@ export default function MisDatosPage() {
         {solicitudVerificacion === 1 && (
           <div id="verificacion" className="mt-6 text-center">
             <p className="text-sm text-muted-foreground mb-2">
-              Tu cuenta no está verificada. Verifica tu cuenta para acceder a <b>más funcionalidades.</b>
+              Tu cuenta no está verificada. Verifica tu cuenta para acceder a{" "}
+              <b>más funcionalidades.</b>
             </p>
             <Button
               disabled={solicitandoVerificacion}
@@ -207,7 +207,10 @@ export default function MisDatosPage() {
         )}
 
         {solicitudVerificacion === 2 && (
-          <div id="verificacion" className="mt-6 mb-2 text-center border border-yellow-400/50 bg-yellow-400/10 rounded-lg p-4">
+          <div
+            id="verificacion"
+            className="mt-6 mb-2 text-center border border-yellow-400/50 bg-yellow-400/10 rounded-lg p-4"
+          >
             <p className="text-md  text-yellow-400 mb-2">
               Tu cuenta está en proceso de verificación. Recibirás una
               notificación una vez que se complete.
@@ -216,16 +219,33 @@ export default function MisDatosPage() {
         )}
 
         {solicitudVerificacion === 3 && (
-          <div id="verificacion" className="mt-6 mb-2 text-center border border-green-400/50 bg-green-400/10 rounded-lg p-4">
-            <p className="text-md  text-green-400 mb-2">Tu cuenta está verificada. desde {new Date(user?.f_vfd).toLocaleDateString()}</p>
+          <div
+            id="verificacion"
+            className="mt-6 mb-2 text-center border border-green-400/50 bg-green-400/10 rounded-lg p-4"
+          >
+            <p className="text-md  text-green-400 mb-2">
+              Tu cuenta está verificada. desde{" "}
+              {new Date(user?.f_vfd).toLocaleDateString()}
+            </p>
           </div>
         )}
 
-        <h1 className="text-3xl font-bold tracking-tight">Mis Datos</h1>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <User className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Cuenta</h1>
+            </div>
+          </div>
+        </div>
+        <p className="text-muted-foreground mb-6">
+          Datos personales y seguridad.
+        </p>
         {/* Datos solo lectura */}
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
-
           <Card>
             <CardHeader>
               <CardTitle>Datos no editables</CardTitle>
@@ -247,85 +267,98 @@ export default function MisDatosPage() {
           </Card>
 
           {/* Formulario: solo Dirección, Email, Teléfono */}
-         
 
-         
-          {
-            imageUrls.selfie ? (
-              <div className="relative">
-                <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                  Selfie
+          {imageUrls.selfie ? (
+            <div className="relative">
+              <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                Selfie
+              </div>
+              <img
+                className="w-full h-48 object-cover rounded-lg"
+                src={imageUrls.selfie}
+                alt="Selfie Usuario"
+              />
+            </div>
+          ) : (
+            <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-lg">
+              {loadingImages ? (
+                <div className="text-sm text-gray-500">Cargando selfie...</div>
+              ) : (
+                <NoImage />
+              )}
+            </div>
+          )}
+
+          {imageUrls.cedulaFrente ? (
+            <div className="relative">
+              <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                Cédula Frente
+              </div>
+              <img
+                className="w-full h-48 object-cover rounded-lg"
+                src={imageUrls.cedulaFrente}
+                alt="Cédula Frente"
+              />
+            </div>
+          ) : (
+            <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-lg">
+              {loadingImages ? (
+                <div className="text-sm text-gray-500">
+                  Cargando cédula frente...
                 </div>
-                <img className="w-full h-48 object-cover rounded-lg" src={imageUrls.selfie} alt="Selfie Usuario" />
+              ) : (
+                <NoImage />
+              )}
+            </div>
+          )}
+
+          {imageUrls.cedulaReverso ? (
+            <div className="relative">
+              <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                Cédula Reverso
               </div>
-            ) : (
-              <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-lg">
-                {loadingImages ? (
-                  <div className="text-sm text-gray-500">Cargando selfie...</div>
-                ) : (
-                  <NoImage />
-                )}
-              </div>
-            )
-          }
-          
-          {
-            imageUrls.cedulaFrente ? (
-              <div className="relative">
-                <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                  Cédula Frente
+              <img
+                className="w-full h-48 object-cover rounded-lg"
+                src={imageUrls.cedulaReverso}
+                alt="Cédula Reverso"
+              />
+            </div>
+          ) : (
+            <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-lg">
+              {loadingImages ? (
+                <div className="text-sm text-gray-500">
+                  Cargando cédula reverso...
                 </div>
-                <img className="w-full h-48 object-cover rounded-lg" src={imageUrls.cedulaFrente} alt="Cédula Frente" />
-              </div>
-            ) : (
-              <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-lg">
-                {loadingImages ? (
-                  <div className="text-sm text-gray-500">Cargando cédula frente...</div>
-                ) : (
-                  <NoImage />
-                )}
-              </div>
-            )
-          }
-          
-          {
-            imageUrls.cedulaReverso ? (
-              <div className="relative">
-                <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                  Cédula Reverso
-                </div>
-                <img className="w-full h-48 object-cover rounded-lg" src={imageUrls.cedulaReverso} alt="Cédula Reverso" />
-              </div>
-            ) : (
-              <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-lg">
-                {loadingImages ? (
-                  <div className="text-sm text-gray-500">Cargando cédula reverso...</div>
-                ) : (
-                  <NoImage />
-                )}
-              </div>
-            )
-          }
+              ) : (
+                <NoImage />
+              )}
+            </div>
+          )}
         </div>
 
+        <div>
+          <Separator className="my-6" />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <Card>
-              <CardHeader>
-                <CardTitle>Editar datos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FormMisDatos user={user} onSuccess={handleUpdateSuccess} />
-              </CardContent>
+            <CardHeader>
+              <CardTitle>Editar datos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormMisDatos user={user} onSuccess={handleUpdateSuccess} />
+            </CardContent>
           </Card>
 
-          {/*Form para direcciones usuarios*/}         
+          {/*Form para direcciones usuarios*/}
           <FormDireciones />
-        
         </div>
 
+        <div>
+          <Separator className="my-6" />
+        </div>
 
-        <Card className={"mt-6"}>
+        <Card className={"mt-6 border-red-500"}>
           <CardHeader>
             <CardTitle>Seguridad</CardTitle>
           </CardHeader>
@@ -334,17 +367,18 @@ export default function MisDatosPage() {
             <Button
               onClick={handleOlvideMiPin}
               variant="link"
-              className="mt-4 p-0"
+              className="mt-4 p-0 text-yellow-500 hover:underline"
             >
               ¿Olvidaste tu PIN?
             </Button>
           </CardContent>
         </Card>
 
-        
-
         {/* Dialog de confirmación de verificación */}
-        <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+        <Dialog
+          open={showVerificationDialog}
+          onOpenChange={setShowVerificationDialog}
+        >
           <DialogContent
             className="sm:max-w-[425px]"
             onPointerDownOutside={(e) => e.preventDefault()}

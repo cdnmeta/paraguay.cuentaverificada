@@ -21,11 +21,14 @@ import { OnlyAdminGuard } from '@/auth/guards/onlyAdmin.guard';
 import { IsOnlyAdmin } from '@/auth/decorators/onlyAdmin.decorator';
 import { UpdatePlanDto, UpdatePlanPayloadDto } from './dto/update-plan.dto';
 import { DeletePlanDto } from './dto/delete-plan.dto';
+import { PlanesTiposRepartirService } from './planes-tipo-repartir/planes-tipos-repartir.service';
 
 @UseGuards(OnlyAdminGuard)
 @Controller('planes')
 export class PlanesController {
-  constructor(private readonly planesService: PlanesService) {}
+  constructor(private readonly planesService: PlanesService,
+    private readonly planesTiposRepartirService: PlanesTiposRepartirService,
+  ) {}
 
   @IsOnlyAdmin()
   @Get()
@@ -54,6 +57,18 @@ export class PlanesController {
       };
       const nuevoPlan = await this.planesService.crearPlan(dataEnviar);
       return res.status(200).json({ message: 'Plan creado exitosamente' });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('tipos-porcentajes-repartir')
+  async obtenerPlanesTiposRepartir(
+    @Res() res: Response,
+  ){
+    try {
+      const tiposRepartir = await this.planesTiposRepartirService.getPlanesTiposRepartir();
+      return res.status(200).json(tiposRepartir);
     } catch (error) {
       throw error;
     }

@@ -411,10 +411,6 @@ export class UsuariosController {
         UserResponseViewData,
         {
           ...usuario,
-          porcentaje_comision_primera_venta:
-            usuario.porcentaje_comision_primera_venta?.toNumber(),
-          porcentaje_comision_recurrente:
-            usuario.porcentaje_comision_recurrente?.toNumber(),
         },
         {
           excludeExtraneousValues: true,

@@ -24,8 +24,8 @@ export default defineConfig(({ mode }) => ({
 
       // Configuración para injectManifest
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 // 5MB
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
       },
 
       workbox: {
@@ -41,13 +41,36 @@ export default defineConfig(({ mode }) => ({
         theme_color: "#f2f8f8",
         background_color: "#0e1a19",
         icons: [
-          { src: "/favicon.png", sizes: "192x192", type: "image/png" },
-          { src: "/favicon.png", sizes: "512x512", type: "image/png" },
           {
-            src: "/favicon.png",
+            src: "pwa/icons/pwa-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "pwa/icons/pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+          {
+            src: "pwa/icons/maskable-512x512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
+          },
+        ],
+        screenshots: [
+          {
+            src: "pwa/screenshots/screenshot-mobile-1080x1920.webp",
+            sizes: "1080x1920",
+            type: "image/png",
+            label: "Vista móvil",
+          },
+          {
+            src: "pwa/screenshots/screenshot-desktop-1920x1080.webp",
+            sizes: "1920x1080",
+            type: "image/png",
+            form_factor: "wide",
+            label: "Vista escritorio",
           },
         ],
       },

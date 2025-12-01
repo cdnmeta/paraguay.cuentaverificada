@@ -55,4 +55,5 @@ export enum GruposSistema {
   VENDEDOR = 3,
   PARTICIPANTE = 4,
   AGENTE_SOPORTE = 5,
+  EMBAJADOR = 6,
 }

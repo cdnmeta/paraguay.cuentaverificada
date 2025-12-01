@@ -239,15 +239,22 @@ export default function DashBoardUsarioProtegido() {
     },
     {
       icon: "/icons/publicar.png",
-      title: "Publicar",
-      desc: "Expresa lo que deseas comprar",
+      title: "Publicar Estados",
+      desc: "Sobre lo que quieras comprar",
       habilitado: true,
+    },
+    {
+      icon: "/icons/recordatorios.png",
+      title: "Recordatorios",
+      desc: "Administra tus recordatorios",
+      habilitado: true,
+      onClick: () => navigate(`/${RecordatoriosRoutes.index}`),
     },
     {
       icon: "/icons/semaforo.png",
       title: "Semáforo Financiero",
       onClick: () => navigate(`/semaforo-financiero`),
-      desc: "No permitas que tus finanzas lleguen al rojo",
+      desc: "Controla tus finanzas",
       habilitado: true,
     },
     {
@@ -274,16 +281,9 @@ export default function DashBoardUsarioProtegido() {
     {
       icon: "/icons/soporte.png",
       title: "Soporte y Ayuda",
-      desc: "Autoayuda + asistencia personalizada",
+      desc: "Estamos aqui para ayudarte",
       habilitado: true,
       onClick: () => navigate(`/${SoporteAyudaRoutes.index}`),
-    },
-    {
-      icon: "/icons/recordatorios.png",
-      title: "Recordatorios",
-      desc: "Administra tus recordatorios",
-      habilitado: true,
-      onClick: () => navigate(`/${RecordatoriosRoutes.index}`),
     },
   ];
 
@@ -450,30 +450,28 @@ export default function DashBoardUsarioProtegido() {
         
 
         {/* Secciones */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-10">
           {seccionesFiltradas.map((item, i) => (
             <Card
               key={i}
-              className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 group"
+              className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 gap-3 group p-4"
               onClick={item.onClick}
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-center w-16 h-16 mx-auto mb-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors flex-shrink-0">
                   <img
                     src={item.icon}
                     alt={item.title}
-                    className="w-8 h-8 object-contain filter group-hover:brightness-110 transition-all"
+                    className="w-6 h-6 object-contain filter group-hover:brightness-110 transition-all"
                   />
                 </div>
-                <CardTitle className="text-lg font-semibold text-center group-hover:text-primary transition-colors">
+                <CardTitle className="text-lg  font-semibold group-hover:text-primary transition-colors">
                   {item.title}
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <CardDescription className="text-center text-muted-foreground text-sm leading-relaxed">
-                  {item.desc}
-                </CardDescription>
-              </CardContent>
+              </div>
+              <CardDescription className="text-muted-foreground text-sm">
+                {item.desc}
+              </CardDescription>
             </Card>
           ))}
         </div>

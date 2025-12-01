@@ -13,6 +13,7 @@ import {
   User,
   Trash,
   Pencil,
+  Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import recordatoriosAPI from "@/apis/recordatorios.api";
@@ -30,6 +31,8 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 const DondeLoGuarde = () => {
   const [recordatorios, setRecordatorios] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -40,6 +43,7 @@ const DondeLoGuarde = () => {
   const [accionSeleccionada, setAccionSeleccionada] = useState(null); // 'eliminar' | 'inactivar' | null
   const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     cargarRecordatorios();
@@ -49,7 +53,9 @@ const DondeLoGuarde = () => {
   const cargarRecordatorios = async () => {
     try {
       setLoading(true);
-      const response = await recordatoriosAPI.obtenerMisRecordatorios({tipo_recordatorio:1});
+      const response = await recordatoriosAPI.obtenerMisRecordatorios({
+        tipo_recordatorio: 1,
+      });
       setRecordatorios(response.data || []);
 
       // Cargar URLs de Firebase para todas las imágenes
@@ -105,7 +111,7 @@ const DondeLoGuarde = () => {
       {
         mensajeExito: "Recordatorio eliminado correctamente",
         mostrarToastExito: true,
-        mensajeError: "No se pudo eliminar el recordatorio"
+        mensajeError: "No se pudo eliminar el recordatorio",
       }
     );
 
@@ -124,7 +130,7 @@ const DondeLoGuarde = () => {
     setRecordatorioAEliminar(recordatorio);
     setRecordatorioSeleccionado(recordatorio);
     setAccionSeleccionada(null); // Reset selección
-  }
+  };
 
   // Manejar selección de acciones (comportamiento radio button)
   const handleSeleccionAccion = (accion) => {
@@ -132,11 +138,11 @@ const DondeLoGuarde = () => {
   };
 
   // Función para inactivar recordatorio
-  const handleCambiarEstadoRecordatorio = async (id,estado= 2) => {
+  const handleCambiarEstadoRecordatorio = async (id, estado = 2) => {
     setEjecutadoAccion(true);
 
-    const resultado = await executeWithErrorHandler(
-      () => recordatoriosAPI.actualizarEstadoRecordatorio(id, estado),
+    const resultado = await executeWithErrorHandler(() =>
+      recordatoriosAPI.actualizarEstadoRecordatorio(id, estado)
     );
 
     if (resultado.success) {
@@ -154,25 +160,24 @@ const DondeLoGuarde = () => {
   const handleEjecutarAccion = () => {
     if (!accionSeleccionada || !recordatorioAEliminar) return;
 
-    if (accionSeleccionada === 'eliminar') {
+    if (accionSeleccionada === "eliminar") {
       handleEliminarRecordatorio(recordatorioAEliminar.id);
-    } else if (accionSeleccionada === 'inactivar') {
+    } else if (accionSeleccionada === "inactivar") {
       handleCambiarEstadoRecordatorio(recordatorioAEliminar.id, 2);
-    } else if (accionSeleccionada === 'activar') {
+    } else if (accionSeleccionada === "activar") {
       handleCambiarEstadoRecordatorio(recordatorioAEliminar.id, 1);
     }
   };
 
-
   const getAccionLabel = (accion) => {
-    if (accion === 'eliminar') {
-      return 'Eliminando...';
-    } else if (accion === 'inactivar') {
-      return 'Inactivando...';
-    } else if (accion === 'activar') {
-      return 'Activando...';
+    if (accion === "eliminar") {
+      return "Eliminando...";
+    } else if (accion === "inactivar") {
+      return "Inactivando...";
+    } else if (accion === "activar") {
+      return "Activando...";
     }
-    return 'Selecciona una acción';
+    return "Selecciona una acción";
   };
 
   const columns = useMemo(
@@ -204,7 +209,12 @@ const DondeLoGuarde = () => {
               >
                 <Edit className="h-3 w-3 " />
               </Button>
-              <Badge onClick={() => handleAbriModal(recordatorio)} variant={estadoInfo.variant}>{estadoInfo.label}</Badge>
+              <Badge
+                onClick={() => handleAbriModal(recordatorio)}
+                variant={estadoInfo.variant}
+              >
+                {estadoInfo.label}
+              </Badge>
             </div>
           );
         },
@@ -314,22 +324,31 @@ const DondeLoGuarde = () => {
 
   return (
     <div>
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row lg:flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <User className="w-6 h-6" />
-              <CardTitle>Mis Recordatorios</CardTitle>
-            </div>
-            <Button
-              onClick={() => navigate(`${routes.crear}`)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Nuevo Recordatorio
-            </Button>
+      <div
+        className={cn(
+          "flex  items-center justify-between mb-6",
+          isMobile ? "flex-col gap-4" : ""
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Bell className="h-6 w-6 text-primary" />
           </div>
-        </CardHeader>
+          <div>
+            <h1 className="text-2xl font-bold">Donde lo Guarde</h1>
+            <p className="text-muted-foreground">
+              Que nunca se te olvide donde guardaste algo.
+            </p>
+          </div>
+        </div>
+
+        <Button onClick={() => navigate(`${routes.crear}`)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Nuevo Recordatorio
+        </Button>
+      </div>
+
+      <Card>
         <CardContent>
           {recordatorios.length === 0 ? (
             <div className="text-center py-12">
@@ -340,13 +359,6 @@ const DondeLoGuarde = () => {
               <p className="text-gray-500 mb-4">
                 Crea tu primer recordatorio para comenzar
               </p>
-              <Button
-                onClick={() => navigate("crear")}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Crear Recordatorio
-              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1">
@@ -370,46 +382,61 @@ const DondeLoGuarde = () => {
                   <p className="text-sm font-medium">Selecciona una acción:</p>
                   <div className="flex gap-4">
                     <Label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox 
-                        checked={accionSeleccionada === 'eliminar'}
-                        onCheckedChange={() => handleSeleccionAccion('eliminar')}
+                      <Checkbox
+                        checked={accionSeleccionada === "eliminar"}
+                        onCheckedChange={() =>
+                          handleSeleccionAccion("eliminar")
+                        }
                       />
                       <span className="text-red-600 font-medium">Eliminar</span>
                     </Label>
-                    
 
-                    {recodatorioSeleccionado && recodatorioSeleccionado.id_estado === 1 && (
-                      <Label className="flex items-center gap-2 cursor-pointer">
-                        <Checkbox
-                          checked={accionSeleccionada === 'inactivar'}
-                          onCheckedChange={() => handleSeleccionAccion('inactivar')}
-                        />
-                        <span className="text-orange-600 font-medium">Inactivar</span>
-                      </Label>
-                    )}
-                    {recodatorioSeleccionado && recodatorioSeleccionado.id_estado === 2 && (
-                      <Label className="flex items-center gap-2 cursor-pointer">
-                        <Checkbox
-                          checked={accionSeleccionada === 'activar'}
-                          onCheckedChange={() => handleSeleccionAccion('activar')}
-                        />
-                        <span className="text-green-600 font-medium">Activar</span>
-                      </Label>
-                    )}
+                    {recodatorioSeleccionado &&
+                      recodatorioSeleccionado.id_estado === 1 && (
+                        <Label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={accionSeleccionada === "inactivar"}
+                            onCheckedChange={() =>
+                              handleSeleccionAccion("inactivar")
+                            }
+                          />
+                          <span className="text-orange-600 font-medium">
+                            Inactivar
+                          </span>
+                        </Label>
+                      )}
+                    {recodatorioSeleccionado &&
+                      recodatorioSeleccionado.id_estado === 2 && (
+                        <Label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={accionSeleccionada === "activar"}
+                            onCheckedChange={() =>
+                              handleSeleccionAccion("activar")
+                            }
+                          />
+                          <span className="text-green-600 font-medium">
+                            Activar
+                          </span>
+                        </Label>
+                      )}
                   </div>
                 </div>
                 <div className="flex gap-2 justify-end">
                   <Button
-                    variant={accionSeleccionada === 'eliminar' ? 'destructive' : 'default'}
+                    variant={
+                      accionSeleccionada === "eliminar"
+                        ? "destructive"
+                        : "default"
+                    }
                     disabled={ejecutadoAccion || !accionSeleccionada}
                     onClick={handleEjecutarAccion}
                   >
-                    
-
-                    { ejecutadoAccion ? getAccionLabel(accionSeleccionada) : 'Guardar Cambios' }
+                    {ejecutadoAccion
+                      ? getAccionLabel(accionSeleccionada)
+                      : "Guardar Cambios"}
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setOpenDialog(false);
                       setAccionSeleccionada(null);

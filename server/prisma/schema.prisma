@@ -220,6 +220,7 @@ model planes {
   nombre              String?
   descripcion         String?
   precio              Float?
+  precio_oferta        Float?
   precio_sin_iva      Float?
   renovacion_plan     String          @default("mes")
   renovacion_valor    Int             @default(1)
@@ -234,7 +235,35 @@ model planes {
               
 
   suscripciones       suscripciones[]
+  planes_descuentos   planes_porcentajes_repartir[]
 }
+
+model planes_porcentajes_repartir {
+  id                  Int       @id @default(autoincrement())
+  id_plan             Int
+  id_tipo             Int       // 1= vendedor 2= participante 3= empresa 4= broker
+  porcentaje_primera_venta Float
+  porcentaje_venta_recurrente Float
+  fecha_creacion      DateTime  @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  activo              Boolean   @default(true)
+  planes              planes    @relation(fields: [id_plan], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_planes_porcentajes_repartir")
+
+  @@unique([id_plan, id_tipo], name: "idx_plan_tipo_descuento")
+}
+
+model planes_tipo_repartir {
+  id          Int      @id @default(autoincrement())
+  descripcion String
+  activo      Boolean  @default(true)
+  fecha_creacion DateTime @default(now()) @db.Timestamptz(6)
+  fecha_actualizacion DateTime? @db.Timestamptz(6)
+  fechas_eliminacion DateTime? @db.Timestamptz(6)
+
+  @@map("planes_tipo_repartir")
+}
+
+
 
 model seguimiento_verificacion {
   id             Int       @id @default(autoincrement())
@@ -257,6 +286,7 @@ model suscripciones {
   fecha_vencimiento     DateTime?               @db.Timestamptz(6)
   id_plan               Int
   id_vendedor           Int?
+  id_embajador          Int?
   estado                Int?                    @default(1) // 1= pendiente 2= activa
   activo                Boolean?                @default(true)
   fecha_creacion        DateTime?               @default(now()) @db.Timestamptz(6)
@@ -325,6 +355,7 @@ model usuarios {
   id_usuario_eliminacion            Int?
   fecha_verificacion                DateTime?                     @db.Timestamptz(6)
   fecha_eliminacion                 DateTime?                     @db.Timestamptz(6)
+  id_embajador                      Int?
   comercio                          comercio[]
   factura_suscripciones             factura_suscripciones[]
   seguimiento_verificacion          seguimiento_verificacion[]
@@ -424,7 +455,7 @@ model ganancias_futuras {
   monto                    Float
   id_estado                Int                    @default(1) // 1=pendiente, 2=pagado, 3=anulado
   activo                   Boolean?               @default(true)
-  tipo_participante        Int // 1=participante, 2=vendedor, 3=empresa
+  tipo_participante        Int // 1=participante, 2=vendedor, 3=empresa, 4= embajador
   fecha_creacion           DateTime?              @default(now()) @db.Timestamptz(6)
   fecha_actualizacion      DateTime?              @db.Timestamptz(6)
   id_usuario_creacion      Int?
