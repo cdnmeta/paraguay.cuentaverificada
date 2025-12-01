@@ -346,12 +346,13 @@ export default function SolicitarCuentaVerificada() {
             setIdUsuario(null);
             navigate(PUBLIC_ROUTES.login);
             setOpenConfirm(false);
-            setMostrarVerificacion(true);
+
           },
         });
         return;
       }
       
+      setMostrarVerificacion(true);
       setUserData(user);
       setOpenConfirm(false);
 
