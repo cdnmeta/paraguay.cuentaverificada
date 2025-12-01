@@ -6,12 +6,16 @@ import {
 import { CreateParticipanteDto } from './dto/create-participante.dto';
 import { UpdateParticipanteDto } from './dto/update-participante.dto';
 import { PrismaService } from '@/prisma/prisma.service';
-import { compras_participantes, Prisma } from '@prisma/client';
+import { compras_participantes, factura_suscripciones, Prisma } from '@prisma/client';
 import { DatabaseService } from '@/database/database.service';
 import { OpcionesRepartirParticipantesDto } from './dto/repartir-participantes';
 import { redondearDecimales, truncateNumber } from '@/utils/funciones';
 import { DatabasePromiseService } from '@/database/database-promise.service';
-import { consultaParticipacionByUsuario, consultaparticipantes } from './sql/consultas';
+import {
+  consultaParticipacionByUsuario,
+  consultaparticipantes,
+} from './sql/consultas';
+import { PlanesTipoRepartir } from '@/planes/types/planes-tipo-repartir';
 interface Ganancia {
   observacion?: string;
   id_moneda: number;
@@ -21,6 +25,214 @@ interface Ganancia {
   tipo_ganancia: number; // 1=venta plan
   tipo_participante: number; // 1=participante, 2=vendedor, 3=empresa
 }
+
+
+type ReglaRol = {
+  porcentaje_primera_venta: number;
+  porcentaje_venta_recurrente: number;
+};
+
+type ParticipanteInput = {
+  id_usuario: number;
+  porcentaje_participacion: number; // % del pool
+};
+
+type GananciaPorUsuario = {
+  id_usuario: number | null; // null = empresa
+  monto: number;
+  tipo_participante: 1 | 2 | 3 | 4; // 1=participante, 2=vendedor, 3=empresa, 4=embajador
+};
+
+type ResultadoCalculoVenta = {
+  montoVendedor: number;
+  montoEmbajador: number;
+  montoParticipantes: number;
+  montoDistribuidoParticipantes: number;
+  montoEmpresa: number;
+  ganancias: GananciaPorUsuario[];
+};
+
+function calcularMontoRol(
+  regla: ReglaRol | undefined,
+  montoBase: number,
+  primeraVenta: boolean,
+  cantNumerosTruncar: number,
+): number {
+  if (!regla) return 0;
+  const pct = primeraVenta
+    ? Number(regla.porcentaje_primera_venta || 0)
+    : Number(regla.porcentaje_venta_recurrente || 0);
+
+  if (!pct) return 0;
+
+  const bruto = (pct / 100) * montoBase;
+  return truncateNumber(bruto, cantNumerosTruncar);
+}
+
+function calcularRepartoVentaPlan(params: {
+  montoBaseSinIva: number;
+  primeraVenta: boolean;
+  cantNumerosTruncar: number;
+  reglaParticipante: ReglaRol;
+  reglaVendedor?: ReglaRol;
+  reglaEmbajador?: ReglaRol;
+  reglaEmpresa?: ReglaRol;
+  participantes: ParticipanteInput[];
+  idVendedor?: number | null;
+  idEmbajador?: number | null;
+}): ResultadoCalculoVenta {
+  const {
+    montoBaseSinIva,
+    primeraVenta,
+    cantNumerosTruncar,
+    reglaParticipante,
+    reglaVendedor,
+    reglaEmbajador,
+    reglaEmpresa,
+    participantes,
+    idVendedor,
+    idEmbajador,
+  } = params;
+
+  const ganancias: GananciaPorUsuario[] = [];
+  let montoVendedor = 0;
+  let montoEmbajador = 0;
+
+  // 1) VENDEDOR
+  if (idVendedor && reglaVendedor) {
+    montoVendedor = calcularMontoRol(
+      reglaVendedor,
+      montoBaseSinIva,
+      primeraVenta,
+      cantNumerosTruncar,
+    );
+
+    if (montoVendedor > 0) {
+      ganancias.push({
+        id_usuario: idVendedor,
+        monto: montoVendedor,
+        tipo_participante: 2,
+      });
+    }
+  }
+
+  // 2) EMBAJADOR
+  if (idEmbajador && reglaEmbajador) {
+    montoEmbajador = calcularMontoRol(
+      reglaEmbajador,
+      montoBaseSinIva,
+      primeraVenta,
+      cantNumerosTruncar,
+    );
+
+    if (montoEmbajador > 0) {
+      ganancias.push({
+        id_usuario: idEmbajador,
+        monto: montoEmbajador,
+        tipo_participante: 4,
+      });
+    }
+  }
+
+  // 3) PARTICIPANTES (pool)
+  let montoRepartirseParticipantes = calcularMontoRol(
+    reglaParticipante,
+    montoBaseSinIva,
+    primeraVenta,
+    2, // aquí suele bastar 2 decimales
+  );
+
+  let montoDistribuidoEntreParticipantes = 0;
+
+  for (const p of participantes) {
+    const porcentajeParticipante = Number(p.porcentaje_participacion || 0);
+    if (!porcentajeParticipante) continue;
+
+    let gananciaParticipante =
+      (montoRepartirseParticipantes * porcentajeParticipante) / 100;
+
+    gananciaParticipante = truncateNumber(
+      gananciaParticipante,
+      cantNumerosTruncar,
+    );
+
+    if (gananciaParticipante <= 0) continue;
+
+    ganancias.push({
+      id_usuario: p.id_usuario,
+      monto: gananciaParticipante,
+      tipo_participante: 1,
+    });
+
+    montoDistribuidoEntreParticipantes += gananciaParticipante;
+  }
+
+  // Diferencia por redondeo (se va a la empresa)
+  const diferenciaPool = truncateNumber(
+    montoRepartirseParticipantes - montoDistribuidoEntreParticipantes,
+    cantNumerosTruncar,
+  );
+
+  // 4) EMPRESA – parte porcentual explícita
+  let montoEmpresaPorcentaje = calcularMontoRol(
+    reglaEmpresa,
+    montoBaseSinIva,
+    primeraVenta,
+    cantNumerosTruncar,
+  );
+
+  // 5) EMPRESA – sobrante de toda la operación
+
+  // si no se carga el porcentaje de empresa, se le asigna todo el sobrante
+  if(montoEmpresaPorcentaje <= 0) {
+    montoEmpresaPorcentaje = truncateNumber(
+      montoBaseSinIva - montoVendedor - montoEmbajador - montoRepartirseParticipantes,
+      cantNumerosTruncar,
+    );
+  }
+
+  let montoEmpresa = (diferenciaPool > 0 ? diferenciaPool : 0) + montoEmpresaPorcentaje
+
+  if (montoEmpresa > 0) {
+    ganancias.push({
+      id_usuario: null, // empresa
+      monto: montoEmpresa,
+      tipo_participante: 3,
+    });
+  }
+
+  return {
+    montoVendedor,
+    montoEmbajador,
+    montoParticipantes: montoRepartirseParticipantes,
+    montoDistribuidoParticipantes: montoDistribuidoEntreParticipantes,
+    montoEmpresa,
+    ganancias,
+  };
+}
+
+function calcularNuevaMeta(params: {
+  infoMeta: {
+    total_participacion_global: number | string | null;
+    total_participacion: number | string | null;
+  };
+  montoParticipantesNuevo: number; // lo que entra a la bolsa en esta venta
+}) {
+  const totalGlobalAnterior = Number(params.infoMeta.total_participacion_global || 0);
+  const totalParticipacion = Number(params.infoMeta.total_participacion || 1);
+
+  const totalGlobalNuevo = totalGlobalAnterior + Number(params.montoParticipantesNuevo || 0);
+  const precioMeta = redondearDecimales(
+    totalGlobalNuevo / totalParticipacion,
+    6,
+  );
+
+  return {
+    total_participacion_global: totalGlobalNuevo,
+    precio_meta: precioMeta,
+  };
+}
+
 
 @Injectable()
 export class ParticipantesService {
@@ -181,325 +393,174 @@ export class ParticipantesService {
    * @param options     { primera_venta?: boolean }  Si es true, usa porcentajes de primera venta; si es false, porcentajes recurrentes.
    * @throws BadRequestException si la factura no existe/no está pagada o si no hay configuración de participación.
    */
-  async repartirGananciasDeVentaPlan(
-    id_factura: number,
-    options: OpcionesRepartirParticipantesDto,
-    tx?: Prisma.TransactionClient,
-  ) {
-    // Helper local para redondeo consistente a 2 decimales
-    const toTwo = (n: number) => Number(n.toFixed(2));
 
-    const cant_numeros_truncar = 4;
+  
 
-    try {
-      const { primera_venta = false } = options;
+async repartirGananciasDeVentaPlan(
+  id_factura: number,
+  options: OpcionesRepartirParticipantesDto,
+  tx?: Prisma.TransactionClient,
+) {
+  const { primera_venta = false } = options;
+  const cant_numeros_truncar = 4;
+  const idMonedaAsignarComisiones = 1;
+  const tipoGanacia = 1;
 
-      const ganancias: Ganancia[] = [];
-      const gananciasForUsuario: any = {};
+  await this.prisma.runInTransaction(tx, async (client) => {
+    const factura = await client.factura_suscripciones.findFirst({
+      where: { id: id_factura, activo: true, estado: 2 },
+      include: {
+        suscripciones: { select: { id: true, id_vendedor: true, id_plan: true,id_embajador: true } },
+        usuarios: { select: { id: true, id_embajador: true } },
+      },
+    });
+    if (!factura) throw new BadRequestException('Factura no encontrada o no pagada');
 
-      await this.prisma.runInTransaction(tx, async (client) => {
-        const prisma = client;
-        // 1) Buscar la factura pagada + su suscripción (incluye vendedor)
-        const factura = await prisma.factura_suscripciones.findFirst({
-          where: { id: id_factura, activo: true, estado: 2 }, // estado 2 = pagado
-          include: {
-            suscripciones: { select: { id: true, id_vendedor: true } },
-            usuarios: {
-              select: {
-                id: true,
-                nombre: true,
-                email: true,
-                porcentaje_comision_primera_venta: true,
-                porcentaje_comision_recurrente: true,
-              },
-            },
-          },
-        });
+    const suscripcion = factura.suscripciones;
+    const planVenta = await client.planes.findFirst({
+      where: { id: suscripcion.id_plan, activo: true },
+    });
+    if (!planVenta) throw new BadRequestException('Plan no encontrado');
 
-        if (!factura) {
-          throw new BadRequestException(
-            'No se encontró la factura o no está pagada',
-          );
-        }
-
-        // 2) Suscripción asociada a la factura
-        const suscripcionFactura = factura?.suscripciones;
-
-        // 3) Vendedor y Participantes (grupo 4 = participantes) con usuarios activos
-        const vendedor = suscripcionFactura?.id_vendedor ?? null;
-
-        const participantes = await prisma.usuarios_grupos.findMany({
-          where: { id_grupo: 4, usuarios: { activo: true } },
-          include: { usuarios: true },
-        });
-
-        // 4) Configuración de participación (porcentajes y parámetros globales)
-        const infoMeta = await prisma.participacion_empresa.findFirst();
-        if (!infoMeta) {
-          throw new BadRequestException(
-            'Información de participación no configurada',
-          );
-        }
-
-        const idMonedaAsignarComisiones = 1; // Asignar la moneda correspondiente, por ejemplo, 1 para USD
-        const tipoGanacia = 1; // 1=venta plan
-
-        // Base de cálculo: total gravado 10% (monto sin IVA)
-        let monto_factura_sin_iva = Number(factura.total_grav_10) || 0;
-        monto_factura_sin_iva = toTwo(monto_factura_sin_iva);
-
-        let montoVendedor = 0;
-
-        // ------------------------------------------------------------
-        // Ganancia del VENDEDOR (si existe)
-        // ------------------------------------------------------------
-
-        if (vendedor) {
-          console.log("Vendedor ", vendedor)
-          const vendedorData = await client.usuarios.findFirst({
-            where: { id: vendedor, activo: true },
-          });
-          console.log("data", vendedorData)
-          if (
-            !vendedorData?.porcentaje_comision_primera_venta &&
-            !vendedorData?.porcentaje_comision_recurrente
-          )
-            throw new BadRequestException(
-              'El usuario vendedor no tiene porcentajes de comisión configurados',
-            );
-
-
-          if (primera_venta) {
-            const pct = Number(vendedorData.porcentaje_comision_primera_venta);
-            montoVendedor = (pct / 100) * monto_factura_sin_iva;
-          } else {
-            const pct = Number(vendedorData.porcentaje_comision_recurrente);
-            montoVendedor = (pct / 100) * monto_factura_sin_iva;
-          }
-
-          montoVendedor = truncateNumber(montoVendedor,cant_numeros_truncar);
-
-          // Agregar a la lista de ganancias a registrar
-          ganancias.push({
-            id_moneda: idMonedaAsignarComisiones,
-            tipo_ganancia: tipoGanacia, // 1=venta plan
-            id_factura: factura.id,
-            id_usuario: vendedor,
-            monto: montoVendedor,
-            tipo_participante: 2, // 2 = vendedor
-          });
-
-          gananciasForUsuario[vendedor] = montoVendedor;
-
-          // TODO: Persistir el registro de ganancia del vendedor si corresponde.
-          // Ejemplo (referencial): await prisma.ganancias_vendedor.create({ data: { id_vendedor: vendedor, id_factura, monto: montoVendedor, ... } });
-        }
-
-        // ------------------------------------------------------------
-        // Ganancias de PARTICIPANTES
-        // ------------------------------------------------------------
-        let montoParticipantes = 0;
-        let montoRepartirse = 0;
-        let montoDistribuidoEntreParticipantes = 0;
-        // Determinar el monto total a repartirse entre todos los participantes
-        if (primera_venta) {
-          const pct = Number(infoMeta.porcentaje_participantes_primera_venta);
-          montoRepartirse = (pct / 100) * monto_factura_sin_iva;
-        } else {
-          const pct = Number(infoMeta.porcentaje_participantes_recurrente);
-          montoRepartirse = (pct / 100) * monto_factura_sin_iva;
-        }
-        montoRepartirse = toTwo(montoRepartirse);
-        montoParticipantes = montoRepartirse;
-
-        if (participantes.length > 0) {
-          // Distribución proporcional según "porcentaje_participacion" por usuario
-          await Promise.all(
-            participantes.map(async (participante) => {
-              // Consulta del porcentaje de participación del usuario (debe venir ya en %)
-              const dataParticipacion = await this.dbService.query(
-                `
-              select com.porcentaje_participacion
-              from compras_participantes com
-              left join usuarios us on com.id_usuario = us.id and us.activo = true
-              where com.id_usuario = $1
-              `,
-                [participante.id_usuario],
-              );
-
-              if (dataParticipacion.rowCount === 0) return; // si no tiene participación, se omite
-
-              const dataParticipante = dataParticipacion.rows[0];
-              if (!dataParticipante) return; // seguridad adicional
-
-              const porcentajeParticipante = Number(
-                dataParticipante.porcentaje_participacion,
-              );
-              let gananciaParticipante = (montoRepartirse * porcentajeParticipante) / 100;
-
-              gananciaParticipante = truncateNumber(gananciaParticipante,cant_numeros_truncar);
-
-              // Agregar a la lista de ganancias a registrar
-              ganancias.push({
-                id_moneda: idMonedaAsignarComisiones,
-                tipo_ganancia: tipoGanacia, // 1=venta plan
-                id_factura: factura.id,
-                id_usuario: participante.id_usuario,
-                monto: gananciaParticipante,
-                tipo_participante: 1, // 1 = participante
-              });
-
-              // sumar a la ganancia del usuario
-              if (gananciasForUsuario[participante.id_usuario]) {
-                gananciasForUsuario[participante.id_usuario] +=
-                  gananciaParticipante;
-              } else {
-                gananciasForUsuario[participante.id_usuario] =
-                  gananciaParticipante;
-              }
-
-              // Sumar al monto ya distribuido entre participantes
-              montoDistribuidoEntreParticipantes += gananciaParticipante;
-
-              // TODO: Persistir el registro de ganancia del participante si corresponde.
-            }),
-          );
-
-        }
-        
-
-        // ------------------------------------------------------------
-        // Ganancias de EMPRESA
-        // ------------------------------------------------------------
-
-        // asignar la ganancia a la empresa de lo que sobro al no se repartir entre participantes y vendedor
-
-        let montoEmpresa = 0;
-
-        // Diferencia de los designado a la bolsa y lo repartido entre participantes
-        const diferenciaEntreAsigandoParticipantes = truncateNumber(
-          montoRepartirse - montoDistribuidoEntreParticipantes,cant_numeros_truncar
-        );
-
-        if (diferenciaEntreAsigandoParticipantes > 0) {
-          montoEmpresa += diferenciaEntreAsigandoParticipantes;
-        }
-        
-        // monto que sobra de la factura despues de asignar a vendedor y participantes
-        const montoSobranteReparticion = monto_factura_sin_iva  - montoVendedor - montoRepartirse; 
-
-        montoEmpresa += truncateNumber(montoSobranteReparticion,cant_numeros_truncar);
-
-
-        // Agregar a la lista de ganancias a registrar
-        ganancias.push({
-          id_moneda: idMonedaAsignarComisiones,
-          tipo_ganancia: tipoGanacia, // 1=venta plan
-          id_factura: factura.id,
-          id_usuario: null, // 0 o null para representar a la empresa
-          monto: montoEmpresa,
-          tipo_participante: 3, // 3 = empresa
-        });
-
-
-
-        
-        //1 - TODO: Persistir el registro de ganancia de los participantes si corresponde.
-        let participaciones_actual =
-          Number(infoMeta.total_participacion_global) +
-          Number(montoParticipantes);
-        let precio_meta =
-          Number(participaciones_actual) / Number(infoMeta.total_participacion);
-
-        console.log('gananciasRepartir', ganancias);
-        
-        console.log('ganancias por cada usuario', gananciasForUsuario);
-
-        console.log(
-          'Total wallet master',
-          participaciones_actual,
-        );
-
-        console.log('Precio Meta:', redondearDecimales(precio_meta, 6));
-
-        console.log(
-          'Total a repartido entre participantes:',
-          montoDistribuidoEntreParticipantes,
-        );
-        
-        console.log(
-          'Cantidad repartir entre participantes:',
-          montoParticipantes,
-        );
-
-        console.log(
-          'Total Ganancia empresa (Bolsa):',
-          montoEmpresa,
-        );
-
-
-        console.log("Total asignado a Vendedor",(montoVendedor))
-
-
-
-        // 1- registrar las ganacias por la venta de un plan
-        await prisma.ganancias_futuras.createMany({
-          data: ganancias.map((g) => ({
-            id_moneda: g.id_moneda,
-            tipo_ganancia: g.tipo_ganancia, // 1=venta plan
-            id_factura: g.id_factura,
-            id_usuario: g.id_usuario,
-            monto: g.monto,
-            tipo_participante: g.tipo_participante,
-          })),
-        });
-
-        // 2- registrar ganancias entre usuarios cada usuario (vendedor, participante)
-        for (const [idStr, monto] of Object.entries(gananciasForUsuario)) {
-          const id_usuario = Number(idStr);
-          const montoAsignar = monto as number;
-          await prisma.usuarios.update({
-            where: { id: id_usuario },
-            data: { saldo: { increment: montoAsignar } },
-          });
-        }
-
-        // 3- registrar ganancias globales (Wallet Mater)
-        await prisma.participacion_empresa.update({
-          where: { id: 1 },
-          data: {
-            total_participacion_global: participaciones_actual,
-          },
-        });
-
-        // 4- Actualizar precio META
-        await prisma.participacion_empresa.update({
-          where: { id: 1 },
-          data: {
-            precio_meta: redondearDecimales(precio_meta, 6),
-          },
-        });
-
-        // 5- Actualizar ganancia acumulada de la empresa
-        if (montoEmpresa > 0) {
-          const acumularGananciaEmpresa =
-            Number(infoMeta.ganancia_acumulada || 0) + montoEmpresa;
-          console.log(
-            'sumar a lo acumulado de la empresa:',
-            redondearDecimales(montoEmpresa),
-          );
-          await prisma.participacion_empresa.update({
-            where: { id: 1 },
-            data: {
-              ganancia_acumulada: redondearDecimales(acumularGananciaEmpresa),
-            },
-          });
-        }
-      });
-    } catch (error) {
-      throw error;
+    const planPorcentajes = await client.planes_porcentajes_repartir.findMany({
+      where: { id_plan: planVenta.id, activo: true },
+    });
+    if (!planPorcentajes.length) {
+      throw new BadRequestException('Plan sin porcentajes de reparto configurados');
     }
-  }
+
+    // mapear reglas
+    const reglaParticipante = planPorcentajes.find(pp => pp.id_tipo === PlanesTipoRepartir.PARTICIPANTES)!;
+    const reglaEmpresa = planPorcentajes.find(pp => pp.id_tipo === PlanesTipoRepartir.EMPRESA);
+    const reglaVendedor = planPorcentajes.find(pp => pp.id_tipo === PlanesTipoRepartir.VENDEDOR);
+    const reglaEmbajador = planPorcentajes.find(pp => pp.id_tipo === PlanesTipoRepartir.EMBAJADOR);
+
+    // participantes del grupo 4
+    const participantesGrupo = await client.usuarios_grupos.findMany({
+      where: { id_grupo: 4, usuarios: { activo: true } },
+      include: { usuarios: true },
+    });
+
+    // traer % de participación de cada uno (puedes hacerlo en un solo query si quieres optimizar)
+    const participantesInput: ParticipanteInput[] = [];
+    for (const p of participantesGrupo) {
+      const dataParticipacion = await this.dbService.query(
+        `
+          select porcentaje_participacion
+          from compras_participantes
+          where id_usuario = $1
+        `,
+        [p.id_usuario],
+      );
+      if (!dataParticipacion.rowCount) continue;
+      participantesInput.push({
+        id_usuario: p.id_usuario,
+        porcentaje_participacion: Number(dataParticipacion.rows[0].porcentaje_participacion),
+      });
+    }
+
+    const infoMeta = await client.participacion_empresa.findFirst();
+    if (!infoMeta) throw new BadRequestException('Meta no configurada');
+
+    let monto_factura_sin_iva = Number(factura.total_grav_10) || 0;
+    monto_factura_sin_iva = Number(monto_factura_sin_iva.toFixed(2));
+
+    const resultado = calcularRepartoVentaPlan({
+      montoBaseSinIva: monto_factura_sin_iva,
+      primeraVenta: primera_venta,
+      cantNumerosTruncar: cant_numeros_truncar,
+      reglaParticipante: {
+        porcentaje_primera_venta: Number(reglaParticipante.porcentaje_primera_venta),
+        porcentaje_venta_recurrente: Number(reglaParticipante.porcentaje_venta_recurrente),
+      },
+      reglaVendedor: reglaVendedor && {
+        porcentaje_primera_venta: Number(reglaVendedor.porcentaje_primera_venta),
+        porcentaje_venta_recurrente: Number(reglaVendedor.porcentaje_venta_recurrente),
+      },
+      reglaEmbajador: reglaEmbajador && {
+        porcentaje_primera_venta: Number(reglaEmbajador.porcentaje_primera_venta),
+        porcentaje_venta_recurrente: Number(reglaEmbajador.porcentaje_venta_recurrente),
+      },
+      reglaEmpresa: reglaEmpresa && {
+        porcentaje_primera_venta: Number(reglaEmpresa.porcentaje_primera_venta),
+        porcentaje_venta_recurrente: Number(reglaEmpresa.porcentaje_venta_recurrente),
+      },
+      participantes: participantesInput,
+      idVendedor: suscripcion.id_vendedor ?? undefined,
+      idEmbajador: suscripcion?.id_embajador ?? null,
+    });
+
+    // aquí podés transformar resultado.ganancias en tu array `ganancias`
+    const ganancias = resultado.ganancias.map((g) => ({
+      id_moneda: idMonedaAsignarComisiones,
+      tipo_ganancia: tipoGanacia,
+      id_factura: factura.id,
+      id_usuario: g.id_usuario,
+      monto: g.monto,
+      tipo_participante: g.tipo_participante,
+    }));
+
+
+    const metaActualizada = calcularNuevaMeta({
+      infoMeta:{
+        total_participacion_global: Number(infoMeta.total_participacion_global) || 0,
+        total_participacion: Number(infoMeta.total_participacion) || 0,
+      },
+      montoParticipantesNuevo: resultado.montoParticipantes,
+    });
+
+    // LOGS para debug
+    console.log('Reparto de venta de plan/suscripción:');
+    console.log(`- Factura ID: ${factura.id}`);
+    console.log(`- Monto base (sin IVA): ${monto_factura_sin_iva}`);
+    console.log(`- Primera venta: ${primera_venta}`);
+    console.log(`- Monto a Vendedor: ${resultado.montoVendedor}`);
+    console.log(`- Monto a Embajador: ${resultado.montoEmbajador}`);
+    console.log(`- Monto a Participantes: ${resultado.montoParticipantes}`);
+    console.log(`- Monto a Empresa: ${resultado.montoEmpresa}`);
+    console.log('- Detalle de ganancias por usuario:',ganancias);
+    console.log('- Nueva meta calculada:',metaActualizada);
+
+
+
+
+    // 1- registrar ganancias
+    await client.ganancias_futuras.createMany({ data: ganancias });
+
+    // 2- sumar a saldos de usuarios (menos empresa, que va a bolsa)
+    for (const g of ganancias) {
+      if (!g.id_usuario) continue; // empresa
+      await client.usuarios.update({
+        where: { id: g.id_usuario },
+        data: { saldo: { increment: g.monto } },
+      });
+    }
+
+    // 3- actualizar META / bolsa con lo que fue a participantes
+
+    await client.participacion_empresa.update({
+      where: { id: infoMeta.id },
+      data: {
+        total_participacion_global: metaActualizada.total_participacion_global,
+        precio_meta: metaActualizada.precio_meta,
+      },
+    });
+
+    // 4- acumular ganancia de empresa
+    if (resultado.montoEmpresa > 0) {
+      const gananciaAcumulada =
+        Number(infoMeta.ganancia_acumulada || 0) + resultado.montoEmpresa;
+
+      await client.participacion_empresa.update({
+        where: { id: infoMeta.id },
+        data: {
+          ganancia_acumulada: redondearDecimales(gananciaAcumulada),
+        },
+      });
+    }
+  });
+}
+
 
   async getParticipacionByUsuario(id_usuario: number) {
     try {
@@ -518,13 +579,14 @@ export class ParticipantesService {
     }
   }
 
-  async getParticipantesQueryMany(query:any){
-   try {
-    
-    const inversionistas = await this.dbPromiseService.result(consultaparticipantes)
-    return inversionistas.rows;
-   } catch (error) {
-    throw error;
-   }
+  async getParticipantesQueryMany(query: any) {
+    try {
+      const inversionistas = await this.dbPromiseService.result(
+        consultaparticipantes,
+      );
+      return inversionistas.rows;
+    } catch (error) {
+      throw error;
+    }
   }
 }

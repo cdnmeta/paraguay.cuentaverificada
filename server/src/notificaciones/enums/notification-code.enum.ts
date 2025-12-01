@@ -15,4 +15,9 @@ export enum NotificationCode {
   // General
   BIENVENIDA = 'bienvenida',
   RECORDATORIO = 'recordatorio',
+
+  // Verificación
+  PAGO_VERIFICACION_APROBADO = 'pago-verificacion-aprobado',
+  PAGO_VERIFICACION_RECHAZADO = 'pago-verificacion-rechazado',
+  COMERCIO_VERIFICADO = 'comercio-verificado',
 }

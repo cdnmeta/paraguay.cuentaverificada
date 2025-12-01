@@ -26,6 +26,7 @@ import {
   Calendar,
   DollarSign,
   Plus,
+  NotepadText,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -574,7 +575,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
   return (
     <div className="space-y-6">
       {/* Sección de Resúmenes */}
-      <div className="rounded-lg p-6 border-2 border-primary">
+      <div className="rounded-lg p-2">
         <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
           <Calculator className="h-5 w-5 text-blue-600" />
           Resumen Financiero
@@ -582,9 +583,11 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
           {/* Columna Izquierda - Semáforo */}
-          <div className="flex items-center justify-center">
-            <div className="bg-card border-2 border-primary rounded-lg p-4 shadow-sm">
-              <h4 className="font-semibold mb-4">Estado Financiero ({porcentajeMostrar.toFixed(2)}%)</h4>
+          <div className="w-full">
+            <div className="bg-card border-2 border-white rounded-lg p-4 shadow-sm">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <NotepadText  className="h-4 w-4 text-green-600"/>
+                Estado Financiero ({porcentajeMostrar.toFixed(2)}%)</h4>
                 <div className="flex justify-center">
                    <div className="w-15 h-auto max-w-xs">
                      <SemaforoImg tipo={tipoSemaforo} />
@@ -601,7 +604,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
           {/* Columna Derecha - Resúmenes Numéricos */}
 
             {/* Promedio Diario */}
-            <div className="bg-card border-2 border-primary rounded-lg p-4 shadow-sm">
+            <div className="bg-card border-2 border-white rounded-lg p-4 shadow-sm">
               <h4 className="font-semibold mb-3 flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-green-600" />
                 Promedio Diario
@@ -629,7 +632,7 @@ const ConteoMovimientos = ({ data = {}, cotizaciones = [], afterDelete = () => {
             </div>
 
             {/* Promedio Mensual */}
-            <div className="bg-card border-2 border-primary rounded-lg p-4 shadow-sm">
+            <div className="bg-card border-2 border-white rounded-lg p-4 shadow-sm">
               <h4 className="font-semibold mb-3 flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-blue-600" />
                 Promedio Mensual

@@ -46,6 +46,10 @@ export class RegisterUsuariosPayloadDto {
   @IsString({ message: 'Pin debe ser una cadena' })
   @IsNotEmpty({ message: 'El pin es obligatorio' })
   pin: string;
+
+  @IsDateString({}, { message: 'La fecha de nacimiento debe ser una fecha válida' })
+  @IsNotEmpty({ message: 'La fecha de nacimiento es obligatoria' })
+  fecha_nacimiento: string;
 }
 
 export class RegisterUsuariosDto extends RegisterUsuariosPayloadDto {
@@ -113,6 +117,10 @@ export class CrearUsuarioDTO {
   @Max(100, { message: 'El porcentaje de venta recurrente debe ser menor o igual a 100' })
   @IsOptional()
   porcentaje_vendedor_venta_recurrente?: number | null; */
+
+  @IsDateString({}, { message: 'La fecha de nacimiento debe ser una fecha válida' })
+  @IsOptional()
+  fecha_nacimiento?: string | null;
 
   @Type(() => Number)
   @IsNumber({},{message: "el id del broker debe ser un número"})

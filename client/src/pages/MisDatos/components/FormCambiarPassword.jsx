@@ -89,7 +89,7 @@ export default function FormCambiarPassword() {
                       type={showPassword ? "text" : "password"} 
                       placeholder="********" 
                       {...field} 
-                      className="pr-10"
+                      className="pr-10 border-red-500"
                     />
                     <Button
                       type="button"
@@ -124,7 +124,7 @@ export default function FormCambiarPassword() {
                       type={showConfirmPassword ? "text" : "password"} 
                       placeholder="********" 
                       {...field} 
-                      className="pr-10"
+                      className="pr-10 border-red-500"
                     />
                     <Button
                       type="button"
@@ -167,7 +167,7 @@ export default function FormCambiarPassword() {
                           <InputOTPSlot 
                             key={index} 
                             index={index} 
-                            className="w-12 h-12 text-lg font-semibold border-2 rounded-lg"
+                            className="w-12 h-12 text-lg font-semibold border-2  border-red-500 rounded-lg"
                           />
                         ))}
                       </InputOTPGroup>
@@ -180,7 +180,7 @@ export default function FormCambiarPassword() {
           )}
         />
         <div className="md:col-span-2 flex items-center gap-3">
-          <Button disabled={formSeguridad.formState.isSubmitting} type="submit">
+          <Button disabled={formSeguridad.formState.isSubmitting} type="submit" className={'bg-red-500 text-white'} >
             {formSeguridad.formState.isSubmitting
               ? "Cambiando..."
               : "Cambiar contraseña"}

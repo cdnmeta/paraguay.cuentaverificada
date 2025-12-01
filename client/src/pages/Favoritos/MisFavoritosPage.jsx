@@ -181,7 +181,7 @@ export default function MisFavoritosPage() {
               <Heart className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Mis Favoritos</h1>
+              <h1 className="text-3xl font-bold text-foreground">Favoritos</h1>
               {favoritos.length > 0 && (
                 <p className="text-sm text-muted-foreground">
                   {favoritosFiltrados.length} de {favoritos.length} favoritos

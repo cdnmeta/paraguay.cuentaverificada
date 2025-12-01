@@ -24,6 +24,7 @@ import {
 } from "@/apis/verificacioComercios";
 import { ComboBox } from "@/components/customs/comboBoxShadcn/ComboBox1";
 import { emit, EVENTS } from "@/utils/events";
+import { CODIGO_PAIS_BASE } from "@/utils/constants";
 
 
 const defaultFormData = {
@@ -32,7 +33,7 @@ const defaultFormData = {
   telefono: "",
   codigoVendedor: "",
   aceptaTerminos: false,
-  codigoPais: "",
+  codigoPais: CODIGO_PAIS_BASE,
   comprobantePago: undefined,
 };
 
@@ -69,7 +70,7 @@ export default function FormSolicitudComercio({
         ruc: comercioData.ruc ?? "",
         telefono: comercioData.telefono ?? "",
         dialCode: comercioData.dial_code ?? "",
-        codigoPais: comercioData.codigo_pais ?? "",
+        codigoPais: comercioData.codigo_pais ?? CODIGO_PAIS_BASE,
         direccion: comercioData.direccion ?? "",
         codigoVendedor: "",
         aceptaTerminos: false,
