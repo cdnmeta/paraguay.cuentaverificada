@@ -162,9 +162,9 @@ export class VerificacionCuentaService {
     files: ImagenesVerificacionCuenta,
   ) {
     try {
-      const cedula_frontal = files.cedula_frontal?.[0];
-      const cedula_reverso = files.cedula_reverso?.[0];
-      const selfie_user = files.selfie_user?.[0];
+      const cedula_frontal = files.cedula_frontal;
+      const cedula_reverso = files.cedula_reverso;
+      const selfie_user = files.selfie_user;
       // guardar las cedulas en firebase
       const user = await this.prismaService.usuarios.findFirst({
         where: {
@@ -196,7 +196,7 @@ export class VerificacionCuentaService {
       if (cedula_frontal) {
         const nombre_cedula_frontal = user?.cedula_frente
           ? path.basename(user?.cedula_frente)
-          : crearNombreArchivoDesdeMulterFile(files?.cedula_frontal[0]);
+          : crearNombreArchivoDesdeMulterFile(cedula_frontal);
         url_cedula_frontal = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_frontal}`;
         await this.firebaseService.subirArchivoPrivado(
           cedula_frontal.buffer,
@@ -208,7 +208,7 @@ export class VerificacionCuentaService {
       if (cedula_reverso) {
         const nombre_cedula_reverso = user?.cedula_reverso
           ? path.basename(user?.cedula_reverso)
-          : crearNombreArchivoDesdeMulterFile(files?.cedula_reverso[0]);
+          : crearNombreArchivoDesdeMulterFile(cedula_reverso);
         url_cedula_reverso = `${FIREBASE_STORAGE_FOLDERS.cedulasUsuarios}/${nombre_cedula_reverso}`;
         await this.firebaseService.subirArchivoPrivado(
           cedula_reverso.buffer,
@@ -220,7 +220,7 @@ export class VerificacionCuentaService {
       if (selfie_user) {
         const nombre_selfie_user = user?.selfie
           ? path.basename(user?.selfie)
-          : crearNombreArchivoDesdeMulterFile(files?.selfie_user[0]);
+          : crearNombreArchivoDesdeMulterFile(selfie_user);
         url_selfie_user = `${FIREBASE_STORAGE_FOLDERS.selfieUsuarios}/${nombre_selfie_user}`;
         await this.firebaseService.subirArchivoPrivado(
           selfie_user.buffer,
@@ -240,9 +240,9 @@ export class VerificacionCuentaService {
           telefono: updateVerificacionCuentaDto.telefono,
           dial_code: updateVerificacionCuentaDto.dial_code,
           email: updateVerificacionCuentaDto.correo,
-          cedula_frente: url_cedula_frontal,
-          cedula_reverso: url_cedula_reverso,
-          selfie: url_selfie_user,
+          cedula_frente: url_cedula_frontal || user.cedula_frente,
+          cedula_reverso: url_cedula_reverso || user.cedula_reverso,
+          selfie: url_selfie_user || user.selfie,
           fecha_actualizacion: new Date(),
           estado: 4, // colocar en pendiente aprobacion
           id_usuario_actualizacion:

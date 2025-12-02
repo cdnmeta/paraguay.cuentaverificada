@@ -458,6 +458,12 @@ export class VerificacionCuentaController {
     const reverso = files.cedula_reverso?.[0];
     const selfie_user = files.selfie_user?.[0];
 
+    const filesSubir = {
+      cedula_frontal: frontal,
+      cedula_reverso: reverso,
+      selfie_user: selfie_user,
+    }
+
     console.log('file', files);
 
     try {
@@ -466,7 +472,7 @@ export class VerificacionCuentaController {
       await this.verificacionCuentaService.actualizarUsuarioVerificacion(
         id,
         updateVerificacionCuentaDto,
-        files,
+        filesSubir,
       );
 
       return res

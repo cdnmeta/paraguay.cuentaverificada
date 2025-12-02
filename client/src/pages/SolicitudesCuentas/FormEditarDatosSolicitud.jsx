@@ -67,7 +67,7 @@ const imageFileSchema = z
 const formSchema = z.object({
   correo: z.string().email("Correo inválido"),
   nombre: z.string().min(2, "Mínimo 2 caracteres"),
-  apellido: z.string().min(2, "Mínimo 2 caracteres"),
+  apellido: z.string({invalid_type_error:"debe ser String"}).nullable().optional(),
   codigo_pais: z.string().min(1, "Seleccione un país"),
   telefono: z
     .string()
