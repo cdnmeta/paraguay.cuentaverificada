@@ -63,7 +63,7 @@ import { SuscripcionesModule } from './suscripciones/suscripciones.module';
     TicketsModule,
     WalletModule,
     NotificacionesModule,
-    SuscripcionesModule,
+    SuscripcionesModule
   ],
   providers: [
     {

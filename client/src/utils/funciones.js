@@ -264,4 +264,15 @@ export  const rellenarNumero = (cantidadDigitosMax, numero,relleno = "0") => {
 };
 
 
+// FUncion para crear wa.me links
+export const crearEnlaceWhatsApp = (numeroTelefono, mensaje = "") => {
+  // Eliminar espacios, guiones y paréntesis del número de teléfono
+  const numeroLimpio = numeroTelefono.replace(/[\s\-()]/g, '');
+  // Codificar el mensaje para URL
+  const mensajeCodificado = encodeURIComponent(mensaje);
+  // Construir el enlace de WhatsApp
+  return `https://wa.me/${numeroLimpio}?text=${mensajeCodificado}`;
+}
+
+
 

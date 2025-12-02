@@ -25,7 +25,10 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { IMAGE_SCHEMA_NO_REQUERIDO, REGEX_CEDULA_IDENTIDAD } from "@/utils/constants";
+import {
+  IMAGE_SCHEMA_NO_REQUERIDO,
+  REGEX_CEDULA_IDENTIDAD,
+} from "@/utils/constants";
 import paisesCode from "@/utils/paises-flag.json";
 import { ComboBox } from "@/components/customs/comboBoxShadcn/ComboBox1";
 import {
@@ -34,12 +37,13 @@ import {
 } from "@/apis/verificacionCuenta.api";
 import { Checkbox } from "@/components/ui/checkbox";
 import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
-import { set } from "date-fns";
+import { isSameDay } from "date-fns";
 import { storage } from "@/firebaseConfig";
 import { useStorageURL } from "@/hooks/useStorageURL";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { X } from "lucide-react";
 import NoImage from "@/components/customs/NoImage";
+import { DatePicker } from "@/components/date-picker1";
 // --- Zod schema (JSX/JS puro) ---
 const MAX_FILE_SIZE_MB = 5;
 
@@ -72,6 +76,14 @@ const formSchema = z.object({
   cedula_frente: IMAGE_SCHEMA_NO_REQUERIDO,
   cedula_reverso: IMAGE_SCHEMA_NO_REQUERIDO,
   selfie_user: IMAGE_SCHEMA_NO_REQUERIDO,
+  fecha_nacimiento: z
+    .date({ invalid_type_error: "Fecha inválida" })
+    .optional()
+    .refine((d) => {
+      if (!d) return true;
+      const hoy = new Date();
+      return !isSameDay(d, hoy);
+    }, "La fecha no puede ser hoy"),
 });
 
 const defaultValues = {
@@ -85,6 +97,7 @@ const defaultValues = {
   cedula_frente: undefined,
   cedula_reverso: undefined,
   selfie_user: undefined,
+  fecha_nacimiento: undefined,
 };
 
 export default function FormEditarDatosSolicitud({
@@ -134,11 +147,20 @@ export default function FormEditarDatosSolicitud({
         const dialCode = paises.find(
           (p) => p.countryCode === Number(data.dial_code)
         );
-        const { cedula_frente, cedula_reverso, selfie, ...dataRest } = data;
+        const {
+          cedula_frente,
+          cedula_reverso,
+          selfie,
+          fecha_nacimiento,
+          ...dataRest
+        } = data;
         form.reset({
           ...dataRest,
           correo: data.email,
           codigo_pais: dialCode ? String(dialCode.value) : "",
+          fecha_nacimiento: fecha_nacimiento
+            ? new Date(fecha_nacimiento)
+            : undefined,
         });
       }
     } catch (error) {
@@ -188,15 +210,19 @@ export default function FormEditarDatosSolicitud({
       fd.append("telefono", values.telefono);
       fd.append("documento", values.documento);
 
-      if (values.cedula_frente ) {
+      if (values.cedula_frente) {
         fd.append("cedula_frontal", values.cedula_frente);
       }
-      if (values.cedula_reverso ) {
+      if (values.cedula_reverso) {
         fd.append("cedula_reverso", values.cedula_reverso);
       }
 
       if (values.selfie_user) {
         fd.append("selfie_user", values.selfie_user);
+      }
+
+      if (values.fecha_nacimiento) {
+        fd.append("fecha_nacimiento", values.fecha_nacimiento.toISOString());
       }
 
       // Aquí haces tu fetch/axios
@@ -220,7 +246,7 @@ export default function FormEditarDatosSolicitud({
 
   const disableBotonGuardar = () => {
     if (!datosVerificados) return true;
-    if(form.formState.isSubmitting) return true;
+    if (form.formState.isSubmitting) return true;
     return false;
   };
 
@@ -228,27 +254,22 @@ export default function FormEditarDatosSolicitud({
     return <LoadingSpinner message="Cargando datos..." />;
   }
 
-  const AlertMotivoRechazo = ({motivo}) => {
-     return (
+  const AlertMotivoRechazo = ({ motivo }) => {
+    return (
       <Alert variant={"destructive"}>
         <X />
         <AlertTitle>Solicitud Rechazada</AlertTitle>
-        <AlertDescription>
-         {motivo || "Solicitud Rechazada"}
-        </AlertDescription>
+        <AlertDescription>{motivo || "Solicitud Rechazada"}</AlertDescription>
       </Alert>
-     )
-  }
+    );
+  };
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 max-w-full max-h-full"
-      >
-        {
-          solicitudData?.estado == 5 && <AlertMotivoRechazo motivo={solicitudData?.motivo_rechazo} />
-        }
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        {solicitudData?.estado == 5 && (
+          <AlertMotivoRechazo motivo={solicitudData?.motivo_rechazo} />
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -311,6 +332,26 @@ export default function FormEditarDatosSolicitud({
             )}
           />
 
+          {/* Fecha de nacimiento (opcional, no puede ser hoy) */}
+          <FormField
+            control={form.control}
+            name="fecha_nacimiento"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fecha de nacimiento</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    value={field.value || null}
+                    onChange={(d) => field.onChange(d ?? undefined)}
+                    placeholder="Seleccione una fecha (opcional)"
+                    disableDate={{ after: new Date() }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <div className="grid grid-cols-[110px,1fr] gap-2 md:col-span-2">
             {/* País + teléfono */}
 
@@ -360,9 +401,7 @@ export default function FormEditarDatosSolicitud({
           </div>
         </div>
 
-        <Separator />
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 mt-2 gap-4">
           {/* Cédula Frontal */}
           <FormField
             control={form.control}
@@ -464,31 +503,31 @@ export default function FormEditarDatosSolicitud({
                         className="w-full h-48 object-cover rounded-xl border"
                       />
                     </PhotoView>
-                  ) : <NoImage />
+                  ) : (
+                    <NoImage />
+                  )
               )}
             </PhotoProvider>
           }
         </div>
 
-        {
-          solicitudData?.id_estado != 3 && (
-            <>
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="terms"
-                  checked={datosVerificados}
-                  onCheckedChange={(value) => setDatosVerificados(value)}
-                />
-                <Label htmlFor="terms">He verificado los datos</Label>
-              </div>
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <Button disabled={disableBotonGuardar()} type="submit">
-                  {form.formState.isSubmitting ? "Guardando..." : "Guardar"}
-                </Button>
-              </div>
-            </>
-          )
-        }
+        {solicitudData?.id_estado != 3 && (
+          <>
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="terms"
+                checked={datosVerificados}
+                onCheckedChange={(value) => setDatosVerificados(value)}
+              />
+              <Label htmlFor="terms">He verificado los datos</Label>
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button disabled={disableBotonGuardar()} type="submit">
+                {form.formState.isSubmitting ? "Guardando..." : "Guardar"}
+              </Button>
+            </div>
+          </>
+        )}
       </form>
     </Form>
   );

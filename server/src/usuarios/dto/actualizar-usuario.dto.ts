@@ -12,6 +12,7 @@ import {
   ValidateIf,
   Min,
   Max,
+  IsBoolean,
 } from 'class-validator';
 import { VendedorDataDto } from './grupos.dto';
 
@@ -89,6 +90,15 @@ export class ActualizarUsuarioDTO {
   @IsNumber({}, { message: 'ID del broker debe ser un número' })
   @IsOptional()
   id_usuario_embajador?: number;
+
+  @IsDateString({}, { message: 'La fecha de nacimiento debe ser una fecha válida' })
+  @IsOptional()
+  fecha_nacimiento?: string | null;
+  
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean({ message: 'Es verificado debe ser un valor booleano' })
+  @IsOptional()
+  verificado?: boolean | null;
 
   /* // Porcentajes de comisión (para vendedores)
   @IsOptional()

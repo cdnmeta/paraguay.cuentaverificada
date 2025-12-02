@@ -152,14 +152,14 @@ export class VerificacionCuentaController {
   ) {
     try {
       const userId = req.user.userId;
-      const result =
+      const {verificador} =
         await this.verificacionCuentaService.solicitarVerificacionUsuario(
           userId,
           { notificar_por_correo: true },
         );
       return res
         .status(200)
-        .json({ message: 'Solicitud de verificación enviada correctamente' });
+        .json({ message: 'Solicitud de verificación enviada correctamente', verificador });
     } catch (error) {
       throw error;
     }

@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -54,11 +55,17 @@ import {
   MAXIMO_PESO_IMAGENES_BYTES,
   REGEX_CEDULA_IDENTIDAD,
 } from "@/utils/constants";
-import { actualizarUsuario, crearUsuario, getUsersByQuery, getUsuarioById } from "@/apis/usuarios.api";
+import {
+  actualizarUsuario,
+  crearUsuario,
+  getUsersByQuery,
+  getUsuarioById,
+} from "@/apis/usuarios.api";
 import { toast } from "sonner";
 import { useAlertDialogStore } from "@/store/useAlertDialogStore";
 import { cargarURL } from "@/utils/funciones";
 import { GruposSistema } from "../types/GruposSistema";
+import { DatePicker } from "@/components/date-picker1";
 
 /**
  * Props:
@@ -87,51 +94,105 @@ export default function FormUsuario({
 
   const baseShape = {
     nombre: z
-      .string({ required_error: 'El nombre es obligatorio' })
+      .string({ required_error: "El nombre es obligatorio" })
       .trim()
-      .min(1, 'El nombre es obligatorio'),
+      .min(1, "El nombre es obligatorio"),
     apellido: z.string().trim().optional().nullable(),
     documento: z
-      .string({ required_error: 'El documento es obligatorio' })
+      .string({ required_error: "El documento es obligatorio" })
       .trim()
-      .regex(REGEX_CEDULA_IDENTIDAD, 'Formato cedula inválido'),
+      .regex(REGEX_CEDULA_IDENTIDAD, "Formato cedula inválido"),
     correo: z
-      .string({ required_error: 'El correo es obligatorio' })
+      .string({ required_error: "El correo es obligatorio" })
       .trim()
-      .email('El correo debe ser un correo válido'),
+      .email("El correo debe ser un correo válido"),
+    fecha_nacimiento: z
+      .date({
+        required_error: "Fecha de nacimiento es requerida",
+        invalid_type_error: "Fecha de nacimiento inválida",
+      })
+      .refine(
+        (val) => {
+          const fecha = new Date(val);
+          const hoy = new Date();
+          hoy.setHours(0, 0, 0, 0);
+          return fecha < hoy;
+        },
+        {
+          message: "La fecha de nacimiento debe ser anterior a hoy",
+        }
+      )
+      .refine(
+        (val) => {
+          const fecha = new Date(val);
+          const fechaMinima = new Date();
+          fechaMinima.setFullYear(fechaMinima.getFullYear() - 100);
+          return fecha > fechaMinima;
+        },
+        {
+          message: "Fecha de nacimiento no válida",
+        }
+      ),
+
+    verificado: z.boolean().optional().nullable(),
     codigo_pais: z.string().optional().nullable(),
     telefono: z.string().optional().nullable(),
     grupos: z.array(z.number()).optional().nullable(),
     cedula_frontal: z.any().optional().nullable(),
     cedula_reverso: z.any().optional().nullable(),
     selfie: z.any().optional().nullable(),
-    id_usuario_embajador: z.coerce.number({invalid_type_error:"el embajador debe ser un numero"}).optional().nullable(),
+    id_usuario_embajador: z.coerce
+      .number({ invalid_type_error: "el embajador debe ser un numero" })
+      .optional()
+      .nullable(),
   };
-
 
   const schemaCreate = z
     .object({
       ...baseShape,
       contrasena: z
-        .string({ required_error: 'La contraseña es obligatoria' })
+        .string({ required_error: "La contraseña es obligatoria" })
         .trim()
-        .min(CANT_MIN_CARACTERES_CONTRASENA, 'La contraseña es obligatoria'),
+        .min(CANT_MIN_CARACTERES_CONTRASENA, "La contraseña es obligatoria"),
       repetir_contrasena: z
-        .string({ required_error: 'La contraseña es obligatoria' })
+        .string({ required_error: "La contraseña es obligatoria" })
         .trim()
-        .min(CANT_MIN_CARACTERES_CONTRASENA, 'La contraseña es obligatoria'),
+        .min(CANT_MIN_CARACTERES_CONTRASENA, "La contraseña es obligatoria"),
     })
     .superRefine((val, ctx) => {
       if (val.telefono && !val.codigo_pais) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Si cargas teléfono, selecciona un dial code', path: ['codigo_pais'] });
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Si cargas teléfono, selecciona un dial code",
+          path: ["codigo_pais"],
+        });
       }
       if (val.contrasena !== val.repetir_contrasena) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Las contraseñas no coinciden', path: ['repetir_contrasena'] });
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Las contraseñas no coinciden",
+          path: ["repetir_contrasena"],
+        });
       }
       // En creación, pedimos imágenes obligatorias
-      if (!val.selfie) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La selfie es obligatoria', path: ['selfie'] });
-      if (!val.cedula_frontal) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La cédula frontal es obligatoria', path: ['cedula_frontal'] });
-      if (!val.cedula_reverso) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La cédula reverso es obligatoria', path: ['cedula_reverso'] });
+      if (!val.selfie)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La selfie es obligatoria",
+          path: ["selfie"],
+        });
+      if (!val.cedula_frontal)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La cédula frontal es obligatoria",
+          path: ["cedula_frontal"],
+        });
+      if (!val.cedula_reverso)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La cédula reverso es obligatoria",
+          path: ["cedula_reverso"],
+        });
     });
 
   const schemaEdit = z
@@ -142,17 +203,29 @@ export default function FormUsuario({
     })
     .superRefine((val, ctx) => {
       if (val.telefono && !val.codigo_pais) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Si cargas teléfono, selecciona un dial code', path: ['codigo_pais'] });
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Si cargas teléfono, selecciona un dial code",
+          path: ["codigo_pais"],
+        });
       }
       // Contraseña opcional en edición; validar sólo si se envía
       if (val.contrasena || val.repetir_contrasena) {
-        const pwd = val.contrasena ?? '';
-        const rep = val.repetir_contrasena ?? '';
+        const pwd = val.contrasena ?? "";
+        const rep = val.repetir_contrasena ?? "";
         if (pwd.length < CANT_MIN_CARACTERES_CONTRASENA) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: `La contraseña debe tener al menos ${CANT_MIN_CARACTERES_CONTRASENA} caracteres`, path: ['contrasena'] });
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `La contraseña debe tener al menos ${CANT_MIN_CARACTERES_CONTRASENA} caracteres`,
+            path: ["contrasena"],
+          });
         }
         if (pwd !== rep) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Las contraseñas no coinciden', path: ['repetir_contrasena'] });
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Las contraseñas no coinciden",
+            path: ["repetir_contrasena"],
+          });
         }
       }
       // En edición NO exigimos imágenes
@@ -177,6 +250,8 @@ export default function FormUsuario({
       apellido: "",
       documento: "",
       correo: "",
+      fecha_nacimiento: null,
+      verificado: false,
       codigo_pais: "",
       telefono: "",
       grupos: [],
@@ -186,7 +261,7 @@ export default function FormUsuario({
 
   const [loading, setLoading] = useState(false);
   const isEdit = isEditing;
-  
+
   // Password visibility
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
@@ -221,12 +296,13 @@ export default function FormUsuario({
           value: String(g.id),
           label: g.descripcion,
         }));
-        
-        const optsEmbajadores = embajadoresData?.map((e) => ({
-          value: e.id,
-          label: `${e.nombre} ${e.apellido || ''} - ${e.documento}`.trim(),
-        })) || [];
-        
+
+        const optsEmbajadores =
+          embajadoresData?.map((e) => ({
+            value: e.id,
+            label: `${e.nombre} ${e.apellido || ""} - ${e.documento}`.trim(),
+          })) || [];
+
         if (!active) return;
         setOptionsGrupos(opts);
         setOptionsEmbajadores(optsEmbajadores);
@@ -255,6 +331,10 @@ export default function FormUsuario({
           apellido: u?.apellido ?? "",
           documento: u?.documento ?? "",
           correo: u?.email ?? u?.correo ?? "",
+          fecha_nacimiento: u?.fecha_nacimiento
+            ? new Date(u.fecha_nacimiento)
+            : null,
+          verificado: u?.verificado ?? false,
           codigo_pais: u?.codigo_pais ?? "+595",
           telefono: u?.telefono ?? "",
           grupos: Array.isArray(u?.grupos)
@@ -266,15 +346,19 @@ export default function FormUsuario({
         });
         // previews desde paths existentes (si tu API devuelve URLs)
         const imagePromises = [
-          u?.cedula_frente ? cargarURL(u?.cedula_frente) : Promise.resolve(null),
-          u?.cedula_reverso ? cargarURL(u?.cedula_reverso) : Promise.resolve(null),
+          u?.cedula_frente
+            ? cargarURL(u?.cedula_frente)
+            : Promise.resolve(null),
+          u?.cedula_reverso
+            ? cargarURL(u?.cedula_reverso)
+            : Promise.resolve(null),
           u?.selfie ? cargarURL(u?.selfie) : Promise.resolve(null),
         ];
         const [urlFront, urlBack, urlSelfie] = await Promise.all(imagePromises);
         setPreviewFront(urlFront);
         setPreviewBack(urlBack);
         setPreviewSelfie(urlSelfie);
-            } catch (e) {
+      } catch (e) {
         console.error("Error cargando usuario", e);
       } finally {
         if (active) setLoading(false);
@@ -309,6 +393,16 @@ export default function FormUsuario({
     formData.append("nombre", values.nombre ?? "");
     formData.append("documento", values.documento ?? "");
     formData.append("correo", values.correo ?? "");
+    if (values.fecha_nacimiento) {
+      const fechaFormato =
+        values.fecha_nacimiento instanceof Date
+          ? values.fecha_nacimiento.toISOString().split("T")[0]
+          : values.fecha_nacimiento;
+      formData.append("fecha_nacimiento", fechaFormato);
+    }
+    if (values.verificado !== null && values.verificado !== undefined) {
+      formData.append("verificado", values.verificado.toString());
+    }
 
     // contrasena: solo enviar si es creación o si el usuario la cambió
     if (!isEdit || (isEdit && values.contrasena)) {
@@ -327,7 +421,11 @@ export default function FormUsuario({
     if (grupos.length) formData.append("grupos", JSON.stringify(grupos));
 
     // embajador para vendedores
-    if (Array.isArray(values?.grupos) && values.grupos.includes(3) && values.id_usuario_embajador) {
+    if (
+      Array.isArray(values?.grupos) &&
+      values.grupos.includes(3) &&
+      values.id_usuario_embajador
+    ) {
       formData.append("id_usuario_embajador", values.id_usuario_embajador);
     }
 
@@ -348,24 +446,26 @@ export default function FormUsuario({
       }
 
       if (typeof afterSubmit === "function") afterSubmit?.();
-        toast.success(response?.data?.message || "Usuario guardado correctamente");
-      if(!isEdit) handleLimpiar();
+      toast.success(
+        response?.data?.message || "Usuario guardado correctamente"
+      );
+      if (!isEdit) handleLimpiar();
     } catch (e) {
       console.error("Error guardando usuario", e);
       if ([400, 422].includes(e?.response?.status)) {
         const msg = e?.response?.data?.message || "Error de validación";
         showAlert({
-            title: "Error",
-            description: msg,
-            type: "error",
-        })
+          title: "Error",
+          description: msg,
+          type: "error",
+        });
         return;
       }
-       showAlert({
-            title: "Error",
-            description: e?.message || "Error al guardar el usuario",
-            type: "error",
-        })
+      showAlert({
+        title: "Error",
+        description: e?.message || "Error al guardar el usuario",
+        type: "error",
+      });
     }
   };
 
@@ -422,6 +522,31 @@ export default function FormUsuario({
               </div>
 
               <div className="grid gap-2">
+                <Controller
+                  control={control}
+                  name="fecha_nacimiento"
+                  render={({ field }) => (
+                    <DatePicker
+                      label="Fecha de Nacimiento *"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      placeholder="Seleccionar fecha de nacimiento"
+                      disableDate={{
+                        after: new Date(),
+                      }}
+                    />
+                  )}
+                />
+                {errors.fecha_nacimiento && (
+                  <p className="text-sm text-red-500">
+                    {errors.fecha_nacimiento.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
                 <Label>Correo *</Label>
                 <Input
                   placeholder="correo@dominio.com"
@@ -431,6 +556,26 @@ export default function FormUsuario({
                 {errors.correo && (
                   <p className="text-sm text-red-500">
                     {errors.correo.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Controller
+                  control={control}
+                  name="verificado"
+                  render={({ field }) => (
+                    <Checkbox
+                      id="verificado"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+                <Label htmlFor="verificado">Usuario Verificado</Label>
+                {errors.verificado && (
+                  <p className="text-sm text-red-500">
+                    {errors.verificado.message}
                   </p>
                 )}
               </div>

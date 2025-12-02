@@ -256,7 +256,7 @@ const FormSemaforoFinancieroMovimiento = ({
                 value={field.value}
                 onChange={field.onChange}
                 placeholder="Seleccione una fecha"
-                diasableDate={{after: new Date()}}
+                disableDate={{after: new Date()}}
               />
               <FormMessage />
             </FormItem>

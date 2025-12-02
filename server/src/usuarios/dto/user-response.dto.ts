@@ -53,6 +53,11 @@ export class UserResponseViewData {
 
   @Expose()
   id_embajador: number | null;
+
+  @Expose()
+  verificado: boolean;
+  @Expose()
+  fecha_nacimiento: Date | null;
 }
 
 
