@@ -4,6 +4,7 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { TOKEN_CACHE_DURATION } from "./constants";
 import { toast } from "sonner";
 import { refreshTokenJwt } from "@/apis/auth.api";
+import { parse } from "date-fns";
 
 // Flag para prevenir múltiples refreshes simultáneos
 let isRefreshingToken = false;
@@ -272,6 +273,13 @@ export const crearEnlaceWhatsApp = (numeroTelefono, mensaje = "") => {
   const mensajeCodificado = encodeURIComponent(mensaje);
   // Construir el enlace de WhatsApp
   return `https://wa.me/${numeroLimpio}?text=${mensajeCodificado}`;
+}
+
+
+export function apiDateToLocal(dateFromApi = null) {
+  if (!dateFromApi) return undefined;
+  const onlyDate = dateFromApi.split("T")[0]; // "2025-12-01"
+  return parse(onlyDate, "yyyy-MM-dd", new Date());
 }
 
 

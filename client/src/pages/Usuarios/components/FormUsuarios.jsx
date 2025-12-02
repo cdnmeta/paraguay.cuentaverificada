@@ -45,7 +45,7 @@ import paisesCode from "@/utils/paises-flag.json";
 
 // Dual list (external lib)
 import DualListBox from "react-dual-listbox";
-import "react-dual-listbox/lib/react-dual-listbox.css";
+import "@/styles/react-dual-listbox.css";
 import { ComboBox } from "@/components/customs/comboBoxShadcn/ComboBox1";
 import { getGruposHabilitados } from "@/apis/auth.api";
 import langListDualbox from "@/assets/lang/lang-list-dualbox";
@@ -63,7 +63,7 @@ import {
 } from "@/apis/usuarios.api";
 import { toast } from "sonner";
 import { useAlertDialogStore } from "@/store/useAlertDialogStore";
-import { cargarURL } from "@/utils/funciones";
+import { apiDateToLocal, cargarURL } from "@/utils/funciones";
 import { GruposSistema } from "../types/GruposSistema";
 import { DatePicker } from "@/components/date-picker1";
 
@@ -332,7 +332,7 @@ export default function FormUsuario({
           documento: u?.documento ?? "",
           correo: u?.email ?? u?.correo ?? "",
           fecha_nacimiento: u?.fecha_nacimiento
-            ? new Date(u.fecha_nacimiento)
+            ?  apiDateToLocal(u.fecha_nacimiento)
             : null,
           verificado: u?.verificado ?? false,
           codigo_pais: u?.codigo_pais ?? "+595",
