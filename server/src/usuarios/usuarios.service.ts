@@ -26,6 +26,7 @@ import {
 } from './dto/direciones-usuario.dto';
 import { DeleteUserDto } from './dto/delete-user.dto';
 import { GruposSistema } from '@/utils/constants';
+import { EstadosUsuarios } from './types/EstadosUsuarios';
 
 @Injectable()
 export class UsuariosService {
@@ -251,10 +252,12 @@ export class UsuariosService {
             dial_code: dto.dial_code,
             telefono: dto.telefono,
             selfie: rutaArchivoSelfie,
-            estado: dto.id_estado || 1,
+            estado: dto.id_estado || EstadosUsuarios.ACTIVO, // activo por defecto
             ip_origen: dto.ip_origen || null,
             dispositivo_origen: dto.dispositivo_origen || null,    
-            id_embajador: dto.id_usuario_embajador || null,      
+            id_embajador: dto.id_usuario_embajador || null,  
+            verificado: dto?.verificado || false,  
+            fecha_nacimiento: dto.fecha_nacimiento ? new Date(dto.fecha_nacimiento) : null,  
           },
         });
 
@@ -531,6 +534,8 @@ export class UsuariosService {
           telefono: dto.telefono,
           direccion: dto.direccion,
           id_embajador: dto.id_usuario_embajador || null,
+          fecha_nacimiento: dto.fecha_nacimiento ? new Date(dto.fecha_nacimiento) : null,
+          verificado: dto.verificado !== undefined ? dto.verificado : usuarioExistente.verificado,
         };
 
         // Actualizar contraseña si se proporciona

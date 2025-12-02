@@ -1,25 +1,45 @@
 export const consulta_verificador_asignar  = `
-with verificadores as (
-  select u.id
-  from usuarios u
-  join usuarios_grupos ug on ug.id_usuario = u.id
-  where ug.id_grupo = 2
-),
-cargas as (
-  select
-    v.id,
-    count(s.id) filter (where s.id_estado = 2 and s.activo = true) as carga
-  from verificadores v
-  left join usuarios_solicitudes_cuenta s
-    on s.id_verificador = v.id
-  group by v.id
-)
-select u.id
-from usuarios u
-join cargas c on c.id = u.id
-order by c.carga asc, random()           
-limit 1
-for update of u skip locked;              
+WITH
+	VERIFICADORES AS (
+		SELECT
+			U.ID
+		FROM
+			USUARIOS U
+			JOIN USUARIOS_GRUPOS UG ON UG.ID_USUARIO = U.ID
+		WHERE
+			UG.ID_GRUPO = 2
+	),
+	CARGAS AS (
+		SELECT
+			V.ID,
+			COUNT(S.ID) FILTER (
+				WHERE
+					S.ID_ESTADO = 2
+					AND S.ACTIVO = TRUE
+			) AS CARGA
+		FROM
+			VERIFICADORES V
+			LEFT JOIN USUARIOS_SOLICITUDES_CUENTA S ON S.ID_VERIFICADOR = V.ID
+		GROUP BY
+			V.ID
+	)
+SELECT
+	U.ID,
+	concat_ws(' ',u.nombre,u.apellido) as nombre_verificador,
+	u.documento,
+	(
+		select nro_telefono_verificacion from empresa_config emc limit 1
+	) as nro_telefono_verificacion
+FROM
+	USUARIOS U
+	JOIN CARGAS C ON C.ID = U.ID
+ORDER BY
+	C.CARGA ASC,
+	RANDOM()
+LIMIT
+	1
+FOR UPDATE OF
+	U SKIP LOCKED;            
 `
 
 

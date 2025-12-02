@@ -46,6 +46,7 @@ import { generarCodigoNumericoAleatorio } from '@/utils/funciones';
 import { usuarios } from '@prisma/client';
 import { instanceToPlain } from 'class-transformer';
 import { userInfo } from 'os';
+import { EstadosUsuarios } from '@/usuarios/types/EstadosUsuarios';
 interface UsuariosArchivosRegister {
   cedulaFrente?: Express.Multer.File;
 }
@@ -148,7 +149,7 @@ export class AuthService {
         dial_code: registerDto.dial_code,
         ip_origen: registerDto.ip_origen,
         dispositivo_origen: registerDto.dispositivo_origen,
-        id_estado: 1, // activo por defecto
+        id_estado: EstadosUsuarios.PENDIENTE_ACTIVACION, // activo por defecto
         pin: registerDto.pin,
         fecha_nacimiento: registerDto.fecha_nacimiento,
       };
@@ -209,7 +210,7 @@ export class AuthService {
       await this.prismaService.$transaction(async (prisma) => {
         await prisma.usuarios.update({
           where: { id: user.id },
-          data: { estado: 2 }, // cambiar estado a activo (La verificacion se hace aparte)
+          data: { estado: EstadosUsuarios.ACTIVO }, // cambiar el estado cambia a activo
         });
 
         // marcar token como usado
@@ -227,11 +228,15 @@ export class AuthService {
     try {
       const { documento, password } = loginDTO;
       const userAutenticar = await this.prismaService.usuarios.findFirst({
-        where: { documento, activo: true, estado: 2 },
+        where: { documento, activo: true},
       });
       if (!userAutenticar) {
         throw new BadRequestException('Usuario no Encontrado');
       }
+
+      if([EstadosUsuarios.PENDIENTE_ACTIVACION].includes(userAutenticar.estado)) throw new BadRequestException('Usuario no activado. Por favor, verifica tu correo electrónico.');
+
+
       // Verificar el token de Firebase
       const contrasenaEncryptada = await verify(
         password,

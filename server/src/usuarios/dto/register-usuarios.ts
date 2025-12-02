@@ -11,6 +11,7 @@ import {
   ValidateIf,
   Min,
   Max,
+  IsBoolean,
 } from 'class-validator';
 
 
@@ -121,6 +122,11 @@ export class CrearUsuarioDTO {
   @IsDateString({}, { message: 'La fecha de nacimiento debe ser una fecha válida' })
   @IsOptional()
   fecha_nacimiento?: string | null;
+
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean({ message: 'Es verificado debe ser un valor booleano' })
+  @IsOptional()
+  verificado?: boolean | null;
 
   @Type(() => Number)
   @IsNumber({},{message: "el id del broker debe ser un número"})

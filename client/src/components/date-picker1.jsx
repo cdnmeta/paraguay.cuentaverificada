@@ -23,7 +23,7 @@ export const DatePicker = React.forwardRef(
       className,
       mode = "single",
       captionLayout = "dropdown",
-      diasableDate = {},
+      disableDate = {},
       locale = es,
       ...props
     },
@@ -67,7 +67,7 @@ export const DatePicker = React.forwardRef(
                 setOpen(false);
               }}
               locale={locale}
-              disabled={diasableDate}
+              disabled={disableDate}
               {...props}
             />
           </PopoverContent>

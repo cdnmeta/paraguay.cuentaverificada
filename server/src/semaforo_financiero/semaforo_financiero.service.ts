@@ -17,7 +17,7 @@ export class SemaforoFinancieroService {
 
   private readonly logger = new Logger(SemaforoFinancieroService.name);
 
-  @Cron(SEMAFORO_FINANCIERO_CRON_TIME) // ejecutar segun configuración en .env
+  //@Cron(SEMAFORO_FINANCIERO_CRON_TIME) // ejecutar segun configuración en .env
   async registrarFijosMensuales() {
     try {
       const tiempo = new Date();

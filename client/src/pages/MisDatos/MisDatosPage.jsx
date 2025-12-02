@@ -21,7 +21,6 @@ import { getMisDatos } from "@/apis/usuarios.api";
 import { Link, useNavigate } from "react-router-dom";
 import { PUBLIC_ROUTES } from "@/utils/routes.routes";
 import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
-import { solicitarVerificacionCuentausuario } from "@/apis/verificacionCuenta.api";
 import NoImage from "@/components/customs/NoImage";
 import { cargarURL } from "@/utils/funciones";
 import { User } from "lucide-react";
@@ -34,9 +33,7 @@ import { User } from "lucide-react";
 export default function MisDatosPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [solicitudVerificacion, setSolicitudVerificacion] = useState(null);
-  const [solicitandoVerificacion, setSolicitandoVerificacion] = useState(false);
   const [imageUrls, setImageUrls] = useState({
     selfie: null,
     cedulaFrente: null,
@@ -119,7 +116,7 @@ export default function MisDatosPage() {
 
   useEffect(() => {
     loadDatos();
-  }, []);
+  }, [loadDatos]);
 
   // Efecto para manejar el scroll al hash #verificacion
   useEffect(() => {
@@ -164,48 +161,12 @@ export default function MisDatosPage() {
     //logout();
   };
 
-  const handleVerificationClick = () => {
-    setShowVerificationDialog(true);
-  };
 
-  const handleConfirmVerification = async () => {
-    try {
-      setSolicitandoVerificacion(true);
-      await solicitarVerificacionCuentausuario();
-      setShowVerificationDialog(false);
-      setSolicitudVerificacion(2);
-      toast.success("Solicitud de verificación enviada");
-    } catch (error) {
-      toast.error(error.message || "Error al solicitar verificación");
-    } finally {
-      setSolicitandoVerificacion(false);
-    }
-  };
-
-  const handleCloseDialog = () => {
-    setShowVerificationDialog(false);
-  };
 
   if (loading) return <LoadingSpinner message="Cargando mis datos..." />;
   return (
     <div className="flex justify-center">
       <div className="container mx-auto rounded-3xl bg-background text-foreground py-8">
-        {solicitudVerificacion === 1 && (
-          <div id="verificacion" className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground mb-2">
-              Tu cuenta no está verificada. Verifica tu cuenta para acceder a{" "}
-              <b>más funcionalidades.</b>
-            </p>
-            <Button
-              disabled={solicitandoVerificacion}
-              onClick={handleVerificationClick}
-              variant="outline"
-            >
-              Verificar mi cuenta
-            </Button>
-          </div>
-        )}
-
         {solicitudVerificacion === 2 && (
           <div
             id="verificacion"
@@ -374,36 +335,7 @@ export default function MisDatosPage() {
           </CardContent>
         </Card>
 
-        {/* Dialog de confirmación de verificación */}
-        <Dialog
-          open={showVerificationDialog}
-          onOpenChange={setShowVerificationDialog}
-        >
-          <DialogContent
-            className="sm:max-w-[425px]"
-            onPointerDownOutside={(e) => e.preventDefault()}
-          >
-            <DialogHeader>
-              <DialogTitle>Verificación de cuenta</DialogTitle>
-              <DialogDescription>
-                Se solicitará una verificación de tu cuenta. Este proceso puede
-                requerir documentación adicional y puede tomar algunos días en
-                completarse.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex gap-2">
-              <Button variant="outline" onClick={handleCloseDialog}>
-                Cerrar
-              </Button>
-              <Button
-                disabled={solicitandoVerificacion}
-                onClick={handleConfirmVerification}
-              >
-                {solicitandoVerificacion ? "Solicitando..." : "Confirmar"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
       </div>
     </div>
   );

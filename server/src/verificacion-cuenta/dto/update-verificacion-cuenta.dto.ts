@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsEmail, IsString, IsNumber, Length } from 'class-validator';
+import { IsOptional, IsEmail, IsString, IsNumber, Length, IsDateString } from 'class-validator';
 
 export class UpdateVerificacionCuentaDto {
     @IsOptional()
@@ -32,6 +32,11 @@ export class UpdateVerificacionCuentaDto {
     @IsOptional()
     @IsNumber({}, { message: 'El ID de usuario de actualización debe ser un número.' }) 
     id_usuario_actualizacion?: number;
+
+
+    @IsDateString({}, { message: 'La fecha de nacimiento debe ser una fecha válida.' })
+    @IsOptional()
+    fecha_nacimiento?: string | null;
 
 }
 

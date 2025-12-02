@@ -43,6 +43,8 @@ import {
 import { NotificacionSolicitudVerificacionCuentaEmail } from '@/email/dto/email.dto';
 import { DatabasePromiseService } from '@/database/database-promise.service';
 import { WalletService } from '@/wallet/wallet.service';
+import { plainToClass, plainToInstance } from 'class-transformer';
+import { UsuarioVerificadoDto } from './dto/response-solicitud-cuenta.dto';
 @Injectable()
 export class VerificacionCuentaService {
   constructor(
@@ -244,7 +246,8 @@ export class VerificacionCuentaService {
           fecha_actualizacion: new Date(),
           estado: 4, // colocar en pendiente aprobacion
           id_usuario_actualizacion:
-            updateVerificacionCuentaDto.id_usuario_actualizacion,
+          updateVerificacionCuentaDto.id_usuario_actualizacion,
+          fecha_nacimiento: updateVerificacionCuentaDto.fecha_nacimiento ? new Date(updateVerificacionCuentaDto.fecha_nacimiento) : null,
         },
       });
     } catch (error) {
@@ -683,6 +686,8 @@ export class VerificacionCuentaService {
         },
       });
 
+      const verificador =  plainToInstance(UsuarioVerificadoDto, usuarioAsignar.rows[0],{excludeExtraneousValues: true});
+
       if (notificar_por_correo) {
         const alias = `${usuario.nombre} ${usuario.apellido ? usuario.apellido : ''}`;
         const dataCorreo: NotificacionSolicitudVerificacionCuentaEmail = {
@@ -694,6 +699,8 @@ export class VerificacionCuentaService {
           dataCorreo,
         );
       }
+
+      return {verificador: verificador};
     } catch (error) {
       throw error;
     }

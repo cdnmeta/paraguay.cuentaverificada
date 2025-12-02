@@ -48,6 +48,10 @@ import { routes as SuscripcionesRoutes } from "@/pages/Suscripciones/config/rout
 import { routes as RecordatoriosRoutes } from "@/pages/Recordatorios/config/routes";
 import recordatoriosAPI from "@/apis/recordatorios.api";
 import { EstadosRecordatorios } from "./Recordatorios/types/EstadosRecordatorios";
+import { solicitarVerificacionCuentausuario } from "@/apis/verificacionCuenta.api";
+import { getMisDatos } from "@/apis/usuarios.api";
+import { toast } from "sonner";
+import { crearEnlaceWhatsApp } from "@/utils/funciones";
 
 // Schema de validación para archivar recordatorios
 const completionSchema = z.object({
@@ -87,6 +91,13 @@ export default function DashBoardUsarioProtegido() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedReminder, setSelectedReminder] = useState(null);
   const [completedReminders, setCompletedReminders] = useState(new Set());
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [solicitandoVerificacion, setSolicitandoVerificacion] = useState(false);
+  
+  // Estado para datos de verificación independiente del user store
+  const [userData, setUserData] = useState(null);
+  const [loadingUserData, setLoadingUserData] = useState(false);
+
 
   const {
     register,
@@ -101,6 +112,12 @@ export default function DashBoardUsarioProtegido() {
     },
   });
 
+  const getMensajeWhatsAppVerificacion =  ({nombre_verificador=null,nombre_user=null,docuemento_verificador=null}) => {
+
+    return `Hola soy ${nombre_user}, he solicitado la verificación de mi cuenta y fui asiganda a ${nombre_verificador} con documento ${docuemento_verificador} para que realice la verificación. Quisiera coordinar los pasos a seguir. Muchas gracias.`
+
+  }
+
   const loadREcordatoriosHoy = async () => {
     try {
       const response = await recordatoriosAPI.obtenerMisRecordatoriosHoy();
@@ -110,8 +127,22 @@ export default function DashBoardUsarioProtegido() {
     }
   };
 
+  // Función para cargar datos de usuario para verificación
+  const loadUserVerificationData = async () => {
+    try {
+      setLoadingUserData(true);
+      const res = await getMisDatos();
+      setUserData(res.data);
+    } catch (error) {
+      console.error('Error al cargar datos de verificación:', error);
+    } finally {
+      setLoadingUserData(false);
+    }
+  };
+
   useEffect(() => {
     loadREcordatoriosHoy();
+    loadUserVerificationData();
   }, []);
 
   // Obtener mensaje del día
@@ -169,6 +200,10 @@ export default function DashBoardUsarioProtegido() {
     setDialogOpen(true);
   };
 
+  const handleSolicitudVerificacion = () => {
+    setShowVerificationDialog(true);
+  }
+
   // Manejar apertura del dialog
   useEffect(() => {
     if (dialogOpen) {
@@ -214,6 +249,37 @@ export default function DashBoardUsarioProtegido() {
     } catch (error) {
       console.error("Error al completar recordatorio:", error);
     }
+  };
+
+  const handleConfirmVerification = async () => {
+      try {
+        setSolicitandoVerificacion(true);
+        const responseSolicitud = await solicitarVerificacionCuentausuario();
+        const {verificador} = responseSolicitud.data;
+        setShowVerificationDialog(false);
+        toast.success("Solicitud de verificación enviada");
+        const mensajeEnviarWsp = getMensajeWhatsAppVerificacion(
+          {
+            docuemento_verificador:verificador?.documento,
+            nombre_user:`${user?.nombre} ${user?.apellido}`,
+            nombre_verificador:verificador?.nombre_verificador,
+          }
+        )
+       const url = crearEnlaceWhatsApp(verificador?.nro_telefono_verificacion,mensajeEnviarWsp);
+        // Recargar datos de verificación después de solicitar
+        setUserData(prevData => ({...prevData, estado: 3}));
+        // Abrir enlace de WhatsApp en una nueva pestaña
+        window.open(url, '_blank');
+      } catch (error) {
+        toast.error(error.message || "Error al solicitar verificación");
+      } finally {
+        setSolicitandoVerificacion(false);
+      }
+    };
+
+
+  const handleCloseDialog = () => {
+    setShowVerificationDialog(false);
   };
 
   // Filtrar recordatorios visibles
@@ -269,7 +335,7 @@ export default function DashBoardUsarioProtegido() {
       title: "Wallet",
       desc: "Depósitos - Pagos - Ganancias",
       onClick: () => navigate(`/${WalletRoutes.index}`),
-      habilitado: () => user?.vfd === true,
+      habilitado: () => userData?.vfd === true,
     },
     {
       icon: "/icons/suscripcion.png",
@@ -341,7 +407,7 @@ export default function DashBoardUsarioProtegido() {
           </div>
         )}
       <div className="w-full flex flex-col md:flex-row lg:flex-row gap-2  mb-6 px-2">
-        {user?.vfd == false && (
+        {!loadingUserData && userData?.vfd == false && userData?.estado === 2 && (
           <Alert className="">
             <CheckCircle2Icon />
             <AlertTitle>¡Bienvenido!</AlertTitle>
@@ -350,16 +416,23 @@ export default function DashBoardUsarioProtegido() {
               <Button
                 variant="outline"
                 className="mt-2"
-                onClick={() =>
-                  navigate(`${PROTECTED_ROUTES.misDatos}#verificacion`)
-                }
+                onClick={handleSolicitudVerificacion}
               >
                 Deseas Verificarla?
               </Button>
             </AlertDescription>
           </Alert>
         )}
-        {user?.vfd == true && (
+        {!loadingUserData && userData?.estado === 3 && (
+          <Alert className="border-yellow-400/50 bg-yellow-400/10">
+            <CheckCircle2Icon className="text-yellow-400" />
+            <AlertTitle className="text-yellow-400">Verificación en Proceso</AlertTitle>
+            <AlertDescription>
+              <p className="text-yellow-400">Tu cuenta está en proceso de verificación. Recibirás una notificación una vez que se complete.</p>
+            </AlertDescription>
+          </Alert>
+        )}
+        {!loadingUserData && userData?.vfd == true && (
           <Alert className="">
             <CheckCircle2Icon />
             <AlertTitle>Hola, {`${user?.nombre} ${user?.apellido}`}</AlertTitle>
@@ -479,7 +552,9 @@ export default function DashBoardUsarioProtegido() {
 
       {/* Dialog de confirmación de recordatorio */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" 
+        onInteractOutside={(e) => {e.preventDefault();}}
+        >
           <DialogHeader>
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" />
@@ -593,6 +668,38 @@ export default function DashBoardUsarioProtegido() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/*Dialog de Solicitud de Verificación de Cuenta*/}
+      {/* Dialog de confirmación de verificación */}
+        <Dialog
+          open={showVerificationDialog}
+          onOpenChange={setShowVerificationDialog}
+        >
+          <DialogContent
+            className="sm:max-w-[425px]"
+            onPointerDownOutside={(e) => e.preventDefault()}
+          >
+            <DialogHeader>
+              <DialogTitle>Verificación de Cuenta</DialogTitle>
+              <DialogDescription>
+                Se solicitará una verificación de tu cuenta. Este proceso puede
+                requerir documentación adicional y puede tomar algunos días en
+                completarse.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex gap-2">
+              <Button variant="outline" onClick={handleCloseDialog}>
+                Cerrar
+              </Button>
+              <Button
+                disabled={solicitandoVerificacion}
+                onClick={handleConfirmVerification}
+              >
+                {solicitandoVerificacion ? "Solicitando..." : "Confirmar"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
     </div>
   );
 }

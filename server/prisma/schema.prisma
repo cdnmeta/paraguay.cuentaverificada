@@ -78,6 +78,7 @@ model empresa_config {
   nuv_actual          Int?
   nuv_fin             Int?
   activo              Boolean?  @default(true)
+  nro_telefono_verificacion String?
 
   id_moneda_base       Int?
   id_moneda_planes     Int?
