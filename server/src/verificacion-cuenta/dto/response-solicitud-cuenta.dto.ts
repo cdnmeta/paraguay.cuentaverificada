@@ -22,13 +22,6 @@ export class SoliitudVerificacionCuentaResponseDto {
 
 
 export class UsuarioVerificadoDto {
-
-    @Expose()
-    nombre_verificador: string;
-
-    @Expose()
-    documento: string;
-
     @Expose()
     nro_telefono_verificacion: string;
 }

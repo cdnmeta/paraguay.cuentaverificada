@@ -37,13 +37,14 @@ import {
 } from "@/apis/verificacionCuenta.api";
 import { Checkbox } from "@/components/ui/checkbox";
 import LoadingSpinner from "@/components/customs/loaders/LoadingSpinner";
-import { isSameDay } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { storage } from "@/firebaseConfig";
 import { useStorageURL } from "@/hooks/useStorageURL";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { X } from "lucide-react";
 import NoImage from "@/components/customs/NoImage";
 import { DatePicker } from "@/components/date-picker1";
+import { apiDateToLocal } from "@/utils/funciones";
 // --- Zod schema (JSX/JS puro) ---
 const MAX_FILE_SIZE_MB = 5;
 
@@ -159,7 +160,7 @@ export default function FormEditarDatosSolicitud({
           correo: data.email,
           codigo_pais: dialCode ? String(dialCode.value) : "",
           fecha_nacimiento: fecha_nacimiento
-            ? new Date(fecha_nacimiento)
+            ? apiDateToLocal(fecha_nacimiento)
             : undefined,
         });
       }

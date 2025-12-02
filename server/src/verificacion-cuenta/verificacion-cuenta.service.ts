@@ -636,6 +636,7 @@ export class VerificacionCuentaService {
           email: true,
           id: true,
           motivo_rechazo: true,
+          fecha_nacimiento: true,
         },
 
         where: { id, activo: true },

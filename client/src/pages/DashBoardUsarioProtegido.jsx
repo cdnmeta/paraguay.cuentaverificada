@@ -93,11 +93,10 @@ export default function DashBoardUsarioProtegido() {
   const [completedReminders, setCompletedReminders] = useState(new Set());
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [solicitandoVerificacion, setSolicitandoVerificacion] = useState(false);
-  
+
   // Estado para datos de verificación independiente del user store
   const [userData, setUserData] = useState(null);
   const [loadingUserData, setLoadingUserData] = useState(false);
-
 
   const {
     register,
@@ -112,11 +111,9 @@ export default function DashBoardUsarioProtegido() {
     },
   });
 
-  const getMensajeWhatsAppVerificacion =  ({nombre_verificador=null,nombre_user=null,docuemento_verificador=null}) => {
-
-    return `Hola soy ${nombre_user}, he solicitado la verificación de mi cuenta y fui asiganda a ${nombre_verificador} con documento ${docuemento_verificador} para que realice la verificación. Quisiera coordinar los pasos a seguir. Muchas gracias.`
-
-  }
+  const getMensajeWhatsAppVerificacion = ({ nombre_user = null }) => {
+    return `Hola, soy *${nombre_user}* y quiero obtener mi Cuenta Verificada GRATIS de por vida. Quedo atento para continuar.`;
+  };
 
   const loadREcordatoriosHoy = async () => {
     try {
@@ -134,7 +131,7 @@ export default function DashBoardUsarioProtegido() {
       const res = await getMisDatos();
       setUserData(res.data);
     } catch (error) {
-      console.error('Error al cargar datos de verificación:', error);
+      console.error("Error al cargar datos de verificación:", error);
     } finally {
       setLoadingUserData(false);
     }
@@ -202,7 +199,7 @@ export default function DashBoardUsarioProtegido() {
 
   const handleSolicitudVerificacion = () => {
     setShowVerificationDialog(true);
-  }
+  };
 
   // Manejar apertura del dialog
   useEffect(() => {
@@ -228,7 +225,7 @@ export default function DashBoardUsarioProtegido() {
       const key = `${selectedReminder.titulo}-${selectedReminder.fecha_recordatorio}`;
 
       // Marcar como archivado localmente
-      setCompletedReminders(prev => new Set([...prev, key]));
+      setCompletedReminders((prev) => new Set([...prev, key]));
 
       console.log("📝 Recordatorio archivado:", {
         titulo: selectedReminder.titulo,
@@ -252,31 +249,29 @@ export default function DashBoardUsarioProtegido() {
   };
 
   const handleConfirmVerification = async () => {
-      try {
-        setSolicitandoVerificacion(true);
-        const responseSolicitud = await solicitarVerificacionCuentausuario();
-        const {verificador} = responseSolicitud.data;
-        setShowVerificationDialog(false);
-        toast.success("Solicitud de verificación enviada");
-        const mensajeEnviarWsp = getMensajeWhatsAppVerificacion(
-          {
-            docuemento_verificador:verificador?.documento,
-            nombre_user:`${user?.nombre} ${user?.apellido}`,
-            nombre_verificador:verificador?.nombre_verificador,
-          }
-        )
-       const url = crearEnlaceWhatsApp(verificador?.nro_telefono_verificacion,mensajeEnviarWsp);
-        // Recargar datos de verificación después de solicitar
-        setUserData(prevData => ({...prevData, estado: 3}));
-        // Abrir enlace de WhatsApp en una nueva pestaña
-        window.open(url, '_blank');
-      } catch (error) {
-        toast.error(error.message || "Error al solicitar verificación");
-      } finally {
-        setSolicitandoVerificacion(false);
-      }
-    };
-
+    try {
+      setSolicitandoVerificacion(true);
+      const responseSolicitud = await solicitarVerificacionCuentausuario();
+      const { verificador } = responseSolicitud.data;
+      setShowVerificationDialog(false);
+      toast.success("Solicitud de verificación enviada");
+      const mensajeEnviarWsp = getMensajeWhatsAppVerificacion({
+        nombre_user: `${user?.nombre} ${user?.apellido}`,
+      });
+      const url = crearEnlaceWhatsApp(
+        verificador?.nro_telefono_verificacion,
+        mensajeEnviarWsp
+      );
+      // Recargar datos de verificación después de solicitar
+      setUserData((prevData) => ({ ...prevData, estado: 3 }));
+      // Abrir enlace de WhatsApp en una nueva pestaña
+      window.open(url, "_self");
+    } catch (error) {
+      toast.error(error.message || "Error al solicitar verificación");
+    } finally {
+      setSolicitandoVerificacion(false);
+    }
+  };
 
   const handleCloseDialog = () => {
     setShowVerificationDialog(false);
@@ -358,77 +353,99 @@ export default function DashBoardUsarioProtegido() {
       item.habilitado === true ||
       (typeof item.habilitado === "function" && item.habilitado())
   );
+  const listaPromoVerificaion = [
+    "🔔 Verifica tu cuenta por solo 24 USD al año.",
+    "🎁  Hoy: GRATIS de por vida.",
+    "🔥 Oferta especial: Para los primeros 5.000 Usuarios.",
+  ];
   return (
     <div className="min-h-screen text-white">
       {/* Recordatorios del día */}
-        {recordatoriosVisibles.length > 0 && (
-          <div className="w-full mx-auto mt-6 p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                Recordatorios de Hoy
-              </h3>
-              <Badge variant="secondary" className="w-fit">
-                {recordatoriosVisibles.length} pendiente
-                {recordatoriosVisibles.length !== 1 ? "s" : ""}
-              </Badge>
-            </div>
-
-            <ScrollArea className="w-full max-h-96">
-              <div className="space-y-3 pr-4">
-                {recordatoriosVisibles.map((recordatorio, index) => (
-                  <Alert key={index} className="relative border-l-4 border-l-yellow-500 bg-yellow-50 hover:bg-yellow-100 transition-colors duration-200">
-                    <NotebookIcon className="text-yellow-600" />
-                    <div className="flex-1 pr-8">
-                      <AlertTitle className="text-start text-yellow-900 font-semibold">{recordatorio?.titulo}</AlertTitle>
-                      {recordatorio?.descripcion && (
-                        <AlertDescription className="text-start text-yellow-800 mt-1">
-                          {recordatorio?.descripcion}
-                        </AlertDescription>
-                      )}
-                      <div className="flex items-center gap-2 text-xs text-yellow-700 mt-2">
-                        <Calendar className="h-3 w-3" />
-                        <span>Recordatorio: {formatDate(recordatorio.fecha_recordatorio)}</span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-yellow-600"
-                      onClick={() => handleCloseReminder(recordatorio)}
-                      aria-label={`Cerrar recordatorio: ${recordatorio.titulo}`}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </Alert>
-                ))}
-              </div>
-            </ScrollArea>
+      {recordatoriosVisibles.length > 0 && (
+        <div className="w-full mx-auto mt-6 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Recordatorios de Hoy
+            </h3>
+            <Badge variant="secondary" className="w-fit">
+              {recordatoriosVisibles.length} pendiente
+              {recordatoriosVisibles.length !== 1 ? "s" : ""}
+            </Badge>
           </div>
-        )}
+
+          <ScrollArea className="w-full max-h-96">
+            <div className="space-y-3 pr-4">
+              {recordatoriosVisibles.map((recordatorio, index) => (
+                <Alert
+                  key={index}
+                  className="relative border-l-4 border-l-yellow-500 bg-yellow-50 hover:bg-yellow-100 transition-colors duration-200"
+                >
+                  <NotebookIcon className="text-yellow-600" />
+                  <div className="flex-1 pr-8">
+                    <AlertTitle className="text-start text-yellow-900 font-semibold">
+                      {recordatorio?.titulo}
+                    </AlertTitle>
+                    {recordatorio?.descripcion && (
+                      <AlertDescription className="text-start text-yellow-800 mt-1">
+                        {recordatorio?.descripcion}
+                      </AlertDescription>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-yellow-700 mt-2">
+                      <Calendar className="h-3 w-3" />
+                      <span>
+                        Recordatorio:{" "}
+                        {formatDate(recordatorio.fecha_recordatorio)}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-yellow-600"
+                    onClick={() => handleCloseReminder(recordatorio)}
+                    aria-label={`Cerrar recordatorio: ${recordatorio.titulo}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </Alert>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
       <div className="w-full flex flex-col md:flex-row lg:flex-row gap-2  mb-6 px-2">
-        {!loadingUserData && userData?.vfd == false && userData?.estado === 2 && (
-          <Alert className="">
-            <CheckCircle2Icon />
-            <AlertTitle>¡Bienvenido!</AlertTitle>
-            <AlertDescription>
-              <p>Tu cuenta aun no ha sido verificada</p>
-              <Button
-                variant="outline"
-                className="mt-2"
-                onClick={handleSolicitudVerificacion}
-              >
-                Deseas Verificarla?
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
+        {!loadingUserData &&
+          userData?.vfd == false &&
+          userData?.estado === 2 && (
+            <Alert className="">
+              <CheckCircle2Icon />
+              <AlertTitle>¡Bienvenido!</AlertTitle>
+              <AlertDescription>
+                <div 
+                  className="mt-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors duration-200"
+                  onClick={handleSolicitudVerificacion}
+                >
+                  <div className="flex flex-col gap-1 text-sm sm:text-base">
+                    <span className="block">🔔 Verifica tu cuenta por solo 24 USD al año.</span>
+                    <span className="block">🎁 Hoy: GRATIS de por vida.</span>
+                    <span className="block">🔥 Oferta especial: Para los primeros 5.000 Usuarios.</span>
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
         {!loadingUserData && userData?.estado === 3 && (
           <Alert className="border-yellow-400/50 bg-yellow-400/10">
             <CheckCircle2Icon className="text-yellow-400" />
-            <AlertTitle className="text-yellow-400">Verificación en Proceso</AlertTitle>
+            <AlertTitle className="text-yellow-400">
+              Verificación en Proceso
+            </AlertTitle>
             <AlertDescription>
-              <p className="text-yellow-400">Tu cuenta está en proceso de verificación. Recibirás una notificación una vez que se complete.</p>
+              <p className="text-yellow-400">
+                Tu cuenta está en proceso de verificación. Recibirás una
+                notificación una vez que se complete.
+              </p>
             </AlertDescription>
           </Alert>
         )}
@@ -520,8 +537,6 @@ export default function DashBoardUsarioProtegido() {
           </Card>
         )}
 
-        
-
         {/* Secciones */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-10">
           {seccionesFiltradas.map((item, i) => (
@@ -552,8 +567,11 @@ export default function DashBoardUsarioProtegido() {
 
       {/* Dialog de confirmación de recordatorio */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md" 
-        onInteractOutside={(e) => {e.preventDefault();}}
+        <DialogContent
+          className="sm:max-w-md"
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
         >
           <DialogHeader>
             <div className="flex items-center gap-2">
@@ -671,35 +689,35 @@ export default function DashBoardUsarioProtegido() {
 
       {/*Dialog de Solicitud de Verificación de Cuenta*/}
       {/* Dialog de confirmación de verificación */}
-        <Dialog
-          open={showVerificationDialog}
-          onOpenChange={setShowVerificationDialog}
+      <Dialog
+        open={showVerificationDialog}
+        onOpenChange={setShowVerificationDialog}
+      >
+        <DialogContent
+          className="sm:max-w-[425px]"
+          onPointerDownOutside={(e) => e.preventDefault()}
         >
-          <DialogContent
-            className="sm:max-w-[425px]"
-            onPointerDownOutside={(e) => e.preventDefault()}
-          >
-            <DialogHeader>
-              <DialogTitle>Verificación de Cuenta</DialogTitle>
-              <DialogDescription>
-                Se solicitará una verificación de tu cuenta. Este proceso puede
-                requerir documentación adicional y puede tomar algunos días en
-                completarse.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex gap-2">
-              <Button variant="outline" onClick={handleCloseDialog}>
-                Cerrar
-              </Button>
-              <Button
-                disabled={solicitandoVerificacion}
-                onClick={handleConfirmVerification}
-              >
-                {solicitandoVerificacion ? "Solicitando..." : "Confirmar"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          <DialogHeader>
+            <DialogTitle>Verificación de Cuenta</DialogTitle>
+            <DialogDescription>
+              Se solicitará una verificación de tu cuenta. Este proceso puede
+              requerir documentación adicional y puede tomar algunos días en
+              completarse.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={handleCloseDialog}>
+              Cerrar
+            </Button>
+            <Button
+              disabled={solicitandoVerificacion}
+              onClick={handleConfirmVerification}
+            >
+              {solicitandoVerificacion ? "Solicitando..." : "Confirmar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
