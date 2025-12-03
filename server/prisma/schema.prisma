@@ -59,6 +59,7 @@ model cotizacion_empresa {
   fecha_creacion                                        DateTime                      @default(now()) @db.Timestamptz(6)
   fecha_actualizacion                                   DateTime?                     @db.Timestamptz(6)
   id_usuario_creacion                                   Int?
+  id_usuario_eliminacion                                Int?
   activo                                                Boolean                       @default(true)
   monedas_cotizacion_empresa_id_moneda_destinoTomonedas monedas                       @relation("cotizacion_empresa_id_moneda_destinoTomonedas", fields: [id_moneda_destino], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_empresa_moneda_destino")
   monedas_cotizacion_empresa_id_moneda_origenTomonedas  monedas                       @relation("cotizacion_empresa_id_moneda_origenTomonedas", fields: [id_moneda_origen], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cotizacion_empresa_moneda_origen")
@@ -233,6 +234,7 @@ model planes {
   id_usuario_creacion Int?
   id_usuario_actualizacion Int?
   id_usuario_eliminacion Int?
+  esta_en_oferta      Boolean?        @default(false)
               
 
   suscripciones       suscripciones[]

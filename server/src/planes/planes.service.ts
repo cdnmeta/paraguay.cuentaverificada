@@ -16,44 +16,49 @@ export class PlanesService {
   async findAll() {
     try {
       let sql = `SELECT
-          PL.ID,
-          PL.NOMBRE,
-          PL.DESCRIPCION,
-          PL.ACTIVO,
-          PL.FECHA_CREACION,
-          PL.FECHA_ACTUALIZACION,
-          PL.PRECIO,
-          PL.PRECIO_SIN_IVA,
-          PL.TIPO_IVA,
-          PL.RENOVACION_VALOR,
-          PL.RENOVACION_PLAN,
-          (CONCAT_WS(' ', USR.NOMBRE, USR.APELLIDO)) AS NOMBRE_USUARIO_CREACION,
-          PMO.NOMBRE AS DESCRIPCION_MONEDA,
-          PMO.SIGLA_ISO,
-          (
-            CASE
-              WHEN PL.TIPO_IVA = 1 THEN 'Exentas'
-              WHEN PL.TIPO_IVA = 2 THEN '5%'
-              WHEN PL.TIPO_IVA = 3 THEN '10%'
-            END
-          ) AS DESCRIPCION_TIPO_IVA
-        FROM
-          PLANES PL
-          LEFT JOIN USUARIOS USR ON USR.ID = PL.ID_USUARIO_CREACION
-          LEFT JOIN MONEDAS PMO ON PMO.ID = (
-            SELECT
-              EMC.ID_MONEDA_PLANES
-            FROM
-              EMPRESA_CONFIG EMC
-            LIMIT
-              1
-          )::INTEGER
-        WHERE
-          PL.ACTIVO = TRUE
-        ORDER BY ID ASC;
-      
-      
-      `;
+        PL.ID,
+        PL.NOMBRE,
+        PL.DESCRIPCION,
+        PL.ACTIVO,
+        PL.FECHA_CREACION,
+        PL.FECHA_ACTUALIZACION,
+        PL.PRECIO,
+        PL.PRECIO_SIN_IVA,
+        PL.TIPO_IVA,
+        (
+          CASE
+            WHEN RENOVACION_PLAN = 'dia' THEN 'diario'
+            WHEN RENOVACION_PLAN = 'mes' THEN 'mensual'
+            WHEN RENOVACION_PLAN = 'anio' THEN 'anual'
+          END
+        ) AS RENOVACION_PLAN,
+        PL.ESTA_EN_OFERTA,
+        PL.PRECIO_OFERTA,
+        (CONCAT_WS(' ', USR.NOMBRE, USR.APELLIDO)) AS NOMBRE_USUARIO_CREACION,
+        PMO.NOMBRE AS DESCRIPCION_MONEDA,
+        PMO.SIGLA_ISO,
+        (
+          CASE
+            WHEN PL.TIPO_IVA = 1 THEN 'Exentas'
+            WHEN PL.TIPO_IVA = 2 THEN '5%'
+            WHEN PL.TIPO_IVA = 3 THEN '10%'
+          END
+        ) AS DESCRIPCION_TIPO_IVA
+      FROM
+        PLANES PL
+        LEFT JOIN USUARIOS USR ON USR.ID = PL.ID_USUARIO_CREACION
+        LEFT JOIN MONEDAS PMO ON PMO.ID = (
+          SELECT
+            EMC.ID_MONEDA_PLANES
+          FROM
+            EMPRESA_CONFIG EMC
+          LIMIT
+            1
+        )::INTEGER
+      WHERE
+        PL.ACTIVO = TRUE
+      ORDER BY
+        ID ASC`;
 
       const planes = await this.databasePromiseService.result(sql, []);
       return planes.rows;
@@ -86,6 +91,7 @@ export class PlanesService {
       );
     }
 
+
     try {
       const nuevoPlan = await this.prisma.$transaction(async (tx) => {
         const planCreado = await tx.planes.create({
@@ -99,6 +105,7 @@ export class PlanesService {
             tipo_iva: createPlanDto.tipo_iva,
             id_usuario_creacion: createPlanDto.id_usuario,
             precio_oferta: createPlanDto.precio_oferta,
+            esta_en_oferta: createPlanDto.esta_en_oferta || false,
           },
         });
         // guardar los porcentajes de repartir
@@ -165,6 +172,7 @@ export class PlanesService {
               precio_oferta: updatePlanDto.precio_oferta,
               id_usuario_actualizacion: updatePlanDto.id_usuario_actualizacion,
               fecha_actualizacion: new Date(),
+              esta_en_oferta: updatePlanDto.esta_en_oferta || false,
             },
           });
 
@@ -221,6 +229,7 @@ export class PlanesService {
             p.renovacion_plan,
             p.renovacion_valor,
             p.tipo_iva,
+            p.esta_en_oferta,
             COALESCE(
               json_agg(
                 json_build_object(

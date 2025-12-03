@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { DatabaseService } from '@/database/database.service';
 import { CotizacionDto } from './dto/regitrar-cotizacion.dto';
 import { TasaAplicada } from './types';
+import { AnularCotizacionDto } from './dto/anular-cotizacion.dto';
 
 @Injectable()
 export class CotizacionEmpresaService {
@@ -192,6 +193,24 @@ export class CotizacionEmpresaService {
           ? `Se aplicó tasa inversa: (B→A)`
           : `Se aplicó tasa directa: (A→B)`,
     };
+  }
+
+  async anularCotizacion(idCotizacion: number,data:AnularCotizacionDto) {
+    try {
+      const cotizacion = await this.prisma.cotizacion_empresa.findFirst({
+        where: { id: idCotizacion, activo: true },
+      });
+      if (!cotizacion) {
+        throw new NotFoundException(`No existe cotización con id=${idCotizacion}.`);
+      }
+      await this.prisma.cotizacion_empresa.update({
+        where: { id: idCotizacion },
+        data: { activo: false,id_usuario_eliminacion: data.id_usuario_eliminacion },
+      });
+      return { message: `Cotización con id=${idCotizacion} eliminada correctamente.` };
+    } catch (error) {
+      throw error;
+    }
   }
 
 }

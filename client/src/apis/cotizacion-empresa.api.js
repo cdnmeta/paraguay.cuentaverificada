@@ -20,3 +20,11 @@ export const registrarCotizacionEmpresa = async (data) => {
   });
   return response;
 };
+
+
+export const anularCotizacionEmpresa = async (id) => {
+  const response = await api.delete(`/${URL_ENDPOINT}/anular-cotizacion/${id}`, {
+    withCredentials: true,
+  });
+  return response;
+}

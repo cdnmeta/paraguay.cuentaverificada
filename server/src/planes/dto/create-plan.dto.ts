@@ -9,6 +9,7 @@ import {
   IsArray,
   ArrayNotEmpty,
   ValidateNested,
+  IsOptional,
 } from 'class-validator';
 
 class PlanPorcentajeRepartirDto {
@@ -62,8 +63,12 @@ export class CreatePlanPayloadDto {
   tipo_iva: number;
 
   @IsNumber({}, { message: 'El precio de oferta debe ser un número' })
-  @IsNotEmpty({ message: 'El precio de oferta es obligatorio' })
-  precio_oferta: number;
+  @IsOptional()
+  precio_oferta: number | null;
+
+  @Transform(({ value }) => value == 'true' || value === true)
+  @IsOptional()
+  esta_en_oferta?: boolean;
 
   @IsArray({ message: 'Los porcentajes de reparto deben ser un arreglo' })
   @ArrayNotEmpty({

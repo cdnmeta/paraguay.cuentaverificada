@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 // APIs
 import { getPlanById, createPlan, updatePlan, getPlanesTiposRepartir } from "@/apis/planes.api";
@@ -39,8 +40,7 @@ const planSchema = z.object({
     .number({
       invalid_type_error: "El precio del plan debe ser un número",
       required_error: "El precio del plan es obligatorio",
-    })
-    .min(1, "El precio del plan debe ser mayor a 0"),
+    }),
   precio_sin_iva: z.coerce
     .number({
       invalid_type_error: "El precio sin IVA del plan debe ser un número",
@@ -63,12 +63,10 @@ const planSchema = z.object({
       message: "El tipo de IVA debe ser un número válido",
     })
     .transform((val) => Number(val)),
-  precio_oferta: z.coerce
-    .number({
-      invalid_type_error: "El precio de oferta debe ser un número",
-      required_error: "El precio de oferta es obligatorio",
-    })
-    .min(0, "El precio de oferta debe ser mayor o igual a 0"),
+  precio_oferta: z.coerce.number({
+    invalid_type_error: "El precio de oferta debe ser un número",
+  }).optional(),
+  esta_en_oferta: z.boolean().optional(),
   porcentajes_repartir: z
     .array(
       z.object({
@@ -90,7 +88,7 @@ const planSchema = z.object({
           })
           .min(0, "El porcentaje debe ser al menos 0")
           .max(100, "El porcentaje no puede ser mayor a 100"),
-      })
+      }),
     )
     .min(1, "Debe haber al menos un tipo de reparto")
     .refine(
@@ -120,6 +118,16 @@ const planSchema = z.object({
         message: "La suma de porcentajes de venta recurrente debe ser exactamente 100%",
       }
     ),
+  
+}).superRefine((data, ctx) => {
+  if (data.esta_en_oferta) {
+    if (data.precio_oferta === undefined || data.precio_oferta === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El precio de oferta es obligatorio cuando el plan está en oferta",
+      });
+    }
+  }
 });
 
 /**
@@ -153,8 +161,9 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
       renovacion_plan: "mes",
       renovacion_valor: 1,
       tipo_iva: "3",
-      precio_oferta: 0,
+      precio_oferta: null,
       porcentajes_repartir: [],
+      esta_en_oferta: false,
     },
   });
 
@@ -208,7 +217,8 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
           renovacion_plan: planData.renovacion_plan || "mes",
           renovacion_valor: planData.renovacion_valor || 1,
           tipo_iva: planData.tipo_iva?.toString() || "3",
-          precio_oferta: planData.precio_oferta || 0,
+          esta_en_oferta: planData.esta_en_oferta || false,
+          precio_oferta: String(planData.precio_oferta) || "",
           porcentajes_repartir: porcentajes_repartir,
         });
       } else {
@@ -296,6 +306,9 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
   const onSubmit = async (data) => {
     try {
       setLoading(true);
+      
+      // ver los datos a enviar
+      console.log("Datos a enviar:", data);
 
       if (isEditMode) {
         await updatePlan(id, data);
@@ -306,9 +319,10 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
 
         toast.success("Plan creado exitosamente");
         form.reset();
-      }
+      } 
 
       onSuccess?.();
+
     } catch (error) {
       console.error("Error saving plan:", error);
       toast.error(error.response?.data?.message || "Error al guardar el plan");
@@ -331,6 +345,8 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
       </Card>
     );
   }
+
+  console.log(form.watch())
 
   return (
     <Card className={className}>
@@ -451,7 +467,6 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
                           field.onChange(precioSinIva);
                           console.log("precio con iva", precioConIva);
                           form.setValue("precio", precioConIva,{ shouldValidate: true});
-                          form.setValue("precio_oferta",precioConIva,{ shouldValidate: true});
                         }}
                         thousandSeparator="."
                         decimalSeparator=","
@@ -544,33 +559,62 @@ export default function PlanForm({ id, onSuccess, className = "" }) {
               />
             </div>
 
-            {/* Precio de Oferta */}
-            <div className="space-y-2">
+            {/* Switch para habilitar precio de oferta */}
+            <div className="space-y-4">
               <FormField
                 control={form.control}
-                name="precio_oferta"
+                name="esta_en_oferta"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Precio de Oferta *</FormLabel>
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Precio en oferta
+                      </FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        Habilitar precio promocional para este plan
+                      </div>
+                    </div>
                     <FormControl>
-                      <NumericFormat
-                        customInput={Input}
-                        value={field.value}
-                        onValueChange={(values) => {
-                          field.onChange(values.floatValue || 0);
-                        }}
-                        thousandSeparator="."
-                        decimalSeparator=","
-                        decimalScale={2}
-                        fixedDecimalScale
-                        allowNegative={false}
-                        placeholder="0,00"
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {/* Precio de Oferta - Solo visible si está habilitado */}
+              {form.watch("esta_en_oferta") && (
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="precio_oferta"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Precio de Oferta *</FormLabel>
+                        <FormControl>
+                          <NumericFormat
+                            customInput={Input}
+                            value={field.value}
+                            onValueChange={(values) => {
+                              field.onChange(values.value);
+                            }}
+                            thousandSeparator="."
+                            decimalSeparator=","
+                            decimalScale={2}
+                            fixedDecimalScale
+                            allowNegative={false}
+                            placeholder="Ingrese el precio de oferta"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <p className="text-yellow-400 text-sm">Atención: El precio de oferta será el precio que se mostrará en lugar del precio regular e influirá en las ganancias y repartos correspondientes.</p>
+                </div>
+              )}
             </div>
 
             {/* Gestión de Porcentajes de Reparto */}

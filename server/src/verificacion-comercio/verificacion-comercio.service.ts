@@ -101,6 +101,7 @@ export class VerificacionComercioService {
         async (prisma) => {
           let id_vendedor: number | null = null;
           let id_embajador: number | null = null;
+          let precioPlanVerificacion = 0;
 
           // Buscar el vendedor por código
           if (createComercioDto.codigoVendedor) {
@@ -165,7 +166,7 @@ export class VerificacionComercioService {
           // crear una suscripcion del plan de verificacion y primera factura
 
           // obtener cual es el id plan de la verificacion
-          const planVerificacionSql = `select id, precio, renovacion_plan,renovacion_valor,tipo_iva from planes where id = (select id_plan_verificacion from empresa_config )`;
+          const planVerificacionSql = `select id, precio,precio_oferta, renovacion_plan,renovacion_valor,tipo_iva, esta_en_oferta from planes where id = (select id_plan_verificacion from empresa_config )`;
 
           const planVerificacion =
             await this.dbService.query(planVerificacionSql);
@@ -178,6 +179,15 @@ export class VerificacionComercioService {
 
           const planVerificacionData = planVerificacion.rows[0];
 
+  
+          if(planVerificacionData.esta_en_oferta){
+            precioPlanVerificacion = planVerificacionData.precio_oferta;
+          } else {
+            precioPlanVerificacion = planVerificacionData.precio;
+          }
+
+
+
           // generar la fecha de vencimiento
 
           // Crear la 1era suscripción y vincular a una factura pendiente
@@ -187,7 +197,7 @@ export class VerificacionComercioService {
               fecha_creacion: fechaSolicitud,
               id_vendedor: id_vendedor,
               id_plan: planVerificacionData.id, // ID del plan de verificación
-              monto: planVerificacionData.precio,
+              monto: precioPlanVerificacion,
               estado: 1, // pendiente
               id_embajador: id_embajador,
               activo: true,
@@ -202,7 +212,7 @@ export class VerificacionComercioService {
           });
 
           const totalesFactura = getIvasFacturaTotales(
-            planVerificacionData.precio,
+            precioPlanVerificacion,
             planVerificacionData.tipo_iva,
           );
 

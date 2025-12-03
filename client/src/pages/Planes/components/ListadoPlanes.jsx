@@ -109,7 +109,9 @@ const ListadoPlanes = ({
     renovacion_valor: true,
     renovacion_plan: true,
     activo: true,
-    fecha_creacion: true
+    fecha_creacion: true,
+    esta_en_oferta: true,
+    precio_oferta: true
   };
 
   const columnsConfig = { ...defaultColumns, ...columnasHabilitadas };
@@ -155,6 +157,35 @@ const ListadoPlanes = ({
           </div>
         );
       },
+    },
+    {
+      accessorKey: "esta_en_oferta",
+      header: "Oferta",
+      cell: ({ row }) => {
+        const data = row.original.esta_en_oferta;
+        return (
+          <Badge variant={data ? "success" : "destructive"}>
+            {data ? "Sí" : "No"}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: "precio_oferta",
+      header: "Precio Oferta",
+      cell: ({ row }) => {
+        const precio = parseFloat(row.getValue("precio_oferta"));
+        const siglaIso = row.original.sigla_iso;
+        const estaEnOferta = row.original.esta_en_oferta;
+        if (!estaEnOferta) {
+          return null;
+        }
+        return (
+          <div className="font-mono text-green-600">
+            {formatearMoneda(precio, siglaIso)}
+          </div>
+        );
+      }
     },
     {
       accessorKey: "descripcion_moneda",

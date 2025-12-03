@@ -14,17 +14,36 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Icons
-import { TrendingUp, ArrowRightLeft } from "lucide-react";
-import { getCotizacionesEmpresa } from '@/apis/cotizacion-empresa.api';
-import { EVENTS, on } from '@/utils/events';
+import { TrendingUp, ArrowRightLeft, MoreVertical, Trash2 } from "lucide-react";
+import { getCotizacionesEmpresa, anularCotizacionEmpresa } from '@/apis/cotizacion-empresa.api';
+import { EVENTS, on, emit } from '@/utils/events';
+import { Button } from '@/components/ui/button';
 
 
 export default function ListCotizacionesEmpresa({ className = "" }) {
   const [cotizaciones, setCotizaciones] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [cotizacionAAnular, setCotizacionAAnular] = useState(null);
+  const [anulando, setAnulando] = useState(false);
 
 
   const loadCotizaciones = async () => {
@@ -65,6 +84,27 @@ export default function ListCotizacionesEmpresa({ className = "" }) {
     } catch {
       return 'Fecha inválida';
     }
+  };
+
+  const handleAnularCotizacion = async () => {
+    if (!cotizacionAAnular) return;
+    
+    setAnulando(true);
+    try {
+      await anularCotizacionEmpresa(cotizacionAAnular.id);
+      // Emitir evento para actualizar la lista
+      emit(EVENTS.COTIZACIONES_EMPRESA_ACTUALIZADA);
+      setCotizacionAAnular(null);
+    } catch (err) {
+      console.error('Error al anular cotización:', err);
+      setError('Error al anular la cotización');
+    } finally {
+      setAnulando(false);
+    }
+  };
+
+  const abrirDialogoAnular = (cotizacion) => {
+    setCotizacionAAnular(cotizacion);
   };
 
   if (loading) {
@@ -129,6 +169,7 @@ export default function ListCotizacionesEmpresa({ className = "" }) {
                   <TableHead className="text-right">Venta</TableHead>
                   <TableHead className="text-center">Última Actualización</TableHead>
                   <TableHead className="text-center">Estado</TableHead>
+                  <TableHead className="text-center">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -174,6 +215,24 @@ export default function ListCotizacionesEmpresa({ className = "" }) {
                         Activo
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem 
+                            onClick={() => abrirDialogoAnular(cotizacion)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Anular cotización
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -181,6 +240,34 @@ export default function ListCotizacionesEmpresa({ className = "" }) {
           </div>
         )}
       </CardContent>
+      
+      {/* Diálogo de confirmación para anular cotización */}
+      <AlertDialog open={!!cotizacionAAnular} onOpenChange={() => setCotizacionAAnular(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Confirmar anulación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas anular la cotización para el par{" "}
+              <strong>
+                {cotizacionAAnular?.moneda_origen_iso} → {cotizacionAAnular?.moneda_destino_iso}
+              </strong>?
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={anulando}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleAnularCotizacion}
+              disabled={anulando}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {anulando ? "Anulando..." : "Anular cotización"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
